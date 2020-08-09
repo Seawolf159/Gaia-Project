@@ -1,13 +1,3 @@
-def cycle(iterable):
-    # cycle('ABCD') --> A B C D A B C D A B C D ...
-    saved = []
-    for element in iterable:
-        yield element
-        saved.append(element)
-    while saved:
-        for element in saved:
-              yield element
+a = dict.fromkeys([x for x in range(19)])
 
-        
-if __name__ == "__main__":
-    pass
+print(a)
