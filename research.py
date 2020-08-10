@@ -2,10 +2,11 @@ import components
 
 
 class Level:
-    """Handles one single level on the technology track.
+    """One single level on the technology track.
     """
 
-    def __init__(self, *, active=False, income=False, direct=False):
+    def __init__(self, level=0, *active=False, income=False, direct=False):
+        self.level = level
         self.active = active
         self.income = income
         self.direct = False
@@ -13,26 +14,28 @@ class Level:
 
 
 class Terraforming:
-    """Handles the technology track for Terraforming.
+    """Technology track for Terraforming.
     """
-
+    # TODO figure out levels
     def __init__(self):
-        self.advanced = "Advanced tile"  # TODO insert advanced tile object
-        self.current = self.level0 = Level(active=3)
-        self.level1 = Level(direct=["ore", 2], active=3)
+        self.advanced = False  # TODO insert advanced tile object
+        self.level0 = Level(0, active=3)
+        self.level1 = Level(1, direct=["ore", 2], active=3)
         self.level2 = Level(active=2)
         self.level3 = Level(active=1)
         self.level4 = Level(direct=["ore", 2], active=1)
-        self.level5 = Level(direct="Federation token", active=1)  # TODO insert federation token
+        self.level5 = Level(direct=False, active=1)  # TODO insert federation token
+        
+        self.players = {}  #  TODO fill at start of game?
 
 
 class Navigation:
-    """Handles the technology track for Navigation.
+    """Technology track for Navigation.
     """
 
     def __init__(self):
         self.advanced = "Advanced tile"  # TODO insert advanced tile object
-        self.level0 = Level(active=1)
+        self.level0 = Level(0, active=1)
         self.level1 = Level(direct=["qic", 1], active=1)
         self.level2 = Level(active=2)
         self.level3 = Level(direct=["qic", 1], active=2)
