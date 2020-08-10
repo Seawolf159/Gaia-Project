@@ -66,5 +66,6 @@ class Components:
 
 
 if __name__ == "__main__":
+    pass
     # test = Components()
     # print(test.sector1.hexes[4].type)
