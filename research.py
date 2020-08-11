@@ -24,7 +24,7 @@ class Terraforming:
         self.level3 = Level(active=1)
         self.level4 = Level(direct=["ore", 2], active=1)
         self.level5 = Level(direct="Federation token", active=1)  # TODO insert federation token
-
+    # test
 
 class Navigation:
     """Handles the technology track for Navigation.
