@@ -1,4 +1,5 @@
 from sector import Sector
+from research import Research
 
 
 class Components:
@@ -62,7 +63,8 @@ class Components:
             17: "Titanium"
         })
 
-
+        # Research board
+        self.research = Research()
 
 
 if __name__ == "__main__":
