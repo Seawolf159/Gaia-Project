@@ -22,7 +22,6 @@ class Terraforming:
     """Technology track for Terraforming.
     """
 
-    # TODO figure out levels
     def __init__(self):
         self.advanced = False  # TODO insert advanced tile object
         self.level0 = Level(active=3)
@@ -52,11 +51,15 @@ class Research:
 
     This class handles everything that can be found on the research board.
     """
+
     def __init__(self):
-        self.players = {}
-        self.score = 10
+        # Techonlogy tracks.
         self.terraforming = Terraforming()
-        self.actions = {x: True for x in range(1, 11)}
+        self.navigation = Navigation()
+
+        # Power and QIC actions.
+        self.pqactions = {x: True for x in range(1, 11)}
+
         self.basic_tech = {x: True for x in range(1, 10)}
 
 
