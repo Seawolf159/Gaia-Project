@@ -28,7 +28,7 @@ class GaiaProject:
         pq = "6. Power or Q.I.C. (Purple/Green).\n"
         special = "7. Special (Orange).\n"
         pass_ = "8. Pass.\n"
-        free = "9. Exchange resources for power.\n"
+        free = "9. Exchange power for resources .\n"
 
         prompt = (
             f"{intro}{mine}{gaia}{upgrade}{federation}{research}{pq}"
