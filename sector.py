@@ -37,7 +37,7 @@ class Sector:
 
     def __init__(self, hexes, img):
         self.hexes = {}
-        self.img = f"{img}.png"
+        self.img = Image.open(f"{img}.png")
 
         for hex_ in range(1, 20):
             if hexes.get(hex_):
@@ -103,51 +103,62 @@ class Universe:
             12: "Trans-dim",
             13: "Volcanic",
             16: "Oxide"
-        })
+        }, os.path.join(IMAGES, "sector5b"))
         self.sector6b = Sector({
             7: "Trans-dim",
             11: "Terra",
             14: "Gaia",
             18: "Trans-dim",
             19: "Desert"
-        })
+        }, os.path.join(IMAGES, "sector6b"))
         self.sector7b = Sector({
             1: "Trans-dim",
             6: "Gaia",
             9: "Gaia",
             15: "Swamp",
             17: "Titanium"
-        })
+        }, os.path.join(IMAGES, "sector7b"))
 
     def generate(self):
         self.universe = "2pdefault"
 
+        # Sector Slots 2 players
+        ss2p = {
+            1: (1632, 1769),  # Center
+            2: (1837, 0),  # North
+            3: (3265, 1060),  # North East
+            4: (3060, 2829),  # South East
+            5: (1427, 3539),  # South
+            6: (0, 2478),  # South West
+            7: (205, 709)  # North West
+        }
+
         # Stitching together the tiles to form the map for 2 players.
         # (width, height)
-        self.map = Image.new("RGBA", (5312, 5430), "white")
+        map_ = Image.new("RGBA", (5312, 5430), "white")
 
         # Center (1632, 1769)
-        self.map.paste(self.sector1.img, (1632, 1769), self.sector1.img)
+        map_.paste(self.sector3.img, (1632, 1769), self.sector3.img)
 
         # North (1837, 0)
-        self.map.paste(self.sector2.img, (1837, 0), self.sector2.img)
+        map_.paste(self.sector1.img, (1837, 0), self.sector1.img)
 
         # North East (3265, 1060)
-        self.map.paste(self.sector3.img, (3265, 1060), self.sector3.img)
+        map_.paste(self.sector5b.img, (3265, 1060), self.sector5b.img)
 
         # South East (3060, 2829)
-        self.map.paste(self.sector4.img, (3060, 2829), self.sector4.img)
+        map_.paste(self.sector6b.img, (3060, 2829), self.sector6b.img)
 
         # South (1427, 3539)
-        self.map.paste(self.sector3.img, (1427, 3539), self.sector3.img)
+        map_.paste(self.sector7b.img, (1427, 3539), self.sector7b.img)
 
         # South West (0, 2478)
-        self.map.paste(self.sector2.img, (0, 2478), self.sector2.img)
+        map_.paste(self.sector4.img, (0, 2478), self.sector4.img)
 
         # North West (205, 709)
-        self.map.paste(self.sector1.img, (205, 709), self.sector1.img)
+        map_.paste(self.sector2.img, (205, 709), self.sector2.img)
 
-        self.map.save("Universe.png", "png")
+        map_.save("2p Default.png", "png")
 
     def show(self):
         self.sector1.image.show
@@ -155,6 +166,7 @@ class Universe:
 
 if __name__ == "__main__":
     test = Universe()
+    test.generate()
 
     # Open the generated map
-    # os.startfile("test.png")
+    os.startfile("2p Default.png")
