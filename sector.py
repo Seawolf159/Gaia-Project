@@ -38,6 +38,7 @@ class Sector:
     def __init__(self, hexes, img):
         self.hexes = {}
         self.img = Image.open(f"{img}.png")
+        self.rotation = 0
 
         for hex_ in range(1, 20):
             if hexes.get(hex_):
@@ -59,6 +60,17 @@ class Sector:
         for hex_, type_ in self.hexes.items():
             tiles.extend([str(hex_), ' ', str(type_), "\n"])
         return ''.join(tiles)
+
+    def rotate_sector_once(self):
+        for i in [1, 2]:
+            if i == 1:
+                self.content[i] = self.content[i][-1:] + self.content[i][:-1]
+            if i == 2:
+                self.content[i] = self.content[i][-2:] + self.content[i][:-2]
+
+        self.rotation += 1
+        if self.rotation == 6:
+            self.rotation = 0
 
 
 class Universe:
@@ -166,7 +178,7 @@ class Universe:
 
 if __name__ == "__main__":
     test = Universe()
-    test.generate()
+    # test.generate()
 
     # Open the generated map
     os.startfile("2p Default.png")
