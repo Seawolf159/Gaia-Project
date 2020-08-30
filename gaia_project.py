@@ -12,6 +12,7 @@ class GaiaProject:
         the faction names in order.
         """
 
+        self.active_player = 1
         self.components = Components()
         self.research = self.components.research
         self.map = Universe()
@@ -41,12 +42,38 @@ class GaiaProject:
         )
         answer = input(prompt)
 
+    def mine(self):
+        pass
+
+    def gaia(self):
+        pass
+
+    def upgrade(self):
+        pass
+
+    def federation(self):
+        pass
+
+    def research(self):
+        pass
+
+    def pq(self):
+        pass
+
+    def special(self):
+        pass
+
+    def pass_(self):
+        pass
+
+    def free(self):
+        pass
+    
     def change_phase(self):
         pass
 
     def change_turn(self):
         pass
-
 
     def play(self):
         """This function will setup and allow you to start playing a game.
