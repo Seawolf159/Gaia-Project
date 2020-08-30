@@ -47,14 +47,6 @@ class Sector:
                 self.hexes[hex_] = Space()
 
     def __str__(self):
-        # return (
-        #     f"   {self.hexes[1]} {self.hexes[2]} {self.hexes[3]}\n"
-        #     f" {self.hexes[4]} {self.hexes[5]} {self.hexes[6]} {self.hexes[7]}\n"
-        #     # f"{} {} {} {} {}\n"
-        #     # f" {} {} {} {}\n"
-        #     # f"   {} {} {}\n"
-        # )
-
         tiles = []
 
         for hex_, type_ in self.hexes.items():
@@ -62,6 +54,37 @@ class Sector:
         return ''.join(tiles)
 
     def rotate_sector_once(self):
+        """Rotating a sector
+
+                1     2      3
+             4     5     6     8
+           9    10    11    12    13
+             13    14    15    16
+                17    18    19
+
+        sector_data = [
+            [11],  # Center
+            [5, 6, 12, 15, 14, 10],  # Inner circle
+            [1, 2, 3, 8, 13, 16, 19, 18, 17, 13, 9, 4]  # Outer circle
+        ]
+
+        Moving the last number of the inner circle to the beginning and moving
+        the last 2 numbers of the outer circle to the beginning, complete a
+        rotation.
+
+        sector_data = [
+            [11],  # Center
+            [10, 5, 6, 12, 15, 14],  # Inner circle
+            [9, 4, 1, 2, 3, 8, 13, 16, 19, 18, 17, 13]  # Outer circle
+        ]
+
+                9     4     1
+             4     10    5     3
+          13    14    11    6     8
+             17    15    12    13
+                18    19    16
+        """
+
         for i in [1, 2]:
             if i == 1:
                 self.content[i] = self.content[i][-1:] + self.content[i][:-1]
@@ -145,6 +168,11 @@ class Universe:
             7: (205, 709)  # North West
         }
 
+        # TODO find better way to do this, maybe don't have the images open in
+        # the sector and open them here somehow. Also figure out exactly how to
+        # generate the map when it's not the default after everything works
+        # with the default.
+
         # Stitching together the tiles to form the map for 2 players.
         # (width, height)
         map_ = Image.new("RGBA", (5312, 5430), "white")
@@ -172,13 +200,79 @@ class Universe:
 
         map_.save("2p Default.png", "png")
 
-    def show(self):
-        self.sector1.image.show
+    @ classmethod
+    def distance(self, startx, starty, targetx, targety):
+        """Using the universe grid to calculate distance between two planets.
+
+        See the file -- Universe grid.png -- for an example of the coordinates.
+
+        Args:
+            startx (int): the starting planet's x coordinate
+            starty (int): the starting planet's y coordinate
+            targetx (int): the target planet's x coordinate
+            targety (int): the target planet's y coordinate
+
+        Returns:
+            An integer that is the distance between the two planets
+
+        TODO:
+            Figure out where this function is best placed.
+        """
+
+        traversex = startx
+        traversey = starty
+
+
+        distance = 0
+        # Keep going until the target planet has been reached.
+        while traversex != targetx or traversey != targety:
+
+            # If the traversal is now on the same horizontal line as the
+            # target, only keep traversing horizontally. Move horizontally in
+            # steps of 2 because of how the grid works.
+            if traversex == targetx:
+                if traversey > targety:
+                    traversey -= 2
+                    distance += 1
+                    continue
+                else:
+                    traversey += 2
+                    distance += 1
+                    continue
+
+            # If the traversal is now on the same vertical line as the target,
+            # only keep traversing vertically. Move vertically in steps of 1
+            # because of how the grid works.
+            elif traversey == targety:
+                if traversex > targetx:
+                    traversex -= 1
+                    distance += 1
+                    continue
+                else:
+                    traversex += 1
+                    distance += 1
+                    continue
+
+            if traversex > targetx:
+                traversex -= 1
+            else:
+                traversex += 1
+
+            if traversey > targety:
+                traversey -= 1
+            else:
+                traversey += 1
+
+            distance += 1
+        else:
+            return distance
 
 
 if __name__ == "__main__":
     test = Universe()
     # test.generate()
+    distance = Universe.distance
+    print(distance(7, 10, 7, 12))
 
     # Open the generated map
-    os.startfile("2p Default.png")
+    # os.startfile("2p Default.png")
