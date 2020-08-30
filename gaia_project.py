@@ -17,6 +17,11 @@ class GaiaProject:
         self.map = Universe()
         # TODO generate the universe (first game universe to begin with)
 
+    def setup(self):
+        """Setup all the pieces of the game"""
+
+        pass
+
     def take_action(self):
         intro = ("What action do you want to take?\n"
                  "Type the number of your action.\n")
