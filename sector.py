@@ -54,7 +54,7 @@ class Sector:
             ]
     """
 
-    def __init__(self, hexes, img):
+    def __init__(self, hexes, img, rotation=0):
         """Initialising the sector object.
 
         Args:
@@ -267,7 +267,6 @@ class Universe:
 
         traversex = startx
         traversey = starty
-
 
         distance = 0
         # Keep going until the target planet has been reached.

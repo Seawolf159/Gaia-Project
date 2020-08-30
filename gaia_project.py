@@ -23,6 +23,9 @@ class GaiaProject:
 
         pass
 
+    def income(self)
+        pass
+
     def take_action(self):
         intro = ("What action do you want to take?\n"
                  "Type the number of your action.\n")
@@ -68,7 +71,7 @@ class GaiaProject:
 
     def free(self):
         pass
-    
+
     def change_phase(self):
         pass
 
