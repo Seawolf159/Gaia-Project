@@ -15,7 +15,7 @@ class GaiaProject:
         self.components = Components()
         self.research = self.components.research
         self.map = Universe()
-        # TODO generate the universe (first game universe to begin with)
+        # TODO generate the universe (first game default universe at first)
 
     def setup(self):
         """Setup all the pieces of the game"""

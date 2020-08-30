@@ -32,19 +32,111 @@ class Planet:
 
 
 class Sector:
-    """Sector tiles.
+    """Sector tile.
+
+    Example:
+        Visual representation:
+             1     2     3
+
+          4     5     6     7
+
+        8    9     10    11    12
+
+          13    14    15    16
+
+             17    18    19
+
+        Program representation:
+            hexes = [
+                [10],  # Center
+                [5, 6, 11, 15, 14, 9],  # Inner circle
+                [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
+            ]
     """
 
     def __init__(self, hexes, img):
-        self.hexes = {}
-        self.img = Image.open(f"{img}.png")
+        """Initialising the sector object.
+
+        Args:
+            img (path): Absolute path to the image file.
+        """
+        self.hexes = [[hexes.get(10, Space())]]
+        self.inner = []
+        self.outer = []
+
+        inner = [5, 6, 11, 15, 14, 9]
+        for num in inner:
+            # If num is in the hexes dictionary, that means it was provided to
+            # the instance and that a planet is there.
+            if hexes.get(num, False):
+                self.inner.append(Planet(hexes[num]))
+            else:
+                self.inner.append(Space())
+
+        outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
+        for num in outer:
+            # If num is in the hexes dictionary, that means it was provided to
+            # the instance and that a planet is there.
+            if hexes.get(num, False):
+                self.outer.append(Planet(hexes[num]))
+            else:
+                self.outer.append(Space())
+
+        # Add the inner and outer circle to the list of hexes
+        self.hexes.append(self.inner)
+        self.hexes.append(self.outer)
+
+        # TODO open image here or somewhere else?
+        # self.img = Image.open(f"{img}.png")
+        self.img = f"{img}.png"
         self.rotation = 0
 
-        for hex_ in range(1, 20):
-            if hexes.get(hex_):
-                self.hexes[hex_] = Planet(hexes[hex_])
-            else:
-                self.hexes[hex_] = Space()
+    def rotate_sector_once(self):
+        """Rotating a sector
+
+             1     2     3
+
+          4     5     6     7
+
+        8    9     10    11    12
+
+          13    14    15    16
+
+             17    18    19
+
+        hexes = [
+            [10],  # Center
+            [5, 6, 11, 15, 14, 9],  # Inner circle
+            [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
+        ]
+
+        Moving the last number of the inner circle to the beginning and moving
+        the last 2 numbers of the outer circle to the beginning, complete a
+        rotation.
+
+        hexes = [
+            [10],  # Center
+            [9, 5, 6, 11, 15, 14],  # Inner circle
+            [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
+        ]
+
+              8     4     1
+
+           13    9    5     2
+
+        17    14    10    6     3
+
+           18    15    11    7
+
+              19    16    12
+        """
+
+        self.hexes[1] = self.hexes[1][-1:] + self.hexes[1][:-1]
+        self.hexes[2] = self.hexes[2][-2:] + self.hexes[2][:-2]
+
+        self.rotation += 1
+        if self.rotation == 6:
+            self.rotation = 0
 
     def __str__(self):
         tiles = []
@@ -52,48 +144,6 @@ class Sector:
         for hex_, type_ in self.hexes.items():
             tiles.extend([str(hex_), ' ', str(type_), "\n"])
         return ''.join(tiles)
-
-    def rotate_sector_once(self):
-        """Rotating a sector
-
-                1     2      3
-             4     5     6     8
-           9    10    11    12    13
-             13    14    15    16
-                17    18    19
-
-        sector_data = [
-            [11],  # Center
-            [5, 6, 12, 15, 14, 10],  # Inner circle
-            [1, 2, 3, 8, 13, 16, 19, 18, 17, 13, 9, 4]  # Outer circle
-        ]
-
-        Moving the last number of the inner circle to the beginning and moving
-        the last 2 numbers of the outer circle to the beginning, complete a
-        rotation.
-
-        sector_data = [
-            [11],  # Center
-            [10, 5, 6, 12, 15, 14],  # Inner circle
-            [9, 4, 1, 2, 3, 8, 13, 16, 19, 18, 17, 13]  # Outer circle
-        ]
-
-                9     4     1
-             4     10    5     3
-          13    14    11    6     8
-             17    15    12    13
-                18    19    16
-        """
-
-        for i in [1, 2]:
-            if i == 1:
-                self.content[i] = self.content[i][-1:] + self.content[i][:-1]
-            if i == 2:
-                self.content[i] = self.content[i][-2:] + self.content[i][:-2]
-
-        self.rotation += 1
-        if self.rotation == 6:
-            self.rotation = 0
 
 
 class Universe:
@@ -157,8 +207,7 @@ class Universe:
     def generate(self):
         self.universe = "2pdefault"
 
-        # Sector Slots 2 players
-        ss2p = {
+        default_2p = {
             1: (1632, 1769),  # Center
             2: (1837, 0),  # North
             3: (3265, 1060),  # North East
@@ -214,9 +263,6 @@ class Universe:
 
         Returns:
             An integer that is the distance between the two planets
-
-        TODO:
-            Figure out where this function is best placed.
         """
 
         traversex = startx
@@ -271,8 +317,6 @@ class Universe:
 if __name__ == "__main__":
     test = Universe()
     # test.generate()
-    distance = Universe.distance
-    print(distance(7, 10, 7, 12))
 
     # Open the generated map
     # os.startfile("2p Default.png")
