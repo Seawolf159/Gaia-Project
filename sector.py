@@ -10,7 +10,8 @@ class Space:
     """Empty spaces on the sector tiles.
     """
 
-    def __init__(self):
+    def __init__(self, location):
+        self.location = location
         self.sattelites = set()
 
     def __repr__(self):
@@ -21,8 +22,9 @@ class Planet:
     """Planet type on the sector tile.
     """
 
-    def __init__(self, type_):
+    def __init__(self, type_, location):
         self.type = type_
+        self.location = location
         self.owner = False
         self.structure = False
         self.federation = False
@@ -52,87 +54,126 @@ class Sector:
                 [5, 6, 11, 15, 14, 9],  # Inner circle
                 [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
             ]
+            universe grid mapping = center sector = [
+                [(8, 13)],
+                [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
+                [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
+                 (10, 15), (10, 13), (10, 11), (9, 10), (8, 9), (7, 10)]
+            ]
     """
 
-    def __init__(self, hexes, img, rotation=0):
+    def __init__(self, hexes, img, universe_grid, rotation):
         """Initialising the sector object.
 
         Args:
+            hexes (dict): Hex number: planet type.
             img (path): Absolute path to the image file.
+            universe_grid (list): Location of planets and spaces in the sector.
+            rotation (int): Rotated amount.
+                Can be 1-5.
         """
-        self.hexes = [[hexes.get(10, Space())]]
+
+        self.hexes = [[hexes.get(10, Space(location=universe_grid[0][0]))]]
+
+        # TODO open image here or somewhere else?
+        # self.img = Image.open(f"{img}.png")
+        self.img = f"{img}.png"
+
+        self.universe_grid = universe_grid
+        self.rotation = rotation
+
+        # Populate the Program representation with planets and empty spaces.
         self.inner = []
         self.outer = []
-
         inner = [5, 6, 11, 15, 14, 9]
-        for num in inner:
+        for i, num in enumerate(inner):
             # If num is in the hexes dictionary, that means it was provided to
             # the instance and that a planet is there.
+
+            location = universe_grid[1][i]
             if hexes.get(num, False):
-                self.inner.append(Planet(hexes[num]))
+                self.inner.append(
+                    Planet(
+                        type_=hexes[num],
+                        location=location
+                    )
+                )
             else:
-                self.inner.append(Space())
+                self.inner.append(Space(location=location))
 
         outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
-        for num in outer:
+        for i, num in enumerate(outer):
             # If num is in the hexes dictionary, that means it was provided to
             # the instance and that a planet is there.
+
+            location = universe_grid[2][i]
             if hexes.get(num, False):
-                self.outer.append(Planet(hexes[num]))
+                self.outer.append(
+                    Planet(
+                        type_=hexes[num],
+                        location=location
+                    )
+                )
             else:
-                self.outer.append(Space())
+                self.outer.append(Space(location=location))
 
         # Add the inner and outer circle to the list of hexes
         self.hexes.append(self.inner)
         self.hexes.append(self.outer)
 
-        # TODO open image here or somewhere else?
-        # self.img = Image.open(f"{img}.png")
-        self.img = f"{img}.png"
-        self.rotation = 0
-
     def rotate_sector_once(self):
-        """Rotating a sector
+        """Rotating a sector"""
 
-             1     2     3
+        #      1     2     3
 
-          4     5     6     7
+        #   4     5     6     7
 
-        8    9     10    11    12
+        # 8    9     10    11    12
 
-          13    14    15    16
+        #   13    14    15    16
 
-             17    18    19
+        #      17    18    19
 
-        hexes = [
-            [10],  # Center
-            [5, 6, 11, 15, 14, 9],  # Inner circle
-            [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
-        ]
+        # hexes = [
+        #     [10],  # Center
+        #     [5, 6, 11, 15, 14, 9],  # Inner circle
+        #     [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
+        # ]
 
-        Moving the last number of the inner circle to the beginning and moving
-        the last 2 numbers of the outer circle to the beginning, complete a
-        rotation.
+        # universe grid mapping = center sector = [
+        #     [(8, 13)],
+        #     [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
+        #     [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
+        #     (10, 15), (10, 13), (10, 11), (9, 10), (8, 9), (7, 10)]
+        # ]
 
-        hexes = [
-            [10],  # Center
-            [9, 5, 6, 11, 15, 14],  # Inner circle
-            [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
-        ]
+        # Moving the last number of the inner circle to the beginning and moving
+        # the last 2 numbers of the outer circle to the beginning, complete a
+        # rotation.
 
-              8     4     1
+        # hexes = [
+        #     [10],  # Center
+        #     [9, 5, 6, 11, 15, 14],  # Inner circle
+        #     [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
+        # ]
 
-           13    9    5     2
+        #       8     4     1
 
-        17    14    10    6     3
+        #    13    9    5     2
 
-           18    15    11    7
+        # 17    14    10    6     3
 
-              19    16    12
-        """
+        #    18    15    11    7
+
+        #       19    16    12
 
         self.hexes[1] = self.hexes[1][-1:] + self.hexes[1][:-1]
         self.hexes[2] = self.hexes[2][-2:] + self.hexes[2][:-2]
+
+        self.universe_grid[1] = (self.universe_grid[1][-1:]
+                               + self.universe_grid[1][:-1])
+        self.universe_grid[2] = (self.universe_grid[2][-2:]
+                               + self.universe_grid[2][:-2])
 
         self.rotation += 1
         if self.rotation == 6:
@@ -148,16 +189,98 @@ class Sector:
 
 class Universe:
 
-    def __init__(self):
-        self.sector1 = Sector({
+    def __init__(self,
+                 sector1=('n', 0),
+                 sector2=('nw', 0),
+                 sector3=('c', 0),
+                 sector4=('sw', 0),
+                 sector5=('ne', 0),
+                 sector6=('se', 0),
+                 sector7=('s', 0),
+                 sector8=False,
+                 sector9=False,
+                 sector10=False):
+        """Generate the universe.
+
+        Args:
+            sector(x): (location, rotation).
+                location can be n, nw, c, sw (North, North West, Center etc.).
+                rotation can be 0-5.
+        """
+
+        # Universe grid tables left ruler (x), top ruler (y)
+        # Center
+        self.c = [
+            [(8, 13)],
+            [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
+            [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
+             (10, 15), (10, 13), (10, 11), (9, 10), (8, 9), (7, 10)]
+        ]
+
+        # North
+        self.n = [
+            [(3, 14)],
+            [(2, 13), (2, 15), (3, 16), (4, 15), (4, 13), (3, 12)],
+            [(1, 12), (1, 14), (1, 16), (2, 17), (3, 18), (4, 17),
+             (5, 16), (5, 14), (5, 12), (4, 11), (3, 10), (2, 11)]
+        ]
+
+        # North East
+        self.ne = [
+            [(6, 21)],
+            [(5, 20), (5, 22), (6, 23), (7, 22), (7, 20), (6, 19)],
+            [(4, 19), (4, 21), (4, 23), (5, 24), (6, 25), (7, 24),
+             (8, 23), (8, 21), (8, 19), (7, 18), (6, 17), (5, 18)]
+        ]
+
+        # South East
+        self.se = [
+            [(11, 20)],
+            [(10, 19), (10, 21), (11, 22), (12, 21), (12, 19), (11, 18)],
+            [(9, 18), (9, 20), (9, 22), (10, 23), (11, 24), (12, 23),
+             (13, 22), (13, 20), (13, 18), (12, 17), (11, 16), (10, 17)]
+        ]
+
+        # South
+        self.s = [
+            [(13, 12)],
+            [(12, 11), (12, 13), (13, 14), (14, 13), (14, 11), (13, 10)],
+            [(11, 10), (11, 12), (11, 14), (12, 15), (13, 16), (14, 15),
+             (15, 14), (15, 12), (15, 10), (14, 9), (13, 8), (12, 9)]
+        ]
+
+        # South West
+        self.sw = [
+            [(10, 5)],
+            [(9, 4), (9, 6), (10, 7), (11, 6), (11, 4), (10, 3)],
+            [(8, 3), (8, 5), (8, 7), (9, 8), (10, 9), (11, 8),
+             (12, 7), (12, 5), (12, 3), (11, 2), (10, 1), (9, 2)]
+        ]
+
+        # North West
+        self.nw = [
+            [(5, 6)],
+            [(4, 5), (4, 7), (5, 8), (6, 7), (6, 5), (5, 4)],
+            [(3, 4), (3, 6), (3, 8), (4, 9), (5, 10), (6, 9),
+             (7, 8), (7, 6), (7, 4), (6, 3), (5, 2), (4, 3)]
+        ]
+
+        self.sector1 = Sector(
+            hexes = {
             4: "Desert",
             5: "Swamp",
             11: "Terra",
             16: "Trans-dim",
             17: "Oxide",
             18: "Volcanic"
-        }, os.path.join(IMAGES, "sector1"))
-        self.sector2 = Sector({
+        },
+            img = os.path.join(IMAGES, "sector1"),
+            universe_grid = eval(f"self.{sector1[0]}"),
+            rotation = sector1[1]
+        )
+
+        self.sector2 = Sector(
+            hexes={
             2: "Volcanic",
             3: "Titanium",
             9: "Swamp",
@@ -165,44 +288,78 @@ class Universe:
             13: "Oxide",
             16: "Desert",
             18: "Trans-dim"
-        }, os.path.join(IMAGES, "sector2"))
-        self.sector3 = Sector({
+        },
+            img=os.path.join(IMAGES, "sector2"),
+            universe_grid=eval(f"self.{sector2[0]}"),
+            rotation=sector2[1]
+        )
+
+        self.sector3 = Sector(
+            hexes={
             3: "Trans-dim",
             5: "Gaia",
             13: "Terra",
             15: 'Ice',
             16: "Titanium",
             17: "Desert"
-        }, os.path.join(IMAGES, "sector3"))
-        self.sector4 = Sector({
+        },
+            img=os.path.join(IMAGES, "sector3"),
+            universe_grid=eval(f"self.{sector3[0]}"),
+            rotation=sector3[1]
+        )
+
+        self.sector4 = Sector(
+            hexes={
             3: "Titanium",
             4: "Ice",
             6: "Oxide",
             9: "Volcanic",
             15: "Swamp",
             19: "Terra"
-        }, os.path.join(IMAGES, "sector4"))
-        self.sector5b = Sector({
+        },
+            img=os.path.join(IMAGES, "sector4"),
+            universe_grid=eval(f"self.{sector4[0]}"),
+            rotation=sector4[1]
+        )
+
+        self.sector5b = Sector(
+            hexes={
             3: "Ice",
             5: "Gaia",
             12: "Trans-dim",
             13: "Volcanic",
             16: "Oxide"
-        }, os.path.join(IMAGES, "sector5b"))
-        self.sector6b = Sector({
+        },
+            img=os.path.join(IMAGES, "sector5b"),
+            universe_grid=eval(f"self.{sector5[0]}"),
+            rotation=sector5[1]
+        )
+
+        self.sector6b = Sector(
+            hexes={
             7: "Trans-dim",
             11: "Terra",
             14: "Gaia",
             18: "Trans-dim",
             19: "Desert"
-        }, os.path.join(IMAGES, "sector6b"))
-        self.sector7b = Sector({
+        },
+            img=os.path.join(IMAGES, "sector6b"),
+            universe_grid=eval(f"self.{sector6[0]}"),
+            rotation=sector6[1]
+        )
+
+        self.sector7b = Sector(
+            hexes={
             1: "Trans-dim",
             6: "Gaia",
             9: "Gaia",
             15: "Swamp",
             17: "Titanium"
-        }, os.path.join(IMAGES, "sector7b"))
+        },
+            img=os.path.join(IMAGES, "sector7b"),
+            universe_grid=eval(f"self.{sector7[0]}"),
+            rotation=sector7[1]
+        )
 
     def generate(self):
         self.universe = "2pdefault"
@@ -315,6 +472,12 @@ class Universe:
 
 if __name__ == "__main__":
     test = Universe()
+    print(test.sector3.hexes[1][3])
+    print(test.sector3.hexes[1][3].location)
+
+    print(test.sector6b.hexes[2][3])
+    print(test.sector6b.hexes[2][3].location)
+
     # test.generate()
 
     # Open the generated map

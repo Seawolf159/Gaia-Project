@@ -15,13 +15,16 @@ class GaiaProject:
         self.active_player = 1
         self.components = Components()
         self.research = self.components.research
-        self.map = Universe()
         # TODO generate the universe (first game default universe at first)
 
     def setup(self):
         """Setup all the pieces of the game"""
 
         pass
+
+    def create_map(self):
+        self.map = Universe()
+
 
     def income(self)
         pass
