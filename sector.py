@@ -37,7 +37,7 @@ class Sector:
     """Sector tile.
 
     Example:
-        Visual representation:
+        Human representation:
              1     2     3
 
           4     5     6     7
@@ -208,7 +208,7 @@ class Universe:
                 rotation can be 0-5.
         """
 
-        # Universe grid tables left ruler (x), top ruler (y)
+        # Universe grid tables (left ruler (x), top ruler (y))
         # Center
         self.c = [
             [(8, 13)],
@@ -473,10 +473,14 @@ class Universe:
 if __name__ == "__main__":
     test = Universe()
     print(test.sector3.hexes[1][3])
-    print(test.sector3.hexes[1][3].location)
+    start = test.sector3.hexes[1][3].location
+    startx, starty = start[0], start[1]
 
     print(test.sector6b.hexes[2][3])
-    print(test.sector6b.hexes[2][3].location)
+    target = test.sector6b.hexes[2][3].location
+    targetx, targety = target[0], target[1]
+
+    print(Universe.distance(startx, starty, targetx, targety))
 
     # test.generate()
 
