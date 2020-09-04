@@ -64,6 +64,22 @@ class Navigation:
         self.level5 = Level(direct="Lost Planet", active=5)  # TODO insert Lost planet object
 
 
+class ArtificialIntelligence:
+    pass
+
+
+class GaiaProject:
+    pass
+
+
+class Economy:
+    pass
+
+
+class Science:
+    pass
+
+
 class Research:
     """Research board.
 
