@@ -15,7 +15,7 @@ class Faction:
         self.mine_income = 1
         self.mine_tiers = [1, 1, 0, 1, 1, 1, 1, 1]
 
-        self.trading_center = 5
+        self.trading_center = 4
         self.trading_center_income = 3
         self.trading_center_tiers = [3, 4, 4, 5]
 
@@ -43,7 +43,7 @@ class Faction:
             "power1": "credits1",
             "power3": "ore1",
             "power4": ["qic1", "knowledge1"],
-            "knowledge1": "credits1"
+            "knowledge1": "credits1",
             "qic": ["range2", "ore1"],
             "ore": ["credits1", "powertoken1"]
         }
@@ -51,7 +51,6 @@ class Faction:
     def planetary_institute_bonus_func(self):
         # For subclasses to override
         raise NotImplementedError
-
 
 
 class HadschHalla(Faction):
@@ -82,7 +81,7 @@ class HadschHalla(Faction):
             "power1": "credits1",
             "power3": "ore1",
             "power4": ["qic1", "knowledge1"],
-            "knowledge1": "credits1"
+            "knowledge1": "credits1",
             "qic": ["range2", "ore1"],
             "ore": ["credits1", "powertoken1"],
 
@@ -90,3 +89,11 @@ class HadschHalla(Faction):
             "credits3": "ore1",
             "credits4": ["qic1", "knowledge1"]
         }
+
+
+def select_faction(faction):
+        factions = {
+            "hadsch halla": HadschHalla
+        }
+
+        return factions[faction]

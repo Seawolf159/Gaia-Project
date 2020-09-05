@@ -1,20 +1,34 @@
+from automa import Automa
 from components import Components
+from player import Player
 from sector import Universe
+from research import Research
 
 
 class GaiaProject:
     """Class for combining all the different parts of the game.
     """
 
-    def __init__(self, player1, player2, player3=False, player4=False):
+    def __init__(self, player1, player2,
+                 player3=False, player4=False, automa=False):
         """
         To create a new game of GaiaProject you need to call it with a list of
         the faction names in order.
         """
 
-        self.active_player = 1
-        self.components = Components()
-        self.research = self.components.research
+        self.player1 = Player(1, player1)
+        if automa:
+            self.player2 = Automa(2, player2)
+        else:
+            self.player2 = Player(2, player2)
+
+        if player3:
+            self.player3 = Player(3, player3)
+        if player4:
+            self.player4 = Player(4, player4)
+
+        self.research_board = Research()
+        
         # TODO generate the universe (first game default universe at first)
 
     def setup(self):
@@ -25,8 +39,7 @@ class GaiaProject:
     def create_map(self):
         self.map = Universe()
 
-
-    def income(self)
+    def income(self):
         pass
 
     def take_action(self):
@@ -46,7 +59,7 @@ class GaiaProject:
             f"{intro}{mine}{gaia}{upgrade}{federation}{research}{pq}"
             f"{special}{pass_}{free}--> "
         )
-        answer = input(prompt)
+        action = input(prompt)
 
     def mine(self):
         pass
@@ -91,6 +104,6 @@ class GaiaProject:
 
 
 if __name__ == "__main__":
-    new_game = GaiaProject("Hadsch Halla", "Taklons")
+    new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
     print(new_game.map.sector1)
     # new_game.play()  # Start a game by calling this if possible

@@ -480,6 +480,7 @@ class Universe:
 
 
 if __name__ == "__main__":
+    test = Universe()
     test.generate()
 
     # Open the generated map
