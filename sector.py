@@ -180,11 +180,20 @@ class Sector:
             self.rotation = 0
 
     def __str__(self):
-        tiles = []
+        center = [10]
+        inner = [5, 6, 11, 15, 14, 9]
+        outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
+        output = []
 
-        for hex_, type_ in self.hexes.items():
-            tiles.extend([str(hex_), ' ', str(type_), "\n"])
-        return ''.join(tiles)
+        for x in range(1, 20):
+            if x in center:
+                output.append(f"{x}: {str(self.hexes[0][0])}\n")
+            elif x in inner:
+                output.append(f"{x}: {str(self.hexes[1][inner.index(x)])}\n")
+            elif x in outer:
+                output.append(f"{x}: {str(self.hexes[2][outer.index(x)])}\n")
+
+        return ''.join(output)
 
 
 class Universe:
@@ -471,18 +480,7 @@ class Universe:
 
 
 if __name__ == "__main__":
-    test = Universe()
-    print(test.sector3.hexes[1][3])
-    start = test.sector3.hexes[1][3].location
-    startx, starty = start[0], start[1]
-
-    print(test.sector6b.hexes[2][3])
-    target = test.sector6b.hexes[2][3].location
-    targetx, targety = target[0], target[1]
-
-    print(Universe.distance(startx, starty, targetx, targety))
-
-    # test.generate()
+    test.generate()
 
     # Open the generated map
     # os.startfile("2p Default.png")
