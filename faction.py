@@ -1,5 +1,5 @@
 class Faction:
-    """Faction boards"""
+    """Faction board."""
 
     def __init__(self):
         self.home_type = False
@@ -12,19 +12,19 @@ class Faction:
 
         # structures
         self.mine = 8
-        self.mine_income = 1
+        self.mine_income = "ore1"
         self.mine_tiers = [1, 1, 0, 1, 1, 1, 1, 1]
 
         self.trading_center = 4
-        self.trading_center_income = 3
+        self.trading_center_income = "credits3"
         self.trading_center_tiers = [3, 4, 4, 5]
 
         self.science_lab = 3
-        self.science_lab_income = 1
+        self.science_lab_income = "knowledge1"
         self.science_lab_tiers = [1, 1, 1]
 
         self.academy = 2
-        self.academy_tiers = [2, "special qic"]
+        self.academy_tiers = [2, "special qic1"]
 
         self.planetary_institute = 1
 
@@ -44,8 +44,8 @@ class Faction:
             "power3": "ore1",
             "power4": ["qic1", "knowledge1"],
             "knowledge1": "credits1",
-            "qic": ["range2", "ore1"],
-            "ore": ["credits1", "powertoken1"]
+            "qic1": ["range2", "ore1"],
+            "ore1": ["credits1", "powertoken1"]
         }
 
     def planetary_institute_bonus_func(self):

@@ -13,6 +13,7 @@ class Player:
                 hadsch halla,
                 TODO name all factions and possibly move the options elsewhere
         """
+
         self.number = number
         self.faction = select_faction(faction.lower())()
         self.score = 10
@@ -20,6 +21,8 @@ class Player:
         self.advanced_technology = []
         self.booster = False
 
+    def income(self):
+        pass
 
 
 

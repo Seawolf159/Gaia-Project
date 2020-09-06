@@ -1,9 +1,10 @@
-import components
+import random
+
+from technology import StandardTechnology
 
 
 class Level:
-    """One single level on the technology track.
-    """
+    """One single level on the technology track."""
 
     def __init__(self, *, active=False, income=False, direct=False):
         # Like Terraforming cost or Navigation range.
@@ -37,22 +38,22 @@ class Level:
 
 
 class Terraforming:
-    """Technology track for Terraforming.
-    """
+    """Technology track for Terraforming."""
 
     def __init__(self):
+        self.standard = False
         self.level0 = Level(active=3)
         self.level1 = Level(direct=["ore", 2], active=3)
         self.level2 = Level(active=2)
         self.level3 = Level(active=1)
         self.level4 = Level(direct=["ore", 2], active=1)
         self.advanced = False  # TODO insert advanced tile object
-        self.level5 = Level(direct=False, active=1)  # TODO insert federation token
+        self.level5 = Level(direct=False, active=1)  # TODO insert fed token
+                                                     # as direct
 
 
 class Navigation:
-    """Technology track for Navigation.
-    """
+    """Technology track for Navigation."""
 
     def __init__(self):
         self.level0 = Level(active=1)
@@ -81,19 +82,71 @@ class Science:
 
 
 class Research:
-    """Research board.
-
-    Everything that can be found on the research board.
-    """
+    """Research board."""
 
     def __init__(self):
         # Techonlogy tracks.
         self.terraforming = Terraforming()
         self.navigation = Navigation()
+        self.artificial_intelligence = ArtificialIntelligence()
+        self.gaia_project = GaiaProject()
+        self.economy = Economy()
+        self.science = Science()
+
+        # Standard technology tiles
+        self.ore_qic = StandardTechnology(["direct", "ore1", "qic1"])
+        self.knowledge_planet_types = StandardTechnology(["direct",
+                                                          "knowledge1"])
+        self.structures_worth_more = StandardTechnology(["worth4power"])
+        self.vp = StandardTechnology(["direct", "vp7"])
+        self.ore_power = StandardTechnology(["income", "ore1", "power1"])
+        self.knowledge_credit = StandardTechnology(["income", "knowledge1",
+                                                    "credits1"])
+        self.mine_on_gaia = StandardTechnology(["action mine on gaia", "vp3"])
+        self.credits_ = StandardTechnology(["income", "credits4"])
+        self.special_power = StandardTechnology(["special", "power4"])
 
         # Power and QIC actions.
         self.pq_actions = {x: True for x in range(1, 11)}
 
         self.basic_tech = {x: True for x in range(1, 10)}
+
+    def randomise_tech_tiles(self):
+        standard = [
+            self.ore_qic,
+            self.knowledge_planet_types,
+            self.structures_worth_more,
+            self.vp,
+            self.ore_power,
+            self.knowledge_credit,
+            self.mine_on_gaia,
+            self.credits_,
+            self.special_power
+        ]
+
+        advanced = [
+            # adv tech tiles
+        ]
+
+        location = [
+            self.terraforming,
+            self.navigation,
+            self.artificial_intelligence,
+            self.gaia_project,
+            self.economy,
+            self.science
+        ]
+
+        # Randomly assign standard and advanced tiles a position
+        while standard:
+            if len(standard) > 3:
+                tile = standard.pop(random.randrange(len(standard)))
+                adv_tile = "todo"  # TODO
+                location = location.pop(random.randrange(len(standard)))
+                location.standard = tile
+                location.advanced = adv_tile
+            else:
+                tile = standard.pop()
+                tile.location = "free"
 
 

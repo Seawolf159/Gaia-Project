@@ -1,7 +1,6 @@
 from automa import Automa
-from components import Components
 from player import Player
-from sector import Universe
+from universe import Universe
 from research import Research
 
 
@@ -11,10 +10,18 @@ class GaiaProject:
 
     def __init__(self, player1, player2,
                  player3=False, player4=False, automa=False):
+        """Create a new game of GaiaProject
+
+        Args:
+            player1-4 (str): Name of the faction the corresonding player is
+                playing.
         """
-        To create a new game of GaiaProject you need to call it with a list of
-        the faction names in order.
-        """
+
+        self.setup(player1, player2, player3, player4, automa)
+
+    def setup(self, player1, player2,
+              player3=False, player4=False, automa=False):
+        """Setup all the pieces of the game"""
 
         self.player1 = Player(1, player1)
         if automa:
@@ -28,16 +35,26 @@ class GaiaProject:
             self.player4 = Player(4, player4)
 
         self.research_board = Research()
+
+        # Order of setup according to rules
+        # 1. Choose first player (Against the automa, the human goes first).
+        # 2. Let the last player assemble the game board (or just some final
+        #    rotation of tiles) or just do it together.
+        # 3. Randomly place the standard and advanced technology tiles.
+        self.research_board.randomise_tech_tiles()
         
+        # 4. Randomly select one federation token for the terraforming research
+        #    track (Against the automa each type of token only has 2 pieces).
+        
+
+        # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
+        #    scoring board.
+        # 6. Randomly select {amount of players} + 3 booster tiles.
+
         # TODO generate the universe (first game default universe at first)
 
-    def setup(self):
-        """Setup all the pieces of the game"""
-
-        pass
-
-    def create_map(self):
-        self.map = Universe()
+    def create_universe(self):
+        self.universe = Universe()
 
     def income(self):
         pass
@@ -105,5 +122,5 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.map.sector1)
+    print(new_game.universe.sector1)
     # new_game.play()  # Start a game by calling this if possible
