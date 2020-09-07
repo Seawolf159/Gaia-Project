@@ -50,6 +50,7 @@ class Terraforming:
         self.advanced = False  # TODO insert advanced tile object
         self.level5 = Level(direct=False, active=1)  # TODO insert fed token
                                                      # as direct
+        self.federation_token = False
 
 
 class Navigation:
@@ -94,17 +95,15 @@ class Research:
         self.science = Science()
 
         # Standard technology tiles
-        self.ore_qic = StandardTechnology(["direct", "ore1", "qic1"])
-        self.knowledge_planet_types = StandardTechnology(["direct",
-                                                          "knowledge1"])
-        self.structures_worth_more = StandardTechnology(["worth4power"])
-        self.vp = StandardTechnology(["direct", "vp7"])
-        self.ore_power = StandardTechnology(["income", "ore1", "power1"])
-        self.knowledge_credit = StandardTechnology(["income", "knowledge1",
-                                                    "credits1"])
-        self.mine_on_gaia = StandardTechnology(["action mine on gaia", "vp3"])
-        self.credits_ = StandardTechnology(["income", "credits4"])
-        self.special_power = StandardTechnology(["special", "power4"])
+        self.ore_qic = ["direct", "ore1", "qic1"]
+        self.knowledge_planet_types = ["direct", "knowledge1"]
+        self.structures_worth_more = ["worth4power"]
+        self.vp = ["direct", "vp7"]
+        self.ore_power = ["income", "ore1", "power1"]
+        self.knowledge_credit = ["income", "knowledge1", "credits1"]
+        self.mine_on_gaia = ["action mine on gaia", "vp3"]
+        self.credits_ = ["income", "credits4"]
+        self.special_power = ["special", "power4"]
 
         # Power and QIC actions.
         self.pq_actions = {x: True for x in range(1, 11)}
@@ -128,7 +127,7 @@ class Research:
             # adv tech tiles
         ]
 
-        location = [
+        tech_tracks = [
             self.terraforming,
             self.navigation,
             self.artificial_intelligence,
@@ -142,11 +141,13 @@ class Research:
             if len(standard) > 3:
                 tile = standard.pop(random.randrange(len(standard)))
                 adv_tile = "todo"  # TODO
-                location = location.pop(random.randrange(len(standard)))
-                location.standard = tile
-                location.advanced = adv_tile
+                tech_track = (
+                    tech_tracks.pop(random.randrange(len(tech_tracks)))
+                )
+                tech_track.standard = tile
+                tech_track.advanced = adv_tile
             else:
                 tile = standard.pop()
-                tile.location = "free"
+                tile.append("free")
 
 

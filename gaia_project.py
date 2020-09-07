@@ -1,7 +1,10 @@
+import random
+
 from automa import Automa
 from player import Player
-from universe import Universe
 from research import Research
+from scoring import Scoring
+from universe import Universe
 
 
 class GaiaProject:
@@ -16,6 +19,15 @@ class GaiaProject:
             player1-4 (str): Name of the faction the corresonding player is
                 playing.
         """
+
+        self.federation_tokens = {
+            "vp": [3, "vp12", "grey"],
+            "vpqic" : [3, "vp8", "qic1", "green"],
+            "vppowertoken": [3, "vp8, powertoken2", "green"],
+            "vpore": [3, "vp7", "ore2", "green"],
+            "vpcredits": [3, "vp7", "credits6", "green"],
+            "vpknowledge": [3, "vp6", "knowledge2", "green"]
+        }
 
         self.setup(player1, player2, player3, player4, automa)
 
@@ -35,6 +47,7 @@ class GaiaProject:
             self.player4 = Player(4, player4)
 
         self.research_board = Research()
+        self.scoring_board = Scoring()
 
         # Order of setup according to rules
         # 1. Choose first player (Against the automa, the human goes first).
@@ -42,13 +55,18 @@ class GaiaProject:
         #    rotation of tiles) or just do it together.
         # 3. Randomly place the standard and advanced technology tiles.
         self.research_board.randomise_tech_tiles()
-        
+
         # 4. Randomly select one federation token for the terraforming research
         #    track (Against the automa each type of token only has 2 pieces).
-        
+        terraforming_token = random.choice(list(self.federation_tokens.keys()))
+        self.research_board.terraforming.federation_token = (
+            self.federation_tokens[terraforming_token][1:]
+        )
+        self.federation_tokens[terraforming_token][0] -= 1
 
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
+        
         # 6. Randomly select {amount of players} + 3 booster tiles.
 
         # TODO generate the universe (first game default universe at first)
@@ -122,5 +140,9 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.universe.sector1)
+    print(new_game.research_board.terraforming.standard)
+    print(new_game.research_board.terraforming.federation_token)
+    print(new_game.federation_tokens)
+
+
     # new_game.play()  # Start a game by calling this if possible
