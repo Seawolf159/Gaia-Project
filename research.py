@@ -1,6 +1,6 @@
 import random
 
-from technology import StandardTechnology
+from technology import StandardTechnology, AdvancedTechnology
 
 
 class Level:
@@ -95,15 +95,8 @@ class Research:
         self.science = Science()
 
         # Standard technology tiles
-        self.ore_qic = ["direct", "ore1", "qic1"]
-        self.knowledge_planet_types = ["direct", "knowledge1"]
-        self.structures_worth_more = ["worth4power"]
-        self.vp = ["direct", "vp7"]
-        self.ore_power = ["income", "ore1", "power1"]
-        self.knowledge_credit = ["income", "knowledge1", "credits1"]
-        self.mine_on_gaia = ["action mine on gaia", "vp3"]
-        self.credits_ = ["income", "credits4"]
-        self.special_power = ["special", "power4"]
+        self.free_standard_technology = []
+
 
         # Power and QIC actions.
         self.pq_actions = {x: True for x in range(1, 11)}
@@ -112,19 +105,33 @@ class Research:
 
     def randomise_tech_tiles(self):
         standard = [
-            self.ore_qic,
-            self.knowledge_planet_types,
-            self.structures_worth_more,
-            self.vp,
-            self.ore_power,
-            self.knowledge_credit,
-            self.mine_on_gaia,
-            self.credits_,
-            self.special_power
+            StandardTechnology("direct", ["ore1", "qic1"]),
+            StandardTechnology("direct", "knowledge1"),
+            StandardTechnology("worth4power", False),
+            StandardTechnology("direct", "vp7"),
+            StandardTechnology("income", ["ore1", "power1"]),
+            StandardTechnology("income", ["knowledge1", "credits1"]),
+            StandardTechnology("action mine on gaia", "vp3"),
+            StandardTechnology("income", ["credits4"]),
+            StandardTechnology("special", "power4")
         ]
 
         advanced = [
-            # adv tech tiles
+            AdvancedTechnology("pass", "federationtokens", "vp3"),
+            AdvancedTechnology("live", "research", ["vp2"]),
+            AdvancedTechnology(special=True, reward=["qic1", "credits5"]),
+            AdvancedTechnology("direct", "mine", "vp2"),
+            AdvancedTechnology("pass", "researchlab", "vp3"),
+            AdvancedTechnology("direct", "sectors", "ore1"),
+            AdvancedTechnology("pass", "different_planets", "vp1"),
+            AdvancedTechnology("direct", "gaiaplanet", "vp2"),
+            AdvancedTechnology("direct", "trade", "vp4"),
+            AdvancedTechnology("direct", "sectors", "vp2"),
+            AdvancedTechnology(special=True, reward="ore1"),
+            AdvancedTechnology("direct", "federationtokens", "vp5"),
+            AdvancedTechnology(special=True, reward="knowledge3"),
+            AdvancedTechnology("live", "mine", "vp3"),
+            AdvancedTechnology("live", "trade", "vp3"),
         ]
 
         tech_tracks = [
@@ -136,11 +143,11 @@ class Research:
             self.science
         ]
 
-        # Randomly assign standard and advanced tiles a position
+        # Randomly assign standard and advanced tiles a location
         while standard:
             if len(standard) > 3:
                 tile = standard.pop(random.randrange(len(standard)))
-                adv_tile = "todo"  # TODO
+                adv_tile = advanced.pop(random.randrange(len(advanced)))
                 tech_track = (
                     tech_tracks.pop(random.randrange(len(tech_tracks)))
                 )
@@ -148,6 +155,4 @@ class Research:
                 tech_track.advanced = adv_tile
             else:
                 tile = standard.pop()
-                tile.append("free")
-
-
+                self.free_standard_technology.append(tile)

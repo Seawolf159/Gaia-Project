@@ -1,3 +1,9 @@
+"""
+TODO instantiate even the unused tech tiles, boosters etc..???
+
+"""
+
+
 import random
 
 from automa import Automa
@@ -66,8 +72,20 @@ class GaiaProject:
 
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
-        
+        self.scoring_board.randomise_scoring()
+
         # 6. Randomly select {amount of players} + 3 booster tiles.
+        player_count = 0
+        if player1:
+            player_count += 1
+        if player2:
+            player_count += 1
+        if player3:
+            player_count += 1
+        if player4:
+            player_count += 1
+
+        self.scoring_board.randomise_boosters(player_count)
 
         # TODO generate the universe (first game default universe at first)
 
@@ -140,9 +158,8 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.research_board.terraforming.standard)
-    print(new_game.research_board.terraforming.federation_token)
-    print(new_game.federation_tokens)
+    print(new_game.research_board.terraforming.advanced)
+    print(new_game.research_board.navigation.advanced)
 
 
     # new_game.play()  # Start a game by calling this if possible

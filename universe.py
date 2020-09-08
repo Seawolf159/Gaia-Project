@@ -14,7 +14,7 @@ class Space:
         self.location = location
         self.sattelites = set()
 
-    def __repr__(self):
+    def __str__(self):
         return "x"
 
 
@@ -29,7 +29,7 @@ class Planet:
         self.structure = False
         self.federation = False
 
-    def __repr__(self):
+    def __str__(self):
         return self.type
 
 
