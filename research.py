@@ -6,14 +6,12 @@ from technology import StandardTechnology, AdvancedTechnology
 class Level:
     """One single level on the technology track."""
 
-    def __init__(self, *, active=False, income=False, direct=False):
+    def __init__(self, active=False, when=False, reward=False):
         # Like Terraforming cost or Navigation range.
         self.active = active
 
-        self.income = income
-
-        # Anything gained directly when reaching level.
-        self.direct = False
+        self.when = when
+        self.reward = reward
 
         # Players on level.
         self.players = set()
@@ -24,17 +22,22 @@ class Level:
         else:
             active = ""
 
-        if self.income:
-            income = f"Your income is {self.income} "
+        if self.when:
+            if self.when == "income":
+                reward_type = "income"
+            else:
+                reward_type = "direct bonus"
+
+            when = f"Your {reward_type} is {self.reward} "
         else:
-            income = ""
+            when = ""
 
         if self.players:
             players = ' | '.join(self.players)
         else:
             players = "No players on here"
 
-        return f"{active}{income}{players}"
+        return f"{active}{when}{players}"
 
 
 class Terraforming:
@@ -42,44 +45,72 @@ class Terraforming:
 
     def __init__(self):
         self.standard = False
-        self.level0 = Level(active=3)
-        self.level1 = Level(direct=["ore", 2], active=3)
-        self.level2 = Level(active=2)
-        self.level3 = Level(active=1)
-        self.level4 = Level(direct=["ore", 2], active=1)
-        self.advanced = False  # TODO insert advanced tile object
-        self.level5 = Level(direct=False, active=1)  # TODO insert fed token
+        self.level0 = Level(3)
+        self.level1 = Level(3, "direct", "ore2" )
+        self.level2 = Level(2)
+        self.level3 = Level(1)
+        self.level4 = Level(1, "direct", "ore2" )
+        self.advanced = False
+        self.level5 = Level(1, "direct")  # TODO insert fed token
                                                      # as direct
-        self.federation_token = False
 
 
 class Navigation:
     """Technology track for Navigation."""
 
     def __init__(self):
-        self.level0 = Level(active=1)
-        self.level1 = Level(direct=["qic", 1], active=1)
-        self.level2 = Level(active=2)
-        self.level3 = Level(direct=["qic", 1], active=2)
-        self.level4 = Level(active=3)
-        self.advanced = "Advanced tile"  # TODO insert advanced tile object
-        self.level5 = Level(direct="Lost Planet", active=5)  # TODO insert Lost planet object
+        self.level0 = Level(1)
+        self.level1 = Level(1, "direct", "qic1")
+        self.level2 = Level(2)
+        self.level3 = Level(2, "direct", "qic1")
+        self.level4 = Level(3)
+        self.advanced = False
+        self.level5 = Level(4, "direct", "Lost Planet")  # TODO insert
+                                                         # Lost planet object
 
 
 class ArtificialIntelligence:
-    pass
+    def __init__(self):
+        self.level0 = Level()
+        self.level1 = Level(False, "direct", "qic1")
+        self.level2 = Level(False, "direct", "qic1")
+        self.level3 = Level(False, "direct", "qic2")
+        self.level4 = Level(False, "direct", "qic2")
+        self.advanced = False
+        self.level5 = Level(False, "direct", "qic4")
 
 
 class GaiaProject:
-    pass
+    def __init__(self):
+        self.level0 = Level()
+        self.level1 = Level(6, "direct", "gaiaformer")
+        self.level2 = Level(6, "direct", "powertoken3")
+        self.level3 = Level(4, "direct", "gaiaformer")
+        self.level4 = Level(3, "direct", "gaiaformer")
+        self.advanced = False
+        self.level5 = Level(3, "direct", ["vp4", "gaiaplanet1"])
 
 
 class Economy:
-    pass
+    def __init__(self):
+        self.level0 = Level()
+        self.level1 = Level(False, "income", ["credits2", "power1"])
+        self.level2 = Level(False, "income", ["ore1", "credits2", "power2"])
+        self.level3 = Level(False, "income", ["ore1", "credits3", "power3"])
+        self.level4 = Level(False, "income", ["ore2", "credits4", "power4"])
+        self.advanced = False
+        self.level5 = Level("False", "direct", ["ore3", "credits6", "power6"])
 
 
 class Science:
-    pass
+    def __init__(self):
+        self.level0 = Level()
+        self.level1 = Level(False, "income", "knowledge1")
+        self.level2 = Level(False, "income", "knowledge2")
+        self.level3 = Level(False, "income", "knowledge3")
+        self.level4 = Level(False, "income", "knowledge4")
+        self.advanced = False
+        self.level5 = Level(False, "direct", "knowledge9")
 
 
 class Research:
@@ -96,7 +127,6 @@ class Research:
 
         # Standard technology tiles
         self.free_standard_technology = []
-
 
         # Power and QIC actions.
         self.pq_actions = {x: True for x in range(1, 11)}
@@ -156,3 +186,6 @@ class Research:
             else:
                 tile = standard.pop()
                 self.free_standard_technology.append(tile)
+
+    def __str__(self):
+        pass
