@@ -59,13 +59,15 @@ class GaiaProject:
         # 1. Choose first player (Against the automa, the human goes first).
         # 2. Let the last player assemble the game board (or just some final
         #    rotation of tiles) or just do it together.
+        self.create_universe()
+
         # 3. Randomly place the standard and advanced technology tiles.
         self.research_board.randomise_tech_tiles()
 
         # 4. Randomly select one federation token for the terraforming research
         #    track (Against the automa each type of token only has 2 pieces).
         terraforming_token = random.choice(list(self.federation_tokens.keys()))
-        self.research_board.terraforming.federation_token = (
+        self.research_board.terraforming.level5.reward = (
             self.federation_tokens[terraforming_token][1:]
         )
         self.federation_tokens[terraforming_token][0] -= 1
@@ -92,7 +94,16 @@ class GaiaProject:
     def create_universe(self):
         self.universe = Universe()
 
-    def income(self):
+    def update_board(self):
+        pass
+
+    def income_phase(self):
+        pass
+
+    def gaia_phase(self):
+        pass
+
+    def action_phase(self):
         pass
 
     def take_action(self):
@@ -153,13 +164,16 @@ class GaiaProject:
         # TODO generate the board and show some sort of summary of the current
         # board?
 
-        pass
+        print("You can currently only play against the Taklons automa as"
+              "the Hadsch Halla")
+        self.update_board()
 
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.research_board.terraforming.advanced)
-    print(new_game.research_board.navigation.advanced)
+    print(new_game.research_board)
+    # print(new_game.research_board.terraforming.advanced)
+    # print(new_game.research_board.navigation.advanced)
 
 
     # new_game.play()  # Start a game by calling this if possible

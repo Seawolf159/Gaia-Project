@@ -51,8 +51,13 @@ class Terraforming:
         self.level3 = Level(1)
         self.level4 = Level(1, "direct", "ore2" )
         self.advanced = False
-        self.level5 = Level(1, "direct")  # TODO insert fed token
-                                                     # as direct
+        self.level5 = Level(1, "direct")
+
+    def __str__(self):
+        return (
+            f"Terraforming:\n{self.advanced}\nFederation token:\n"
+            f"{self.level5.reward}\n"
+        )
 
 
 class Navigation:
@@ -68,6 +73,8 @@ class Navigation:
         self.level5 = Level(4, "direct", "Lost Planet")  # TODO insert
                                                          # Lost planet object
 
+    def __str__(self):
+        return f"Navigation:\n{self.advanced}\n"
 
 class ArtificialIntelligence:
     def __init__(self):
@@ -79,6 +86,8 @@ class ArtificialIntelligence:
         self.advanced = False
         self.level5 = Level(False, "direct", "qic4")
 
+    def __str__(self):
+        return f"Terraforming:\n{self.advanced}\n"
 
 class GaiaProject:
     def __init__(self):
@@ -90,6 +99,8 @@ class GaiaProject:
         self.advanced = False
         self.level5 = Level(3, "direct", ["vp4", "gaiaplanet1"])
 
+    def __str__(self):
+        return f"GaiaProject:\n{self.advanced}\n"
 
 class Economy:
     def __init__(self):
@@ -101,6 +112,8 @@ class Economy:
         self.advanced = False
         self.level5 = Level("False", "direct", ["ore3", "credits6", "power6"])
 
+    def __str__(self):
+        return f"Economy:\n{self.advanced}\n"
 
 class Science:
     def __init__(self):
@@ -112,6 +125,8 @@ class Science:
         self.advanced = False
         self.level5 = Level(False, "direct", "knowledge9")
 
+    def __str__(self):
+        return f"Science:\n{self.advanced}\n"
 
 class Research:
     """Research board."""
@@ -149,7 +164,7 @@ class Research:
         advanced = [
             AdvancedTechnology("pass", "federationtokens", "vp3"),
             AdvancedTechnology("live", "research", ["vp2"]),
-            AdvancedTechnology(special=True, reward=["qic1", "credits5"]),
+            AdvancedTechnology("special", reward=["qic1", "credits5"]),
             AdvancedTechnology("direct", "mine", "vp2"),
             AdvancedTechnology("pass", "researchlab", "vp3"),
             AdvancedTechnology("direct", "sectors", "ore1"),
@@ -157,9 +172,9 @@ class Research:
             AdvancedTechnology("direct", "gaiaplanet", "vp2"),
             AdvancedTechnology("direct", "trade", "vp4"),
             AdvancedTechnology("direct", "sectors", "vp2"),
-            AdvancedTechnology(special=True, reward="ore1"),
+            AdvancedTechnology("special", reward="ore3"),
             AdvancedTechnology("direct", "federationtokens", "vp5"),
-            AdvancedTechnology(special=True, reward="knowledge3"),
+            AdvancedTechnology("special", reward="knowledge3"),
             AdvancedTechnology("live", "mine", "vp3"),
             AdvancedTechnology("live", "trade", "vp3"),
         ]
@@ -188,4 +203,20 @@ class Research:
                 self.free_standard_technology.append(tile)
 
     def __str__(self):
-        pass
+        tracks =  [
+            self.terraforming,
+            self.navigation,
+            self.artificial_intelligence,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        return (
+            f"{str(self.terraforming)}\n"
+            f"{str(self.navigation)}\n"
+            f"{str(self.artificial_intelligence)}\n"
+            f"{str(self.gaia_project)}\n"
+            f"{str(self.economy)}\n"
+            f"{str(self.science)}"
+        )
