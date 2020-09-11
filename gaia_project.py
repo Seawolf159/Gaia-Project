@@ -111,9 +111,9 @@ class GaiaProject:
 
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
-            player.first_mine("first")
+            first_mine = player.initial_mines("first")  # returns a sector num.
         for player in reversed(self.players):
-            player.first_mine("second")
+            second_mine = player.initial_mines("second")  # Same as above
 
         # Choose booster (start with last player and going counter-clockwise):
 

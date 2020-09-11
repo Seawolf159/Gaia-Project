@@ -68,15 +68,46 @@ class Player:
         else:
             action()
 
-    def first_mine(self, count):
+    def initial_mines(self, count):
         faction_name: f"{self.faction.name}:\n"
         question = "Where whould you like to place your {count} mine?"
 
-        # TODO make placement function. Choose placement system. Example:
-        # say sector number followed by planet colour etc. Or something else?
+        while choosing_sector:
+            sector = (
+                "Please type the number of the sector your planet "
+                "choice is in.\n--> "
+            )
+            sector_choice = input(sector)
+
+            if sector_choice not in ["1", "2", "3", "4", "5", "6", "7"]:
+                continue
+            else:
+                return sector_choice
 
     def mine(self):
         pass
+
+    def choose_tile(self):
+        # more players TODO only for 2p right now
+        while choosing_sector:
+            sector = (
+                "Please type the number of the sector your planet "
+                "choice is in.\n--> "
+            )
+            sector_choice = input(sector)
+
+            if sector_choice not in ["1", "2", "3", "4", "5", "6", "7"]:
+                continue
+            else:
+                break
+
+        while True:
+            planet = "Please type the chosen planet type.\n--> "
+            planet_choice = input(planet)
+            if planet_choice not in
+
+
+
 
     def gaia(self):
         pass
