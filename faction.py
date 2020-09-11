@@ -2,6 +2,7 @@ class Faction:
     """Faction board."""
 
     def __init__(self):
+        self.name = False
         self.home_type = False
 
         # resources
@@ -58,6 +59,7 @@ class HadschHalla(Faction):
     def __init__(self):
         Faction.__init__(self)
 
+        self.name = "Hadsch Halla"
         self.home_type = "oxide"
 
         # resources

@@ -11,11 +11,13 @@ class Space:
     """
 
     def __init__(self, location):
-        self.location = location
+        self.location = location  # (x, y)
+
+        # Home world of each player that has a sattelite here.
         self.sattelites = set()
 
     def __str__(self):
-        return "x"
+        return f"X: {self.location[0]} Y:{self.location[1]}: x"
 
 
 class Planet:
@@ -23,14 +25,14 @@ class Planet:
     """
 
     def __init__(self, type_, location):
-        self.type = type_
-        self.location = location
-        self.owner = False
-        self.structure = False
-        self.federation = False
+        self.type = type_  # Oxide, desert, gaia, trans-dim etc.
+        self.location = location  # (x, y)
+        self.owner = False  # Home world of owner
+        self.structure = False  # Type of building built
+        self.federation = False  # Part of federation? True or False
 
     def __str__(self):
-        return self.type
+        return f"X: {self.location[0]} Y:{self.location[1]}: {self.type}"
 
 
 class Sector:

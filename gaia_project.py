@@ -3,7 +3,6 @@ TODO instantiate even the unused tech tiles, boosters etc..???
 
 """
 
-
 import random
 
 from automa import Automa
@@ -39,23 +38,40 @@ class GaiaProject:
 
     def setup(self, player1, player2,
               player3=False, player4=False, automa=False):
-        """Setup all the pieces of the game"""
+        """Setup all the pieces of the game
 
-        self.player1 = Player(1, player1)
+        Args:
+            player1-4 (str): Name of the faction the corresonding player is
+                playing.
+        """
+
+        # A list with all the player objects
+        self.players = []
+        self.player_turn = 1
+        self.round = 1
+
+        self.player1 = Player(player1)
+        self.players.append(self.player1)
         if automa:
-            self.player2 = Automa(2, player2)
+            self.player2 = Automa(player2)
+            self.players.append(self.player2)
         else:
-            self.player2 = Player(2, player2)
+            self.player2 = Player(player2)
+            self.players.append(self.player2)
 
         if player3:
-            self.player3 = Player(3, player3)
+            self.player3 = Player(player3)
+            self.players.append(self.player3)
         if player4:
-            self.player4 = Player(4, player4)
+            self.player4 = Player(player4)
+            self.players.append(self.player4)
+
+        self.change_turn()
 
         self.research_board = Research()
         self.scoring_board = Scoring()
 
-        # Order of setup according to rules
+        # Order of setup according to rules:
         # 1. Choose first player (Against the automa, the human goes first).
         # 2. Let the last player assemble the game board (or just some final
         #    rotation of tiles) or just do it together.
@@ -89,6 +105,19 @@ class GaiaProject:
 
         self.scoring_board.randomise_boosters(player_count)
 
+        # Start of the game:
+        # Choose faction (start with first player and going clockwise):
+        # TODO Let player choose faction after seeing setup?
+
+        # Place first structures (start with first player and going clockwise):
+        for player in self.players:
+            player.first_mine("first")
+        for player in reversed(self.players):
+            player.first_mine("second")
+
+        # Choose booster (start with last player and going counter-clockwise):
+
+
         # TODO generate the universe (first game default universe at first)
 
     def create_universe(self):
@@ -106,57 +135,11 @@ class GaiaProject:
     def action_phase(self):
         pass
 
-    def take_action(self):
-        intro = ("What action do you want to take?\n"
-                 "Type the number of your action.\n")
-        mine = "1. Build a mine.\n"
-        gaia = "2. Start a gaia project.\n"
-        upgrade = "3. Upgrade existing structure.\n"
-        federation = "4. Form a federation.\n"
-        research = "5. Research.\n"
-        pq = "6. Power or Q.I.C. (Purple/Green).\n"
-        special = "7. Special (Orange).\n"
-        pass_ = "8. Pass.\n"
-        free = "9. Exchange power for resources .\n"
-
-        prompt = (
-            f"{intro}{mine}{gaia}{upgrade}{federation}{research}{pq}"
-            f"{special}{pass_}{free}--> "
-        )
-        action = input(prompt)
-
-    def mine(self):
-        pass
-
-    def gaia(self):
-        pass
-
-    def upgrade(self):
-        pass
-
-    def federation(self):
-        pass
-
-    def research(self):
-        pass
-
-    def pq(self):
-        pass
-
-    def special(self):
-        pass
-
-    def pass_(self):
-        pass
-
-    def free(self):
-        pass
-
     def change_phase(self):
         pass
 
     def change_turn(self):
-        pass
+        self.current_player = self.players[self.player_turn]
 
     def play(self):
         """This function will setup and allow you to start playing a game.
@@ -166,7 +149,21 @@ class GaiaProject:
 
         print("You can currently only play against the Taklons automa as"
               "the Hadsch Halla")
-        self.update_board()
+        playing = True
+        while playing:
+            # During 6 rounds, cycle through the 6 phases of the game.
+            # 1. Income phase followed by Gaia phase.
+            for player in self.players:
+                player.income()
+                player.gaia_phase()
+
+            # 3. Action phase
+
+
+            # 4. Clean up phase
+
+
+        # self.update_board()
 
 
 if __name__ == "__main__":
