@@ -105,5 +105,5 @@ class Player:
 
 
 if __name__ == "__main__":
-    test = Player(1, "hadsch halla")
+    test = Player("hadsch halla")
     print(test.faction.home_type)
