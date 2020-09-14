@@ -112,6 +112,7 @@ class Player:
             pass
         if sector == "7" and ptype == "trans-dim":
             pass
+
         # skip center as it's always empty
         for circle in eval(f"self.universe.sector{sector}.hexes[1:]"):
             for hex_ in circle:
@@ -129,8 +130,8 @@ class Player:
         while True:
             while True:
                 sector = (
-                    "Please type the number of the sector your planet "
-                    "choice is in.\n--> "
+                    "\nPlease type the number of the sector your chosen planet "
+                    "is in.\n--> "
                 )
                 sector_choice = input(sector).lower()
 
