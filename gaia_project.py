@@ -23,6 +23,7 @@ class GaiaProject:
         Args:
             player1-4 (str): Name of the faction the corresonding player is
                 playing.
+            automa (bool): Wether or not you are playing against the automa.
         """
 
         self.federation_tokens = {
@@ -107,13 +108,16 @@ class GaiaProject:
 
         # Start of the game:
         # Choose faction (start with first player and going clockwise):
-        # TODO Let player choose faction after seeing setup?
+        # TODO Let player choose faction after seeing setup
 
         # Place first structures (start with first player and going clockwise):
+        # Also give the players the universe object to be able to build mines
+        # and stuff.
         for player in self.players:
-            first_mine = player.initial_mines("first")  # returns a sector num.
+            player.universe = self.universe
+            player.start_mines("first")
         for player in reversed(self.players):
-            second_mine = player.initial_mines("second")  # Same as above
+            player.start_mines("second")
 
         # Choose booster (start with last player and going counter-clockwise):
 
@@ -142,8 +146,8 @@ class GaiaProject:
         self.current_player = self.players[self.player_turn]
 
     def play(self):
-        """This function will setup and allow you to start playing a game.
-        """
+        """This function will setup and allow you to start playing a game."""
+
         # TODO generate the board and show some sort of summary of the current
         # board?
 
@@ -168,9 +172,9 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.research_board)
-    # print(new_game.research_board.terraforming.advanced)
-    # print(new_game.research_board.navigation.advanced)
+    print(new_game.universe.sector4)
+    print(new_game.universe.sector5)
+
 
 
     # new_game.play()  # Start a game by calling this if possible

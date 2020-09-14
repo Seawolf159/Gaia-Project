@@ -11,7 +11,7 @@ class Automa:
 
         self.booster = False
 
-    def income(self):
+    def start_mines(self, count):
         pass
 
     def mine(self):

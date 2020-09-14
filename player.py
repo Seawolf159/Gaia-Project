@@ -1,3 +1,4 @@
+import constants as C
 from faction import select_faction
 
 
@@ -27,7 +28,7 @@ class Player:
         pass
 
     def action_phase(self):
-        faction_name: f"{self.faction.name}:\n"
+        faction_name: f"\n{self.faction.name}:\n"
         intro = ("What action do you want to take?\n"
                  "Type the number of your action.\n")
         mine = "1. Build a mine.\n"
@@ -41,15 +42,15 @@ class Player:
         free = "9. Exchange power for resources .\n"
 
         options = {
-            "1": mine,
-            "2": gaia,
-            "3": upgrade,
-            "4": federation,
-            "5": research,
-            "6": pq,
-            "7": special,
-            "8": pass_,
-            "9": free
+            "1": self.mine,
+            "2": self.gaia,
+            "3": self.upgrade,
+            "4": self.federation,
+            "5": self.research,
+            "6": self.pq,
+            "7": self.special,
+            "8": self.pass_,
+            "9": self.free
         }
 
         prompt = (
@@ -64,47 +65,103 @@ class Player:
             if action in options.keys():
                 picking_action = False
             else:
-                print("Please type the action's corresponding number.")
+                print("\nPlease type the action's corresponding number.",
+                      end="")
         else:
             action()
 
-    def initial_mines(self, count):
-        faction_name: f"{self.faction.name}:\n"
-        question = "Where whould you like to place your {count} mine?"
+    def start_mines(self, count):
+        faction_name = f"\n{self.faction.name}:\n"
+        question = (
+            f"Where whould you like to place your {count.upper()} "
+            "mine?"
+        )
+        print(f"{faction_name}{question}", end="")
 
-        while choosing_sector:
+        while True:
             sector = (
-                "Please type the number of the sector your planet "
-                "choice is in.\n--> "
+                "\nPlease type the number of the sector your chosen planet "
+                "is in.\n--> "
             )
             sector_choice = input(sector)
 
-            if sector_choice not in ["1", "2", "3", "4", "5", "6", "7"]:
-                continue
+            if sector_choice in C.SECTORS_2P:
+                planet = self.locate_planet(sector_choice,
+                                            self.faction.home_type.lower())
+                if planet:
+                    planet.owner = self.faction.home_type
+                    planet.structure = "mine"
+                    return
+                else:
+                    print(
+                        f"\nYour home world ({self.faction.home_type}) doesn't"
+                        " exist inside this sector!", end=""
+                    )
             else:
-                return sector_choice
+                print("\nPlease only type 1-7", end="")
+
+    def locate_planet(self, sector, ptype):
+        """Looking for a planet.
+
+        Args:
+            sector (str): Number of the sector where you want to find a planet.
+            ptype (str): Specific type of planet that your are looking for.
+        """
+
+        if sector == "6" and ptype == "gaia":
+            pass
+        if sector == "7" and ptype == "trans-dim":
+            pass
+        # skip center as it's always empty
+        for circle in eval(f"self.universe.sector{sector}.hexes[1:]"):
+            for hex_ in circle:
+                if hasattr(hex_, "type"):
+                    if hex_.type.lower() == self.faction.home_type.lower():
+                        return hex_
+        else:
+            return False
 
     def mine(self):
         pass
 
     def choose_tile(self):
         # more players TODO only for 2p right now
-        while choosing_sector:
-            sector = (
-                "Please type the number of the sector your planet "
-                "choice is in.\n--> "
-            )
-            sector_choice = input(sector)
-
-            if sector_choice not in ["1", "2", "3", "4", "5", "6", "7"]:
-                continue
-            else:
-                break
-
         while True:
-            planet = "Please type the chosen planet type.\n--> "
-            planet_choice = input(planet)
-            if planet_choice not in
+            while True:
+                sector = (
+                    "Please type the number of the sector your planet "
+                    "choice is in.\n--> "
+                )
+                sector_choice = input(sector).lower()
+
+                if sector_choice in C.SECTORS_2P:
+                    break
+
+            while True:
+                planet = "Please type the chosen planet type or colour.\n--> "
+                planet_choice = input(planet).lower()
+                if planet_choice in C.PLANETS:
+                    # TODO do something
+                    pass
+                    # if (
+                    #     sector_choice == "6"
+                    #     and planet_choice == "trans-dim"
+                    # ):
+                    #     while True:
+                    #         specify = (
+                    #             "Please specify wich trans-dimensional planet you "
+                    #             "would like to choose. Type n for north and s for "
+                    #             "south. The sector arrow points north!"
+                    #         )
+                    #         specification = input(f"{specify}\n--> ")
+
+                    #         if specification in ["n", "s"]:
+                    #             break
+
+
+                    #     else:
+                    #         break
+
 
 
 

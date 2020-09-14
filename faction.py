@@ -60,7 +60,7 @@ class HadschHalla(Faction):
         Faction.__init__(self)
 
         self.name = "Hadsch Halla"
-        self.home_type = "oxide"
+        self.home_type = "Oxide"
 
         # resources
         self.credits = 15

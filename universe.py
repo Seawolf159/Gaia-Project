@@ -25,14 +25,20 @@ class Planet:
     """
 
     def __init__(self, type_, location):
-        self.type = type_  # Oxide, desert, gaia, trans-dim etc.
+        self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
         self.location = location  # (x, y)
         self.owner = False  # Home world of owner
         self.structure = False  # Type of building built
         self.federation = False  # Part of federation? True or False
 
     def __str__(self):
-        return f"X: {self.location[0]} Y:{self.location[1]}: {self.type}"
+        return (
+            f"X: {self.location[0]} Y:{self.location[1]}\n"
+            f"Type: {self.type}\n"
+            f"Owner: {self.owner}\n"
+            f"Structure: {self.structure}\n"
+            f"Federation: {self.federation}"
+        )
 
 
 class Sector:
@@ -71,8 +77,7 @@ class Sector:
             hexes (dict): Hex number: planet type.
             img (path): Absolute path to the image file.
             universe_grid (list): Location of planets and spaces in the sector.
-            rotation (int): Rotated amount.
-                Can be 1-5.
+            rotation (int): Rotated amount. Can be 1-5.
         """
 
         self.hexes = [[hexes.get(10, Space(location=universe_grid[0][0]))]]
@@ -123,8 +128,8 @@ class Sector:
         self.hexes.append(self.inner)
         self.hexes.append(self.outer)
 
-    def rotate_sector_once(self):
-        """Rotating a sector"""
+    def rotate_sector(self, x=1):
+        """Rotating a sector x times."""
 
         #      1     2     3
 
@@ -169,17 +174,18 @@ class Sector:
 
         #       19    16    12
 
-        self.hexes[1] = self.hexes[1][-1:] + self.hexes[1][:-1]
-        self.hexes[2] = self.hexes[2][-2:] + self.hexes[2][:-2]
+        for _ in range(x):
+            self.hexes[1] = self.hexes[1][-1:] + self.hexes[1][:-1]
+            self.hexes[2] = self.hexes[2][-2:] + self.hexes[2][:-2]
 
-        self.universe_grid[1] = (self.universe_grid[1][-1:]
-                               + self.universe_grid[1][:-1])
-        self.universe_grid[2] = (self.universe_grid[2][-2:]
-                               + self.universe_grid[2][:-2])
+            self.universe_grid[1] = (self.universe_grid[1][-1:]
+                                + self.universe_grid[1][:-1])
+            self.universe_grid[2] = (self.universe_grid[2][-2:]
+                                + self.universe_grid[2][:-2])
 
-        self.rotation += 1
-        if self.rotation == 6:
-            self.rotation = 0
+            self.rotation += 1
+            if self.rotation == 6:
+                self.rotation = 0
 
     def __str__(self):
         center = [10]
@@ -286,7 +292,7 @@ class Universe:
             18: "Volcanic"
         },
             img = os.path.join(IMAGES, "sector1"),
-            universe_grid = eval(f"self.{sector1[0]}"),
+            universe_grid=eval(f"self.{sector1[0]}"),
             rotation = sector1[1]
         )
 
@@ -333,7 +339,10 @@ class Universe:
             rotation=sector4[1]
         )
 
-        self.sector5b = Sector(
+        # CAREFUL THESE ARE THE BACK SIDE!! Possible solution something like
+        # this:
+        # if 2p or something:
+        self.sector5 = Sector(
             hexes={
             3: "Ice",
             5: "Gaia",
@@ -346,7 +355,22 @@ class Universe:
             rotation=sector5[1]
         )
 
-        self.sector6b = Sector(
+        # else:
+        # self.sector5 = Sector(
+        #     hexes={
+        #     3: "Ice",
+        #     5: "Gaia",
+        #     12: "Trans-dim",
+        #     13: "Volcanic",
+        #     16: "Oxide"
+        # },
+        #     img=os.path.join(IMAGES, "sector5"),
+        #     universe_grid=eval(f"self.{sector5[0]}"),
+        #     rotation=sector5[1]
+        # )
+
+        # CAREFUL THESE ARE THE BACK SIDE!!
+        self.sector6 = Sector(
             hexes={
             7: "Trans-dim",
             11: "Terra",
@@ -359,7 +383,9 @@ class Universe:
             rotation=sector6[1]
         )
 
-        self.sector7b = Sector(
+
+        # CAREFUL THESE ARE THE BACK SIDE!!
+        self.sector7 = Sector(
             hexes={
             1: "Trans-dim",
             6: "Gaia",
@@ -373,7 +399,7 @@ class Universe:
         )
 
     def generate(self):
-        self.universe = "2pdefault"
+        self.universe = "default_2p"
 
         default_2p = {
             1: (1632, 1769),  # Center
@@ -401,13 +427,13 @@ class Universe:
         map_.paste(self.sector1.img, (1837, 0), self.sector1.img)
 
         # North East (3265, 1060)
-        map_.paste(self.sector5b.img, (3265, 1060), self.sector5b.img)
+        map_.paste(self.sector5.img, (3265, 1060), self.sector5.img)
 
         # South East (3060, 2829)
-        map_.paste(self.sector6b.img, (3060, 2829), self.sector6b.img)
+        map_.paste(self.sector6.img, (3060, 2829), self.sector6.img)
 
         # South (1427, 3539)
-        map_.paste(self.sector7b.img, (1427, 3539), self.sector7b.img)
+        map_.paste(self.sector7.img, (1427, 3539), self.sector7.img)
 
         # South West (0, 2478)
         map_.paste(self.sector4.img, (0, 2478), self.sector4.img)
@@ -483,7 +509,4 @@ class Universe:
 
 if __name__ == "__main__":
     test = Universe()
-    test.generate()
-
-    # Open the generated map
-    # os.startfile("2p Default.png")
+    print(test.sector1)
