@@ -506,6 +506,28 @@ class Universe:
         else:
             return distance
 
+    def locate_planet(self, sector, ptype, faction):
+        """Looking for a planet.
+
+        Args:
+            sector (str): Number of the sector where you want to find a planet.
+            ptype (str): Specific type of planet that your are looking for.
+        """
+
+        if sector == "6" and ptype == "gaia":
+            pass
+        if sector == "7" and ptype == "trans-dim":
+            pass
+
+        # skip center as it's always empty
+        for circle in eval(f"self.universe.sector{sector}.hexes[1:]"):
+            for hex_ in circle:
+                if hasattr(hex_, "type"):
+                    if hex_.type.lower() == faction.home_type.lower():
+                        return hex_
+        else:
+            return False
+
 
 if __name__ == "__main__":
     test = Universe()
