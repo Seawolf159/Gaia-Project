@@ -88,6 +88,7 @@ class Player:
 
             if sector_choice in C.SECTORS_2P:
                 # Ignore this error, it will be fixed at runtime
+                # pylint: disable=no-member
                 planet = self.universe.locate_planet(
                     sector_choice,
                     self.faction.home_type.lower()
