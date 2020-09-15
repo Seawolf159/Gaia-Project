@@ -23,7 +23,7 @@ class Automa:
             "is a tie, use directional selection."
         )
 
-        print(f"{faction_name}{question}", end="")
+        print(f"{faction_name}{question}{rules}", end="")
 
         while True:
             sector = (

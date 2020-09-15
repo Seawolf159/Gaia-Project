@@ -114,8 +114,8 @@ class Player:
         while True:
             while True:
                 sector = (
-                    "\nPlease type the number of the sector your chosen planet "
-                    "is in.\n--> "
+                    "\nPlease type the number of the sector your chosen planet"
+                    " is in.\n--> "
                 )
                 sector_choice = input(sector).lower()
 
@@ -146,10 +146,6 @@ class Player:
 
                     #     else:
                     #         break
-
-
-
-
 
     def gaia(self):
         pass
