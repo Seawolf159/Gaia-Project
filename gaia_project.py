@@ -111,16 +111,16 @@ class GaiaProject:
         # TODO Let player choose faction after seeing setup
 
         # Place first structures (start with first player and going clockwise):
-        # Also give the players the universe object to be able to build mines
-        # and stuff.
+        # Also give the players the universe object to be able to build mines.
         for player in self.players:
             player.universe = self.universe
             player.start_mines("first")
         for player in reversed(self.players):
             player.start_mines("second")
-
+        
         # Choose booster (start with last player and going counter-clockwise):
-
+        for player in reversed(self.players):
+            player.booster()
 
         # TODO generate the universe (first game default universe at first)
 

@@ -52,6 +52,9 @@ class Automa:
             else:
                 print("\nPlease only type 1-7", end="")
 
+    def choose_booster(self):
+        pass
+
     def mine(self):
         pass
 
