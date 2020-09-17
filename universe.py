@@ -520,7 +520,7 @@ class Universe:
             pass
 
         # skip center as it's always empty
-        for circle in eval(f"self.universe.sector{sector}.hexes[1:]"):
+        for circle in eval(f"self.sector{sector}.hexes[1:]"):
             for hex_ in circle:
                 if hasattr(hex_, "type"):
                     if hex_.type.lower() == faction.home_type.lower():

@@ -76,6 +76,7 @@ class GaiaProject:
         # 1. Choose first player (Against the automa, the human goes first).
         # 2. Let the last player assemble the game board (or just some final
         #    rotation of tiles) or just do it together.
+        # TODO generate the universe (first game default universe at first)
         self.create_universe()
 
         # 3. Randomly place the standard and advanced technology tiles.
@@ -111,18 +112,15 @@ class GaiaProject:
         # TODO Let player choose faction after seeing setup
 
         # Place first structures (start with first player and going clockwise):
-        # Also give the players the universe object to be able to build mines.
         for player in self.players:
-            player.universe = self.universe
-            player.start_mines("first")
+            player.start_mines("first", self.universe)
         for player in reversed(self.players):
-            player.start_mines("second")
-        
+            player.start_mines("second", self.universe)
+
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
-            player.booster()
+            player.choose_booster(self.scoring_board)
 
-        # TODO generate the universe (first game default universe at first)
 
     def create_universe(self):
         self.universe = Universe()
@@ -172,8 +170,8 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    print(new_game.universe.sector4)
-    print(new_game.universe.sector5)
+    # print(new_game.universe.sector4)
+    # print(new_game.universe.sector5)
 
 
 
