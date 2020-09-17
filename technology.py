@@ -1,6 +1,7 @@
 class StandardTechnology:
 
-    def __init__(self, when, reward):
+    def __init__(self, img, when, reward):
+        self.img = img
         self.when = when
         self.reward = reward
 
@@ -13,7 +14,8 @@ class StandardTechnology:
 
 class AdvancedTechnology:
 
-    def __init__(self, when=False, effect=False, reward=False):
+    def __init__(self, img, when=False, effect=False, reward=False):
+        self.img = img
         self.when = when
         self.effect = effect
         self.reward = reward

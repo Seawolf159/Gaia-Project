@@ -1,6 +1,6 @@
 import random
 
-from technology import StandardTechnology, AdvancedTechnology
+from technology import AdvancedTechnology, StandardTechnology
 
 
 class Level:
@@ -140,6 +140,16 @@ class Research:
         self.economy = Economy()
         self.science = Science()
 
+        # list for looping purposes.
+        self.tracks =  [
+            self.terraforming,
+            self.navigation,
+            self.artificial_intelligence,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
         # Standard technology tiles
         self.free_standard_technology = []
 
@@ -150,33 +160,41 @@ class Research:
 
     def randomise_tech_tiles(self):
         standard = [
-            StandardTechnology("direct", ["ore1", "qic1"]),
-            StandardTechnology("direct", "knowledge1"),
-            StandardTechnology("worth4power", False),
-            StandardTechnology("direct", "vp7"),
-            StandardTechnology("income", ["ore1", "power1"]),
-            StandardTechnology("income", ["knowledge1", "credits1"]),
-            StandardTechnology("action mine on gaia", "vp3"),
-            StandardTechnology("income", ["credits4"]),
-            StandardTechnology("special", "power4")
+            StandardTechnology("TECqic.png", "direct", ["ore1", "qic1"]),
+            StandardTechnology("TECtyp.png", "direct", "knowledge1"),
+            StandardTechnology("TECpia.png", "worth4power", False),
+            StandardTechnology("TECvps.png", "direct", "vp7"),
+            StandardTechnology("TECore.png", "income", ["ore1", "power1"]),
+            StandardTechnology("TECknw.png", "income", ["knowledge1", "credits1"]),
+            StandardTechnology("TECgai.png", "action mine on gaia", "vp3"),
+            StandardTechnology("TECcre.png", "income", ["credits4"]),
+            StandardTechnology("TECpow.png", "special", "power4")
         ]
 
         advanced = [
-            AdvancedTechnology("pass", "federationtokens", "vp3"),
-            AdvancedTechnology("live", "research", ["vp2"]),
-            AdvancedTechnology("special", reward=["qic1", "credits5"]),
-            AdvancedTechnology("direct", "mine", "vp2"),
-            AdvancedTechnology("pass", "researchlab", "vp3"),
-            AdvancedTechnology("direct", "sectors", "ore1"),
-            AdvancedTechnology("pass", "different_planets", "vp1"),
-            AdvancedTechnology("direct", "gaiaplanet", "vp2"),
-            AdvancedTechnology("direct", "trade", "vp4"),
-            AdvancedTechnology("direct", "sectors", "vp2"),
-            AdvancedTechnology("special", reward="ore3"),
-            AdvancedTechnology("direct", "federationtokens", "vp5"),
-            AdvancedTechnology("special", reward="knowledge3"),
-            AdvancedTechnology("live", "mine", "vp3"),
-            AdvancedTechnology("live", "trade", "vp3"),
+            AdvancedTechnology(
+                "ADVfedP.png", "pass", "federationtokens", "vp3"
+            ),
+            AdvancedTechnology("ADVstp.png", "live", "research", ["vp2"]),
+            AdvancedTechnology(
+                "ADVqic.png", "special", reward=["qic1", "credits5"]
+            ),
+            AdvancedTechnology("ADVminV.png", "direct", "mine", "vp2"),
+            AdvancedTechnology("ADVlab.png", "pass", "researchlab", "vp3"),
+            AdvancedTechnology("ADVsecO.png", "direct", "sectors", "ore1"),
+            AdvancedTechnology(
+                "ADVtyp.png", "pass", "different_planets", "vp1"),
+            AdvancedTechnology("ADVgai.png", "direct", "gaiaplanet", "vp2"
+            ),
+            AdvancedTechnology("ADVtrsV.png", "direct", "trade", "vp4"),
+            AdvancedTechnology("ADVsecV.png", "direct", "sectors", "vp2"),
+            AdvancedTechnology("ADVore.png", "special", reward="ore3"),
+            AdvancedTechnology(
+                "ADVfedV.png", "direct", "federationtokens", "vp5"
+            ),
+            AdvancedTechnology("ADVknw.png", "special", reward="knowledge3"),
+            AdvancedTechnology("ADVminB.png", "live", "mine", "vp3"),
+            AdvancedTechnology("ADVtrsV.png", "live", "trade", "vp3"),
         ]
 
         tech_tracks = [
@@ -191,27 +209,27 @@ class Research:
         # Randomly assign standard and advanced tiles a location
         while standard:
             if len(standard) > 3:
-                tile = standard.pop(random.randrange(len(standard)))
+                # Pick a random standard technology.
+                std_tile = standard.pop(random.randrange(len(standard)))
+
+                # Pick a random advanced technology.
                 adv_tile = advanced.pop(random.randrange(len(advanced)))
+
+                # Pick a technology track.
                 tech_track = (
                     tech_tracks.pop(random.randrange(len(tech_tracks)))
                 )
-                tech_track.standard = tile
+
+                # Place the standard and advanced tiles on the tech track.
+                tech_track.standard = std_tile
                 tech_track.advanced = adv_tile
             else:
+                # Free standard technology tiles allow you to move up a tech
+                # track of your choosing.
                 tile = standard.pop()
                 self.free_standard_technology.append(tile)
 
     def __str__(self):
-        tracks =  [
-            self.terraforming,
-            self.navigation,
-            self.artificial_intelligence,
-            self.gaia_project,
-            self.economy,
-            self.science,
-        ]
-
         return (
             f"{str(self.terraforming)}\n"
             f"{str(self.navigation)}\n"

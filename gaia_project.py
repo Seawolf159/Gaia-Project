@@ -3,13 +3,19 @@ TODO instantiate even the unused tech tiles, boosters etc..???
 
 """
 
+import os
 import random
+
+from PIL import Image
 
 from automa import Automa
 from player import Player
 from research import Research
 from scoring import Scoring
 from universe import Universe
+
+ROOT = os.path.dirname(__file__)
+IMAGES = os.path.join(ROOT, "images")
 
 
 class GaiaProject:
@@ -26,15 +32,17 @@ class GaiaProject:
             automa (bool): Wether or not you are playing against the automa.
         """
 
+        # TODO Make the tokens classes!
         self.federation_tokens = {
-            "vp": [3, "vp12", "grey"],
-            "vpqic" : [3, "vp8", "qic1", "green"],
-            "vppowertoken": [3, "vp8, powertoken2", "green"],
-            "vpore": [3, "vp7", "ore2", "green"],
-            "vpcredits": [3, "vp7", "credits6", "green"],
-            "vpknowledge": [3, "vp6", "knowledge2", "green"]
+            "vp": ["FEDvps.png", 3, "vp12", "grey"],
+            "vpqic" : ["FEDqic.png", 3, "vp8", "qic1", "green"],
+            "vppowertoken": ["FEDpwt.png", 3, "vp8, powertoken2", "green"],
+            "vpore": ["FEDore.png", 3, "vp7", "ore2", "green"],
+            "vpcredits": ["FEDcre.png", 3, "vp7", "credits6", "green"],
+            "vpknowledge": ["FEDknw.png", 3, "vp6", "knowledge2", "green"]
         }
 
+        # TODO FIX THIS MESS. Factions are on chosen at the start normally.
         self.setup(player1, player2, player3, player4, automa)
 
     def setup(self, player1, player2,
@@ -86,9 +94,9 @@ class GaiaProject:
         #    track (Against the automa each type of token only has 2 pieces).
         terraforming_token = random.choice(list(self.federation_tokens.keys()))
         self.research_board.terraforming.level5.reward = (
-            self.federation_tokens[terraforming_token][1:]
+            self.federation_tokens[terraforming_token][:]
         )
-        self.federation_tokens[terraforming_token][0] -= 1
+        self.federation_tokens[terraforming_token][1] -= 1
 
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
@@ -107,6 +115,9 @@ class GaiaProject:
 
         self.scoring_board.randomise_boosters(player_count)
 
+        # Load the setup into an image to see it more easily.
+        self.visual_setup()
+
         # Start of the game:
         # Choose faction (start with first player and going clockwise):
         # TODO Let player choose faction after seeing setup
@@ -121,6 +132,35 @@ class GaiaProject:
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
 
+    def visual_setup(self):
+        """Load setup into an image for better awareness of the setup"""
+
+        # Create empty canvas.
+        # setup = Image.new("RGBA", (1184, 936), "white")
+
+        # Technology backgrounds
+        with Image.open(os.path.join(ROOT,
+                "empty_setup.png")) as canvas:
+
+            with Image.open(os.path.join(IMAGES,
+                    self.research_board.terraforming.level5.reward[0])) as fed:
+                canvas.paste(fed, (10, 40), fed)
+
+            for track in self.research_board.tracks:
+                with Image.open(os.path.join(IMAGES,
+                        # Error is corrected at runtime so i can ignore this.
+                        # pylint: disable=no-member
+                        track.standard.img)) as std:
+                    canvas.paste(std, (144, 113), std)
+
+                with Image.open(os.path.join(IMAGES,
+                        # Error is corrected at runtime so i can ignore this.
+                        # pylint: disable=no-member
+                        track.advanced.img)) as adv:
+                    canvas.paste(adv, (144, 0), adv)
+                break
+
+            canvas.save("setup.png", "png")
 
     def create_universe(self):
         self.universe = Universe()
@@ -170,6 +210,7 @@ class GaiaProject:
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
+    new_game.visual_setup()
     # print(new_game.universe.sector4)
     # print(new_game.universe.sector5)
 
