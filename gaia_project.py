@@ -144,21 +144,22 @@ class GaiaProject:
 
             with Image.open(os.path.join(IMAGES,
                     self.research_board.terraforming.level5.reward[0])) as fed:
-                canvas.paste(fed, (10, 40), fed)
+                canvas.paste(fed, (5, 35), fed)
 
             for track in self.research_board.tracks:
                 with Image.open(os.path.join(IMAGES,
                         # Error is corrected at runtime so i can ignore this.
                         # pylint: disable=no-member
-                        track.standard.img)) as std:
-                    canvas.paste(std, (144, 113), std)
+                        track.advanced.img)) as adv:
+                    canvas.paste(adv, (160, 3), adv)
 
                 with Image.open(os.path.join(IMAGES,
                         # Error is corrected at runtime so i can ignore this.
                         # pylint: disable=no-member
-                        track.advanced.img)) as adv:
-                    canvas.paste(adv, (144, 0), adv)
+                        track.standard.img)) as std:
+                    canvas.paste(std, (160, 127), std)
                 break
+
 
             canvas.save("setup.png", "png")
 
