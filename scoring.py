@@ -3,7 +3,9 @@ import random
 
 class Booster:
 
-    def __init__(self, income1=False, income2=False, special=False, vp=False):
+    def __init__(self, img, income1=False, income2=False,
+                 special=False, vp=False):
+        self.img = img
         self.income1 = income1
         self.income2 = income2
         self.special = special
@@ -15,7 +17,8 @@ class Booster:
 
 class RoundScoring:
 
-    def __init__(self, vp, goal, first_half, second_half):
+    def __init__(self, img, vp, goal, first_half, second_half):
+        self.img = img
         self.vp = 0
         self.goal = goal
         self.first_half = first_half
@@ -27,7 +30,8 @@ class RoundScoring:
 
 class EndScoring:
 
-    def __init__(self, goal, neutral):
+    def __init__(self, img, goal, neutral):
+        self.img = img
         self.goal = goal
 
         # Neutral player in 2 player game.
@@ -54,16 +58,16 @@ class Scoring:
 
     def randomise_boosters(self, players):
         boosters = [
-            Booster(income1="ore1", income2="knowledge1"),
-            Booster(income1="powertoken2", income2="ore1"),
-            Booster(income1="credits2", income2="qic1"),
-            Booster(special="terraforming", income2="credits2"),
-            Booster(special="range3", income2="power2"),
-            Booster(vp="mine1", income2="ore1"),
-            Booster(vp="trade2", income2="ore1"),
-            Booster(vp="researchlab3", income2="knowledge1"),
-            Booster(vp="planetaryacademy4", income2="power4"),
-            Booster(vp="gaia1", income2="credits4"),
+            Booster("BOOknw.png", income1="ore1", income2="knowledge1"),
+            Booster("BOOpwt.png", income1="powertoken2", income2="ore1"),
+            Booster("BOOqic.png", income1="credits2", income2="qic1"),
+            Booster("BOOter.png", special="terraforming", income2="credits2"),
+            Booster("BOOnav.png", special="range3", income2="power2"),
+            Booster("BOOmin.png", vp="mine1", income2="ore1"),
+            Booster("BOOtrs.png", vp="trade2", income2="ore1"),
+            Booster("BOOlab.png", vp="researchlab3", income2="knowledge1"),
+            Booster("BOOpia.png", vp="planetaryacademy4", income2="power4"),
+            Booster("BOOgai.png", vp="gaia1", income2="credits4"),
         ]
 
         for _ in range(players + 3):
@@ -74,16 +78,16 @@ class Scoring:
 
     def randomise_scoring(self):
         round_tiles = [
-            RoundScoring(2, "terraforming", 4, 6),
-            RoundScoring(2, "research", 2, 4),
-            RoundScoring(2, "mine", 4, 6),
-            RoundScoring(5, "fedtoken", 0, 5),
-            RoundScoring(3, "trade3", 3, 6),
-            RoundScoring(4, "trade4", 3, 6),
-            RoundScoring(3, "gaiamine3", 2, 2),
-            RoundScoring(4, "gaiamine4", 2, 2),
-            RoundScoring(5, "planetaryacademy", 0, 5),
-            RoundScoring(5, "planetaryacademy", 0, 5)
+            RoundScoring("RNDter.png", 2, "terraforming", 4, 6),
+            RoundScoring("RNDstp.png", 2, "research", 2, 4),
+            RoundScoring("RNDmin.png", 2, "mine", 4, 6),
+            RoundScoring("RNDfed.png", 5, "fedtoken", 0, 5),
+            RoundScoring("RNDtrs3.png", 3, "trade3", 3, 6),
+            RoundScoring("RNDtrs4.png", 4, "trade4", 3, 6),
+            RoundScoring("RNDgai3.png", 3, "gaiamine3", 2, 2),
+            RoundScoring("RNDgai4.png", 4, "gaiamine4", 2, 2),
+            RoundScoring("RNDpia.png", 5, "planetaryacademy", 0, 5),
+            RoundScoring("RNDpia.png", 5, "planetaryacademy", 0, 5)
         ]
 
         self.rounds = []
@@ -93,12 +97,12 @@ class Scoring:
             )
 
         end_scoring_tiles = [
-            EndScoring("structures_federation", 10),
-            EndScoring("structures", 11),
-            EndScoring("different_planets", 5),
-            EndScoring("gaia planets", 4),
-            EndScoring("sectors", 6),
-            EndScoring("sattelites", 8)
+            EndScoring("FINfed.png", "structures_federation", 10),
+            EndScoring("FINbld.png", "structures", 11),
+            EndScoring("FINtyp.png", "different_planets", 5),
+            EndScoring("FINgai.png", "gaia planets", 4),
+            EndScoring("FINsec.png", "sectors", 6),
+            EndScoring("FINsat.png", "sattelites", 8)
         ]
 
         self.end_scoring = [
@@ -125,9 +129,3 @@ class Scoring:
             f"Rounds: {rounds}\n"
             f"End scoring: {end_scoring}"
         )
-
-
-def any_(items):
-    for item in items:
-        if item:
-            return item

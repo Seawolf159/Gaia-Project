@@ -1,6 +1,6 @@
 """
-TODO instantiate even the unused tech tiles, boosters etc..???
-
+TODO instantiate even the unused tech tiles, boosters etc..??? So the ones that
+don't get used.
 """
 
 import os
@@ -13,6 +13,7 @@ from player import Player
 from research import Research
 from scoring import Scoring
 from universe import Universe
+from federation import FederationToken
 
 ROOT = os.path.dirname(__file__)
 IMAGES = os.path.join(ROOT, "images")
@@ -32,17 +33,16 @@ class GaiaProject:
             automa (bool): Wether or not you are playing against the automa.
         """
 
-        # TODO Make the tokens classes!
-        self.federation_tokens = {
-            "vp": ["FEDvps.png", 3, "vp12", "grey"],
-            "vpqic" : ["FEDqic.png", 3, "vp8", "qic1", "green"],
-            "vppowertoken": ["FEDpwt.png", 3, "vp8, powertoken2", "green"],
-            "vpore": ["FEDore.png", 3, "vp7", "ore2", "green"],
-            "vpcredits": ["FEDcre.png", 3, "vp7", "credits6", "green"],
-            "vpknowledge": ["FEDknw.png", 3, "vp6", "knowledge2", "green"]
-        }
+        self.federation_tokens = [
+            FederationToken("FEDvps.png", 2, "vp12", "grey"),
+            FederationToken("FEDqic.png", 2, ["vp8", "qic1"], "green"),
+            FederationToken("FEDpwt.png", 2, ["vp8, powertoken2"], "green"),
+            FederationToken("FEDore.png", 2, ["vp7", "ore2"], "green"),
+            FederationToken("FEDcre.png", 2, ["vp7", "credits6"], "green"),
+            FederationToken("FEDknw.png", 2, ["vp6", "knowledge2"], "green")
+        ]
 
-        # TODO FIX THIS MESS. Factions are on chosen at the start normally.
+        # TODO FIX THIS MESS. Factions are chosen last during setup.
         self.setup(player1, player2, player3, player4, automa)
 
     def setup(self, player1, player2,
@@ -92,11 +92,10 @@ class GaiaProject:
 
         # 4. Randomly select one federation token for the terraforming research
         #    track (Against the automa each type of token only has 2 pieces).
-        terraforming_token = random.choice(list(self.federation_tokens.keys()))
-        self.research_board.terraforming.level5.reward = (
-            self.federation_tokens[terraforming_token][:]
-        )
-        self.federation_tokens[terraforming_token][1] -= 1
+        terraforming_fed_token = random.choice(self.federation_tokens)
+        terraforming_fed_token.count -= 1
+        self.research_board.terraforming.level5.reward = terraforming_fed_token
+
 
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
@@ -115,7 +114,7 @@ class GaiaProject:
 
         self.scoring_board.randomise_boosters(player_count)
 
-        # Load the setup into an image to see it more easily.
+        # Load the setup into an image to see it more easily as a human.
         self.visual_setup()
 
         # Start of the game:
@@ -133,35 +132,148 @@ class GaiaProject:
             player.choose_booster(self.scoring_board)
 
     def visual_setup(self):
-        """Load setup into an image for better awareness of the setup"""
+        """Load setup into an image for better human readability of a setup."""
 
-        # Create empty canvas.
-        # setup = Image.new("RGBA", (1184, 936), "white")
-
-        # Technology backgrounds
+        # Canvas with technology track backgrounds at the top.
         with Image.open(os.path.join(ROOT,
                 "empty_setup.png")) as canvas:
 
+            # Terraforming setup.
+            # Placing the federation token.
             with Image.open(os.path.join(IMAGES,
-                    self.research_board.terraforming.level5.reward[0])) as fed:
+                   self.research_board.terraforming.level5.reward.img)) as fed:
                 canvas.paste(fed, (5, 35), fed)
 
-            for track in self.research_board.tracks:
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.terraforming.advanced.img)) as adv:
+                canvas.paste(adv, (160, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.terraforming.standard.img)) as std:
+                canvas.paste(std, (158, 127), std)
+
+            # Navigation setup.
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.navigation.advanced.img)) as adv:
+                canvas.paste(adv, (330, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.navigation.standard.img)) as std:
+                canvas.paste(std, (328, 127), std)
+
+            # Artificial Intelligence setup.
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.a_i.advanced.img)) as adv:
+                canvas.paste(adv, (500, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.a_i.standard.img)) as std:
+                canvas.paste(std, (496, 127), std)
+
+            # Gaia Project setup.
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.gaia_project.advanced.img)) as adv:
+                canvas.paste(adv, (668, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.gaia_project.standard.img)) as std:
+                canvas.paste(std, (664, 127), std)
+
+            # Economy setup.
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.economy.advanced.img)) as adv:
+                canvas.paste(adv, (836, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.economy.standard.img)) as std:
+                canvas.paste(std, (832, 127), std)
+
+            # Science setup.
+            with Image.open(os.path.join(IMAGES,
+                    # Place the advanced tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.science.advanced.img)) as adv:
+                canvas.paste(adv, (1012, 3), adv)
+
+            with Image.open(os.path.join(IMAGES,
+                    # Place the standard tile.
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    self.research_board.science.standard.img)) as std:
+                canvas.paste(std, (1008, 127), std)
+
+            # Free standard technology tiles setup.
+            x = 240
+            for free_tile in self.research_board.free_standard_technology:
                 with Image.open(os.path.join(IMAGES,
-                        # Error is corrected at runtime so i can ignore this.
-                        # pylint: disable=no-member
-                        track.advanced.img)) as adv:
-                    canvas.paste(adv, (160, 3), adv)
+                        free_tile.img)) as free_std:
+                    canvas.paste(free_std, (int(x), 260), free_std)
 
+                # To space the free tiles evenly apart
+                x += 240 * 1.4
+
+            # Booster tiles setup.
+            x = 30
+            for booster_tile in self.scoring_board.boosters:
                 with Image.open(os.path.join(IMAGES,
-                        # Error is corrected at runtime so i can ignore this.
-                        # pylint: disable=no-member
-                        track.standard.img)) as std:
-                    canvas.paste(std, (160, 127), std)
-                break
+                        booster_tile.img)) as booster:
+                    canvas.paste(booster, (int(x), 415), booster)
 
+                # To space the booster tiles evenly apart
+                x += 80 * 2.5
 
-            canvas.save("setup.png", "png")
+            # Round scoring tiles setup.
+            x = 5
+            for round_tile in self.scoring_board.rounds:
+                with Image.open(os.path.join(IMAGES,
+                        round_tile.img)) as round_:
+                    canvas.paste(round_, (int(x), 745), round_)
+
+                # To space the round scoring tiles evenly apart
+                x += 100 * 1.6
+
+            # End scoring tiles setup.
+            y = 656
+            for end_tile in self.scoring_board.end_scoring:
+                with Image.open(os.path.join(IMAGES,
+                        end_tile.img)) as end:
+                    canvas.paste(end, (974, y), end)
+
+                # To space the end scoring tiles evenly apart
+                y += 140
+
+            canvas.save("Setup.png", "png")
 
     def create_universe(self):
         self.universe = Universe()

@@ -135,20 +135,10 @@ class Research:
         # Techonlogy tracks.
         self.terraforming = Terraforming()
         self.navigation = Navigation()
-        self.artificial_intelligence = ArtificialIntelligence()
+        self.a_i = ArtificialIntelligence()
         self.gaia_project = GaiaProject()
         self.economy = Economy()
         self.science = Science()
-
-        # list for looping purposes.
-        self.tracks =  [
-            self.terraforming,
-            self.navigation,
-            self.artificial_intelligence,
-            self.gaia_project,
-            self.economy,
-            self.science,
-        ]
 
         # Standard technology tiles
         self.free_standard_technology = []
@@ -194,46 +184,44 @@ class Research:
             ),
             AdvancedTechnology("ADVknw.png", "special", reward="knowledge3"),
             AdvancedTechnology("ADVminB.png", "live", "mine", "vp3"),
-            AdvancedTechnology("ADVtrsV.png", "live", "trade", "vp3"),
+            AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
         ]
 
         tech_tracks = [
             self.terraforming,
             self.navigation,
-            self.artificial_intelligence,
+            self.a_i,
             self.gaia_project,
             self.economy,
             self.science
         ]
 
         # Randomly assign standard and advanced tiles a location
-        while standard:
-            if len(standard) > 3:
-                # Pick a random standard technology.
-                std_tile = standard.pop(random.randrange(len(standard)))
+        while len(standard) > 3:
+            # Pick a random standard technology.
+            std_tile = standard.pop(random.randrange(len(standard)))
 
-                # Pick a random advanced technology.
-                adv_tile = advanced.pop(random.randrange(len(advanced)))
+            # Pick a random advanced technology.
+            adv_tile = advanced.pop(random.randrange(len(advanced)))
 
-                # Pick a technology track.
-                tech_track = (
-                    tech_tracks.pop(random.randrange(len(tech_tracks)))
-                )
+            # Pick a technology track.
+            tech_track = (
+                tech_tracks.pop(random.randrange(len(tech_tracks)))
+            )
 
-                # Place the standard and advanced tiles on the tech track.
-                tech_track.standard = std_tile
-                tech_track.advanced = adv_tile
-            else:
-                # Free standard technology tiles allow you to move up a tech
-                # track of your choosing.
-                tile = standard.pop()
-                self.free_standard_technology.append(tile)
+            # Place the standard and advanced tiles on the tech track.
+            tech_track.standard = std_tile
+            tech_track.advanced = adv_tile
+        else:
+            # Free standard technology tiles allow you to move up a tech
+            # track of your choosing.
+            self.free_standard_technology.extend(standard)
 
     def __str__(self):
         return (
             f"{str(self.terraforming)}\n"
             f"{str(self.navigation)}\n"
-            f"{str(self.artificial_intelligence)}\n"
+            f"{str(self.a_i)}\n"
             f"{str(self.gaia_project)}\n"
             f"{str(self.economy)}\n"
             f"{str(self.science)}"
