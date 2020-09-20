@@ -33,6 +33,7 @@ class GaiaProject:
             automa (bool): Wether or not you are playing against the automa.
         """
 
+        # more players TODO federations have 3 of each type in 3+ player games
         self.federation_tokens = [
             FederationToken("FEDvps.png", 2, "vp12", "grey"),
             FederationToken("FEDqic.png", 2, ["vp8", "qic1"], "green"),
