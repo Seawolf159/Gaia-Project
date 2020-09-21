@@ -1,4 +1,5 @@
 import random
+from exceptions_ import PlanetAlreadyOwnedError, PlanetNotFoundError
 
 import constants as C
 from faction import select_faction
@@ -234,22 +235,28 @@ class Player:
             sector_choice = input(sector)
 
             if sector_choice in C.SECTORS_2P:
-                planet = universe.locate_planet(
-                    sector_choice,
-                    self.faction.home_type.lower(),
-                    self.faction
-                )
-
-                if planet:
+                try:
+                    planet = universe.locate_planet(
+                        sector_choice,
+                        self.faction.home_type.lower(),
+                        self.faction
+                    )
+                except PlanetNotFoundError:
+                    print(
+                        f"Your home world ({self.faction.home_type}) doesn't "
+                        "exist inside this sector! Please choose a different "
+                        "sector.")
+                except PlanetAlreadyOwnedError:
+                    print(
+                        "This planet is already occupied by you. Please choose"
+                        " a different sector."
+                    )
+                else:
                     planet.owner = self.faction.home_type
                     self.empire.append(planet)
                     self.faction.mine += 1
                     planet.structure = "mine"
                     return
-                else:
-                    print(
-                        f"Your home world ({self.faction.home_type}) doesn't "
-                        "exist inside this sector!")
             else:
                 print("Please only type 1-7")
 
@@ -291,6 +298,8 @@ class Player:
 
             while True:
                 planet = "Please type the chosen planet type or colour.\n--> "
+                # TODO generate a list with all planets in the sector so user
+                # doesn't have to type it all out.
                 planet_choice = input(planet).lower()
                 if planet_choice in C.PLANETS:
                     # TODO do something

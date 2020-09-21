@@ -1,6 +1,7 @@
 import random
 
 import constants as C
+from exceptions_ import PlanetNotFoundError, PlanetAlreadyOwnedError
 
 
 class Automa:
@@ -43,20 +44,28 @@ class Automa:
             sector_choice = input(sector)
 
             if sector_choice in C.SECTORS_2P:
-                planet = universe.locate_planet(
-                    sector_choice,
-                    self.faction.home_type.lower(),
-                    self.faction
-                )
 
-                if planet:
+                try:
+                    planet = universe.locate_planet(
+                        sector_choice,
+                        self.faction.home_type.lower(),
+                        self.faction
+                    )
+                except PlanetNotFoundError:
+                    print(
+                        f"The automa home world ({self.faction.home_type}) "
+                        "doesn't exist inside this sector. Please choose a "
+                        "different sector."
+                    )
+                except PlanetAlreadyOwnedError:
+                    print(
+                        "This planet is already occupied by you. Please choose"
+                        " a different sector."
+                    )
+                else:
                     planet.owner = self.faction.home_type
                     planet.structure = "mine"
                     return
-                else:
-                    print(
-                        f"The automa home world ({self.faction.home_type}) "
-                        "doesn't exist inside this sector!")
             else:
                 print("Please only type 1-7")
 
@@ -84,6 +93,8 @@ class Automa:
                 print("Please only type one of the available numbers.")
 
     def mine(self):
+        # TODO look at end scoring and see if i need to place a
+        # sattelite??
         pass
 
     def gaia(self):

@@ -1,4 +1,5 @@
 import os
+from exceptions_ import PlanetAlreadyOwnedError, PlanetNotFoundError
 
 from PIL import Image
 
@@ -527,9 +528,12 @@ class Universe:
             for hex_ in circle:
                 if hasattr(hex_, "type"):
                     if hex_.type.lower() == faction.home_type.lower():
-                        return hex_
+                        if not hex_.owner:
+                            return hex_
+                        else:
+                            raise PlanetAlreadyOwnedError
         else:
-            return False
+            raise PlanetNotFoundError
 
 
 if __name__ == "__main__":
