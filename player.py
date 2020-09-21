@@ -258,6 +258,8 @@ class Player:
                     planet.structure = "mine"
                     return
             else:
+                # More players TODO make this message dynamic to the board.
+                # If playing with more players it would be 1-10 for example.
                 print("Please only type 1-7")
 
     def choose_booster(self, scoring_board):
