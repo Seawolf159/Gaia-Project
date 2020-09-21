@@ -15,7 +15,7 @@ class Faction:
         self.ore = 0
         self.knowledge = 0
         self.qic = 0
-        self.gaia_former = 0
+        self.gaiaformer = 0
 
         # For subclasses to fill a list []. For example:
         # ["credits3", "ore1", "knowledge1"]. These are the income the
@@ -65,6 +65,10 @@ class Faction:
         if self.bowl2 > 1:
             self.bowl2 -= 1
             self.bowl3 += 1
+
+    def count_powertokens(self):
+        total = self.bowl1 + self.bowl2 + self.bowl3
+        return total
 
     def planetary_institute_bonus_func(self):
         # For subclasses to override

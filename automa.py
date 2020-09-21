@@ -1,7 +1,7 @@
+import exceptions as e
 import random
 
 import constants as C
-from exceptions import PlanetNotFoundError, PlanetAlreadyOwnedError
 
 
 class Automa:
@@ -18,12 +18,20 @@ class Automa:
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
 
+    def setup(self, research_board):
+        # TODO Set yourself on the proper research level.
+        pass
+
     def income_phase(self):
         # Automa has no income.
         pass
 
     def gaia_phase(self):
         # Automa doesn't have a gaia phase.
+        pass
+
+    def action_phase(self):
+        # TODO draw automa cards etc.
         pass
 
     def start_mines(self, count, universe):
@@ -51,13 +59,13 @@ class Automa:
                         self.faction.home_type.lower(),
                         self.faction
                     )
-                except PlanetNotFoundError:
+                except e.PlanetNotFoundError:
                     print(
                         f"The automa home world ({self.faction.home_type}) "
                         "doesn't exist inside this sector. Please choose a "
                         "different sector."
                     )
-                except PlanetAlreadyOwnedError:
+                except e.PlanetAlreadyOwnedError:
                     print(
                         "This planet is already occupied by the Automa. Please"
                         " choose a different sector."
@@ -131,6 +139,9 @@ class Taklons:
             "human's' planets"
         )
         self.vp = 2
+
+        # research jump start
+        self.start_research = False
 
         # TODO automate more
         # self.terraforming = [

@@ -127,6 +127,23 @@ class GaiaProject:
         # see if they get to go up on any of the research tracks at the
         # beginning of the game.
 
+        # Place players on level 0 of all research boards unless stated
+        # otherwise.
+        for player in self.players:
+            player.terraforming = self.research_board.terraforming.level0
+            player.navigation = self.research_board.navigation.level0
+            player.artificial_intelligence = self.research_board.a_i.level0
+            player.gaia_project = self.research_board.gaia_project.level0
+            player.economy = self.research_board.economy.level0
+            player.science = self.research_board.science.level0
+
+            start_research = player.faction.start_research
+            if start_research:
+                exec(f"player.{start_research} "
+                     f"= self.research_board.{start_research}.level1")
+
+        print(self.players[0].economy)
+
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
             player.start_mines("first", self.universe)
@@ -136,6 +153,7 @@ class GaiaProject:
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
+
 
         # TODO Move the setup inside the play function instead and remove this
         # line.
@@ -320,10 +338,11 @@ class GaiaProject:
             # 1. Income phase followed by Gaia phase.
             for player in self.players:
                 player.income_phase()
-                player.gaia_phase()
+                player.gaia_phase()  # Do this after i finished gaia action.
 
             # 3. Action phase
-
+            for player in self.players:
+                player.action_phase(self.universe)
 
             # 4. Clean up phase
 

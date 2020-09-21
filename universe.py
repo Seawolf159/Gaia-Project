@@ -1,5 +1,5 @@
 import os
-from exceptions import PlanetAlreadyOwnedError, PlanetNotFoundError
+import exceptions as e
 
 from PIL import Image
 
@@ -528,9 +528,9 @@ class Universe:
                         if not hex_.owner:
                             return hex_
                         else:
-                            raise PlanetAlreadyOwnedError
+                            raise e.PlanetAlreadyOwnedError
         else:
-            raise PlanetNotFoundError
+            raise e.PlanetNotFoundError
 
 
 if __name__ == "__main__":
