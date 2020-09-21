@@ -127,8 +127,8 @@ class GaiaProject:
         # see if they get to go up on any of the research tracks at the
         # beginning of the game.
 
-        # Place players on level 0 of all research boards unless stated
-        # otherwise.
+        # Place players on level 0 of all research boards and check if they
+        # start on level 1 of any of them.
         for player in self.players:
             player.terraforming = self.research_board.terraforming.level0
             player.navigation = self.research_board.navigation.level0

@@ -226,6 +226,9 @@ class Player:
                 except e.NoGaiaFormerError:
                     print("You have no available Gaiaformers. Please pick a "
                           "different action.")
+                except e.NotEnoughPowerTokens:
+                    print("You don't have enough power tokens to do this "
+                          "action. Please pick a different action.
                 else:
                     return
             else:
@@ -366,13 +369,24 @@ class Player:
         # TODO Automation, load all the trans-dim planets within range and let
         # player choose a number.
         if self.faction.gaiaformer > 0:
-            if self.faction.count_powertokens():
-                pass
-            print("You want to start a Gaia Project.")
-            planet = self.choose_planet(universe, "trans-dim")
-            planet.owner = self.faction.home_type
-            planet.structure = "gaiaformer"
-            self.faction.gaiaformer -= 1
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            if self.faction.count_powertokens() > self.gaia_project.active:
+                print("You want to start a Gaia Project.")
+                planet = self.choose_planet(universe, "trans-dim")
+                for _ in range(self.gaia_project.active):
+                    # Prioritise taking from the lowest bowl
+                    if self.faction.bowl1 > 0:
+                        self.faction.bowl1 -= 1
+                    elif self.faction.bowl2 > 0:
+                        self.faction.bowl2 -= 1
+                    elif self.faction.bowl3 > 0:
+                        self.faction.bowl3 -= 1
+                planet.owner = self.faction.home_type
+                planet.structure = "gaiaformer"
+                self.faction.gaiaformer -= 1
+            else:
+                raise e.NotEnoughPowerTokensError
         else:
             raise e.NoGaiaFormerError
 

@@ -11,3 +11,7 @@ class PlanetNotFoundError(Exception):
 
 class NoGaiaFormerError(Exception):
     pass
+
+
+class NotEnoughPowerTokens(Exception):
+    pass
