@@ -56,7 +56,7 @@ class GaiaProject:
                 playing.
         """
 
-        # A list with all the player objects
+        # A list with all the player objects in turn order.
         self.players = []
         self.player_turn = 1
         self.round = 1
