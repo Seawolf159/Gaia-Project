@@ -59,8 +59,8 @@ class Automa:
                     )
                 except PlanetAlreadyOwnedError:
                     print(
-                        "This planet is already occupied by you. Please choose"
-                        " a different sector."
+                        "This planet is already occupied by the Automa. Please"
+                        " choose a different sector."
                     )
                 else:
                     planet.owner = self.faction.home_type

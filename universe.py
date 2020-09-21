@@ -513,9 +513,6 @@ class Universe:
         Args:
             sector (str): Number of the sector where you want to find a planet.
             ptype (str): Specific type of planet that your are looking for.
-
-        TODO:
-            Make it impossible to choose a planet that is already taken.
         """
 
         if sector == "6" and ptype == "gaia":
@@ -523,7 +520,7 @@ class Universe:
         if sector == "7" and ptype == "trans-dim":
             pass
 
-        # skip center as it's always empty
+        # Skip center as it's always empty.
         for circle in eval(f"self.sector{sector}.hexes[1:]"):
             for hex_ in circle:
                 if hasattr(hex_, "type"):
