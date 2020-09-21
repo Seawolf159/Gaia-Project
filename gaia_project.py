@@ -43,7 +43,8 @@ class GaiaProject:
             FederationToken("FEDknw.png", 2, ["vp6", "knowledge2"], "green")
         ]
 
-        # TODO FIX THIS MESS. Factions are chosen last during setup.
+        # TODO FINAL FIX THIS MESS. Factions are chosen last during setup.
+        # But this makes the setup faster for testing purposes.
         self.setup(player1, player2, player3, player4, automa)
 
     def setup(self, player1, player2,
@@ -116,11 +117,15 @@ class GaiaProject:
         self.scoring_board.randomise_boosters(player_count)
 
         # Load the setup into an image to see it more easily as a human.
-        self.visual_setup()
+        # CIRITICAL TODO uncomment line below when finished. Commented because
+        # it kept changing the img file which is not necessary right now.
+        # self.visual_setup()
 
         # Start of the game:
         # Choose faction (start with first player and going clockwise):
-        # TODO Let player choose faction after seeing setup
+        # TODO Let player choose faction after seeing setup and don't forget to
+        # see if they get to go up on any of the research tracks at the
+        # beginning of the game.
 
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
@@ -131,6 +136,10 @@ class GaiaProject:
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
+
+        # TODO Move the setup inside the play function instead and remove this
+        # line.
+        self.play()
 
     def visual_setup(self):
         """Load setup into an image for better human readability of a setup."""
@@ -280,6 +289,8 @@ class GaiaProject:
         self.universe = Universe()
 
     def update_board(self):
+        # Placeholder for when i put structures on the map and this function
+        # will update the map with new structures.
         pass
 
     def income_phase(self):
@@ -303,14 +314,12 @@ class GaiaProject:
         # TODO generate the board and show some sort of summary of the current
         # board?
 
-        print("You can currently only play against the Taklons automa as"
-              "the Hadsch Halla")
         playing = True
         while playing:
-            # During 6 rounds, cycle through the 6 phases of the game.
+            # During 6 rounds, cycle through the 4 phases of the game.
             # 1. Income phase followed by Gaia phase.
             for player in self.players:
-                player.income()
+                player.income_phase()
                 player.gaia_phase()
 
             # 3. Action phase
@@ -318,13 +327,15 @@ class GaiaProject:
 
             # 4. Clean up phase
 
+            # Break to avoid infinite loops while testing
+            break
+
 
         # self.update_board()
 
 
 if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    new_game.visual_setup()
     # print(new_game.universe.sector4)
     # print(new_game.universe.sector5)
 

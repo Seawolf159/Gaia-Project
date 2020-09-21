@@ -46,7 +46,7 @@ class Scoring:
 
     def __init__(self):
 
-        # These lists are filled in the randomise functions
+        # These lists are filled in the randomise functions.
         # Boosters
         self.boosters = []
 
@@ -61,7 +61,7 @@ class Scoring:
             Booster("BOOknw.png", income1="ore1", income2="knowledge1"),
             Booster("BOOpwt.png", income1="powertoken2", income2="ore1"),
             Booster("BOOqic.png", income1="credits2", income2="qic1"),
-            Booster("BOOter.png", special="terraforming", income2="credits2"),
+            Booster("BOOter.png", special="terraforming1", income2="credits2"),
             Booster("BOOnav.png", special="range3", income2="power2"),
             Booster("BOOmin.png", vp="mine1", income2="ore1"),
             Booster("BOOtrs.png", vp="trade2", income2="ore1"),

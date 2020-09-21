@@ -1,7 +1,12 @@
 class Faction:
-    """Faction board."""
+    """General faction board."""
 
     def __init__(self):
+        """Common similarieties between factions.
+
+        Override any of these in the subclasses when needed.
+        """
+
         self.name = False
         self.home_type = False
 
@@ -9,28 +14,34 @@ class Faction:
         self.credits = 0
         self.ore = 0
         self.knowledge = 0
+        self.qic = 0
         self.gaia_former = 0
 
-        # structures
-        self.mine = 8
-        self.mine_income = "ore1"
-        self.mine_tiers = [1, 1, 0, 1, 1, 1, 1, 1]
+        # For subclasses to fill a list []. For example:
+        # ["credits3", "ore1", "knowledge1"]. These are the income the
+        # Hadsch Halla will ALWAYS get independent of a structure covering the
+        # income.
+        self.standard_income = False
 
-        self.trading_center = 4
-        self.trading_center_income = "credits3"
-        self.trading_center_tiers = [3, 4, 4, 5]
+        # built structures
+        self.mine = 0
+        self.mine_income = [1, 1, 0, 1, 1, 1, 1, 1]
 
-        self.science_lab = 3
-        self.science_lab_income = "knowledge1"
-        self.science_lab_tiers = [1, 1, 1]
+        self.trading_station = 0
+        self.trading_station_income = [3, 4, 4, 5]
 
-        self.academy = 2
-        self.academy_tiers = [2, "special qic1"]
+        self.research_lab = 0
+        self.research_lab_income = [1, 1, 1]
 
-        self.planetary_institute = 1
+        self.academy = 0
+        self.academy_income = [False, 2]  # True means that it is built
+        self.academy_special = [False, "qic1"]  # True means that it is built
+
+        self.planetary_institute = 0
+        self.planetary_institute_income = ["power4", "powertoken1"]
 
         # research jump start
-        self.research = False
+        self.start_research = False
 
         # power bowls
         self.bowl1 = 0
@@ -46,8 +57,14 @@ class Faction:
             "power4": ["qic1", "knowledge1"],
             "knowledge1": "credits1",
             "qic1": ["range2", "ore1"],
-            "ore1": ["credits1", "powertoken1"]
+            "ore1": ["credits1", "powertoken1"],
+            "bowl3": self.move_from_bowl2_to_bowl3
         }
+
+    def move_from_bowl2_to_bowl3(self):
+        if self.bowl2 > 1:
+            self.bowl2 -= 1
+            self.bowl3 += 1
 
     def planetary_institute_bonus_func(self):
         # For subclasses to override
@@ -62,16 +79,15 @@ class HadschHalla(Faction):
         self.name = "Hadsch Halla"
         self.home_type = "Oxide"
 
-        # resources
+        # starting resources
         self.credits = 15
         self.ore = 4
         self.knowledge = 3
-
-        # structures
-        self.planetary_institute_income = ["power 4", "power token 1"]
+        self.qic = 1
+        self.standard_income = ["credits3", "ore1", "knowledge1"]
 
         # research jump start
-        self.research = "economy"
+        self.start_research = "economy"
 
         # power bowls
         self.bowl1 = 2
@@ -85,7 +101,8 @@ class HadschHalla(Faction):
             "power4": ["qic1", "knowledge1"],
             "knowledge1": "credits1",
             "qic": ["range2", "ore1"],
-            "ore": ["credits1", "powertoken1"],
+            "ore1": ["credits1", "powertoken1"],
+            "bowl2tobowl3": self.move_from_bowl2_to_bowl3,
 
             # planetary institute bonus
             "credits3": "ore1",

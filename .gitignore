@@ -3,3 +3,4 @@ venv/
 .vscode/
 Gaia Project.code-workspace
 structures/
+test.py

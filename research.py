@@ -92,10 +92,10 @@ class ArtificialIntelligence:
 class GaiaProject:
     def __init__(self):
         self.level0 = Level()
-        self.level1 = Level(6, "direct", "gaiaformer")
+        self.level1 = Level(6, "direct", "gaiaformer1")
         self.level2 = Level(6, "direct", "powertoken3")
-        self.level3 = Level(4, "direct", "gaiaformer")
-        self.level4 = Level(3, "direct", "gaiaformer")
+        self.level3 = Level(4, "direct", "gaiaformer1")
+        self.level4 = Level(3, "direct", "gaiaformer1")
         self.advanced = False
         self.level5 = Level(3, "direct", ["vp4", "gaiaplanet1"])
 
@@ -155,9 +155,10 @@ class Research:
             StandardTechnology("TECpia.png", "worth4power", False),
             StandardTechnology("TECvps.png", "direct", "vp7"),
             StandardTechnology("TECore.png", "income", ["ore1", "power1"]),
-            StandardTechnology("TECknw.png", "income", ["knowledge1", "credits1"]),
+            StandardTechnology("TECknw.png", "income", ["knowledge1",
+                                                        "credits1"]),
             StandardTechnology("TECgai.png", "action mine on gaia", "vp3"),
-            StandardTechnology("TECcre.png", "income", ["credits4"]),
+            StandardTechnology("TECcre.png", "income", "credits4"),
             StandardTechnology("TECpow.png", "special", "power4")
         ]
 

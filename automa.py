@@ -17,6 +17,14 @@ class Automa:
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
 
+    def income_phase(self):
+        # Automa has no income.
+        pass
+
+    def gaia_phase(self):
+        # Automa doesn't have a gaia phase.
+        pass
+
     def start_mines(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the automa place its {count.upper()} mine?\n"
@@ -25,11 +33,11 @@ class Automa:
             "is a tie, use directional selection with a random card."
         )
 
-        print(f"{faction_name}{question}{rules}", end="")
+        print(f"{faction_name}{question}{rules}")
 
         while True:
             sector = (
-                "\nPlease type the number of the sector the chosen planet "
+                "Please type the number of the sector the chosen planet "
                 "is in.\n--> "
             )
             sector_choice = input(sector)
@@ -47,21 +55,20 @@ class Automa:
                     return
                 else:
                     print(
-                        f"\nThe automa home world ({self.faction.home_type}) "
-                        "doesn't exist inside this sector!", end=""
-                    )
+                        f"The automa home world ({self.faction.home_type}) "
+                        "doesn't exist inside this sector!")
             else:
-                print("\nPlease only type 1-7", end="")
+                print("Please only type 1-7")
 
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"
         question = (
             "Which booster does the automa pick? Please turn a random automa "
-            "card and look at the bottom right.\n"
+            "card and look at the bottom right."
         )
+        print(f"{faction_name}{question}")
 
         while True:
-            print(f"{faction_name}{question}")
             for x, booster in enumerate(scoring_board.boosters, start=1):
                 print(f"{x}. {booster}")
 
@@ -74,7 +81,7 @@ class Automa:
                 print(f"Automa chose {self.booster}.")
                 return
             else:
-                print("Please only type one of the available numbers.", end="")
+                print("Please only type one of the available numbers.")
 
     def mine(self):
         pass

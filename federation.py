@@ -4,4 +4,4 @@ class FederationToken:
         self.img = img
         self.count = count
         self.reward = reward
-        self.state = state
+        self.state = state  # Grey or green
