@@ -1,7 +1,7 @@
 import random
 
 import constants as C
-from exceptions_ import PlanetNotFoundError, PlanetAlreadyOwnedError
+from exceptions import PlanetNotFoundError, PlanetAlreadyOwnedError
 
 
 class Automa:

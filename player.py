@@ -1,5 +1,5 @@
 import random
-from exceptions_ import PlanetAlreadyOwnedError, PlanetNotFoundError
+from exceptions import PlanetAlreadyOwnedError, PlanetNotFoundError
 
 import constants as C
 from faction import select_faction

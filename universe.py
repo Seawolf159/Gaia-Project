@@ -1,5 +1,5 @@
 import os
-from exceptions_ import PlanetAlreadyOwnedError, PlanetNotFoundError
+from exceptions import PlanetAlreadyOwnedError, PlanetNotFoundError
 
 from PIL import Image
 
