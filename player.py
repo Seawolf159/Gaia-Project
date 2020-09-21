@@ -228,7 +228,7 @@ class Player:
                           "different action.")
                 except e.NotEnoughPowerTokens:
                     print("You don't have enough power tokens to do this "
-                          "action. Please pick a different action.
+                          "action. Please pick a different action.")
                 else:
                     return
             else:
