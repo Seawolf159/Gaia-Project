@@ -28,8 +28,7 @@ class Player:
         # Research levels
         self.terraforming = False  # This property is set during setup
         self.navigation = False  # This property is set during setup
-        self.a_i = False  # This property is set during
-                                              # setup
+        self.a_i = False  # This property is set during setup
         self.gaia_project = False  # This property is set during setup
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
@@ -390,7 +389,7 @@ class Player:
         else:
             raise e.NoGaiaFormerError
 
-    def upgrade(self):
+    def upgrade(self, research_board):
         pass
 
     def federation(self):

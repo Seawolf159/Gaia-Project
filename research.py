@@ -14,7 +14,7 @@ class Level:
         self.reward = reward
 
         # Players on level.
-        self.players = set()
+        self.players = []
 
     def __str__(self):
         if self.active:
@@ -33,9 +33,11 @@ class Level:
             when = ""
 
         if self.players:
+            pointer = "--> "
             players = ' | '.join(self.players)
+            players = pointer + players
         else:
-            players = "No players on here"
+            players = ""
 
         return f"{active}{when}{players}"
 
@@ -44,89 +46,136 @@ class Terraforming:
     """Technology track for Terraforming."""
 
     def __init__(self):
-        self.standard = False
+        self.standard = False  # This property is set during setup
         self.level0 = Level(3)
         self.level1 = Level(3, "direct", "ore2" )
         self.level2 = Level(2)
         self.level3 = Level(1)
         self.level4 = Level(1, "direct", "ore2" )
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
+        # Level 5 reward is a federation which is inserted during setup.
         self.level5 = Level(1, "direct")
 
     def __str__(self):
-        return (
-            f"Terraforming:\n{self.advanced}\nFederation token:\n"
-            f"{self.level5.reward}\n"
-        )
+        title = "Terraforming\n"
+        output = [title]
+
+        output = [
+            title,
+            f"5. Terraform cost: 1 ore",
+            f"4. Terraform cost: 1 ore | Gain: 2 ore",
+            f"3. Terraform cost: 1 ore",
+        ]
+
+        # From high to low for similarity with the physical game.
+        levels = [
+            self.level5,
+            self.level4,
+            self.level3,
+            "Charge 3 power.",
+            self.level2,
+            self.level1,
+            self.level0
+        ]
+        for i, level in enumerate(reversed(levels)):
+            output.append(f"{i}. {level}\n")
+
+        return ''.join(output)
 
 
 class Navigation:
     """Technology track for Navigation."""
 
     def __init__(self):
+        self.standard = False  # This property is set during setup
         self.level0 = Level(1)
         self.level1 = Level(1, "direct", "qic1")
         self.level2 = Level(2)
         self.level3 = Level(2, "direct", "qic1")
         self.level4 = Level(3)
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
         self.level5 = Level(4, "direct", "Lost Planet")  # TODO insert
                                                          # Lost planet object
 
     def __str__(self):
-        return f"Navigation:\n{self.advanced}\n"
+        title = "Navigation\n"
+        output = [title]
+
+        # From high to low for similarity with the physical game.
+        levels = [
+            self.level5,
+            self.level4,
+            self.level3,
+            "Charge 3 power.",
+            self.level2,
+            self.level1,
+            self.level0
+        ]
+        for i, level in enumerate(reversed(levels), start=1):
+            output.append(f"{i}. {level}\n")
+
+        return ''.join(output)
+
 
 class ArtificialIntelligence:
     def __init__(self):
+        self.standard = False  # This property is set during setup
         self.level0 = Level()
         self.level1 = Level(False, "direct", "qic1")
         self.level2 = Level(False, "direct", "qic1")
         self.level3 = Level(False, "direct", "qic2")
         self.level4 = Level(False, "direct", "qic2")
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
         self.level5 = Level(False, "direct", "qic4")
 
     def __str__(self):
         return f"Terraforming:\n{self.advanced}\n"
 
+
 class GaiaProject:
     def __init__(self):
+        self.standard = False  # This property is set during setup
         self.level0 = Level()
         self.level1 = Level(6, "direct", "gaiaformer1")
         self.level2 = Level(6, "direct", "powertoken3")
         self.level3 = Level(4, "direct", "gaiaformer1")
         self.level4 = Level(3, "direct", "gaiaformer1")
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
         self.level5 = Level(3, "direct", ["vp4", "gaiaplanet1"])
 
     def __str__(self):
         return f"GaiaProject:\n{self.advanced}\n"
 
+
 class Economy:
     def __init__(self):
+        self.standard = False  # This property is set during setup
         self.level0 = Level()
         self.level1 = Level(False, "income", ["credits2", "power1"])
         self.level2 = Level(False, "income", ["ore1", "credits2", "power2"])
         self.level3 = Level(False, "income", ["ore1", "credits3", "power3"])
         self.level4 = Level(False, "income", ["ore2", "credits4", "power4"])
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
         self.level5 = Level("False", "direct", ["ore3", "credits6", "power6"])
 
     def __str__(self):
         return f"Economy:\n{self.advanced}\n"
 
+
 class Science:
     def __init__(self):
+        self.standard = False  # This property is set during setup
         self.level0 = Level()
         self.level1 = Level(False, "income", "knowledge1")
         self.level2 = Level(False, "income", "knowledge2")
         self.level3 = Level(False, "income", "knowledge3")
         self.level4 = Level(False, "income", "knowledge4")
-        self.advanced = False
+        self.advanced = False  # This property is set during setup
         self.level5 = Level(False, "direct", "knowledge9")
 
     def __str__(self):
         return f"Science:\n{self.advanced}\n"
+
 
 class Research:
     """Research board."""
@@ -220,10 +269,11 @@ class Research:
 
     def __str__(self):
         return (
+            "Research tracks:\n"
             f"{str(self.terraforming)}\n"
             f"{str(self.navigation)}\n"
             f"{str(self.a_i)}\n"
             f"{str(self.gaia_project)}\n"
             f"{str(self.economy)}\n"
-            f"{str(self.science)}"
+            f"{str(self.science)}\n"
         )

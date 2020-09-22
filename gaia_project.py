@@ -128,21 +128,36 @@ class GaiaProject:
         # beginning of the game.
 
         # Place players on level 0 of all research boards and check if they
-        # start on level 1 of any of them.
-        for player in self.players:
-            player.terraforming = self.research_board.terraforming.level0
-            player.navigation = self.research_board.navigation.level0
-            player.artificial_intelligence = self.research_board.a_i.level0
-            player.gaia_project = self.research_board.gaia_project.level0
-            player.economy = self.research_board.economy.level0
-            player.science = self.research_board.science.level0
+        # start on level 1 of any of them. Add the level to the player object
+        # for easy acces and insert the faction name of the player in the level
+        # object for printing.
+        for p in self.players:
+            name = p.faction.name
 
-            start_research = player.faction.start_research
+            p.terraforming = self.research_board.terraforming.level0
+            self.research_board.terraforming.level0.players.append(name)
+
+            p.navigation = self.research_board.navigation.level0
+            self.research_board.navigation.level0.players.append(name)
+
+            p.artificial_intelligence = self.research_board.a_i.level0
+            self.research_board.a_i.level0.players.append(name)
+
+            p.gaia_project = self.research_board.gaia_project.level0
+            self.research_board.gaia_project.level0.players.append(name)
+
+            p.economy = self.research_board.economy.level0
+            self.research_board.economy.level0.players.append(name)
+
+            p.science = self.research_board.science.level0
+            self.research_board.science.level0.players.append(name)
+
+            start_research = p.faction.start_research
             if start_research:
-                exec(f"player.{start_research} "
+                exec(f"p.{start_research} "
                      f"= self.research_board.{start_research}.level1")
 
-        print(self.players[0].economy)
+        print(self.research_board)
 
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
@@ -153,7 +168,6 @@ class GaiaProject:
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
-
 
         # TODO Move the setup inside the play function instead and remove this
         # line.
