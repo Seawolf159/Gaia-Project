@@ -350,7 +350,10 @@ class GaiaProject:
 
             # 3. Action phase
             for player in self.players:
-                player.action_phase(self.universe)
+                # TODO No idea why this happens
+                # TypeError: action_phase() takes 1 positional argument but 2
+                # were given
+                player.action_phase(self)
 
             # 4. Clean up phase
 

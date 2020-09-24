@@ -63,7 +63,7 @@ class Sector:
                 [5, 6, 11, 15, 14, 9],  # Inner circle
                 [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
             ]
-            universe grid mapping = center sector = [
+            universe grid mapping. For example: center sector = [
                 [(8, 13)],
                 [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
                 [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
@@ -79,6 +79,9 @@ class Sector:
             img (path): Absolute path to the image file.
             universe_grid (list): Location of planets and spaces in the sector.
             rotation (int): Rotated amount. Can be 1-5.
+
+        TODO:
+            Right now the rotation does nothing really.
         """
 
         self.hexes = [[hexes.get(10, Space(location=universe_grid[0][0]))]]
@@ -130,7 +133,7 @@ class Sector:
         self.hexes.append(self.outer)
 
     def rotate_sector(self, x=1):
-        """Rotating a sector x times."""
+        """Rotate a sector x times."""
 
         #      1     2     3
 
@@ -373,10 +376,10 @@ class Universe:
         # CAREFUL THESE ARE THE BACK SIDE!!
         self.sector6 = Sector(
             hexes={
-            7: "Trans-dim",
+            7: "Trans-dimN",
             11: "Terra",
             14: "Gaia",
-            18: "Trans-dim",
+            18: "Trans-dimS",
             19: "Desert"
         },
             img=os.path.join(IMAGES, "sector6b"),
@@ -384,13 +387,12 @@ class Universe:
             rotation=sector6[1]
         )
 
-
         # CAREFUL THESE ARE THE BACK SIDE!!
         self.sector7 = Sector(
             hexes={
             1: "Trans-dim",
-            6: "Gaia",
-            9: "Gaia",
+            6: "GaiaN",
+            9: "GaiaS",
             15: "Swamp",
             17: "Titanium"
         },
@@ -507,31 +509,100 @@ class Universe:
         else:
             return distance
 
-    def locate_planet(self, sector, ptype, faction):
+    def locate_planet(self, sector, ptype):
         """Looking for a planet.
 
         Args:
             sector (str): Number of the sector where you want to find a planet.
             ptype (str): Specific type of planet that your are looking for.
-            faction: Faction object.
         """
 
-        if sector == "6" and ptype == "gaia":
-            pass
-        if sector == "7" and ptype == "trans-dim":
-            pass
+        # TODO Make this ridiculous way of doing this better.
+        if sector == "6" and ptype == "trans-dim":
+            choices = []
+            # Skip center as it's always empty.
+            for circle in self.sector6.hexes[1:]:
+                for hex_ in circle:
+                    if hasattr(hex_, "type"):
+                        if hex_.type.lower() == ptype:
+                            if not hex_.owner:
+                                choices.append(hex_)
 
-        # Skip center as it's always empty.
-        for circle in eval(f"self.sector{sector}.hexes[1:]"):
-            for hex_ in circle:
-                if hasattr(hex_, "type"):
-                    if hex_.type.lower() == faction.home_type.lower():
-                        if not hex_.owner:
-                            return hex_
-                        else:
-                            raise e.PlanetAlreadyOwnedError
+            if len(choices) == 2:
+                print(
+                    "There are two Trans-dimensional planets in this sector. "
+                    "Which one would you like to choose? North or South in "
+                    "relation to the sector arrow? (N/S)"
+                )
+
+                while True:
+                    answer = input("--> ").lower()
+
+                    if answer == "n":
+                        for planet in choices:
+                            if planet.name[-1] == "N":
+                                return planet
+                    elif answer == "s":
+                        for planet in choices:
+                            if planet.name[-1] == "S":
+                                return planet
+                    else:
+                        print("Please type N for North or S for South.")
+            elif len(choices) == 1:
+                return choices[0]
+            else:
+                raise e.PlanetAlreadyOwnedError
+
+        # More players TODO this is not future proof as on
+        # the bigger board this sectors front side has the
+        # gaia planets to the west and east instead of
+        # north and south.
+        elif sector == "7" and ptype == "gaia":
+            choices = []
+            # Skip center as it's always empty.
+            for circle in self.sector7.hexes[1:]:
+                for hex_ in circle:
+                    if hasattr(hex_, "type"):
+                        if hex_.type.lower() == ptype:
+                            if not hex_.owner:
+                                choices.append(hex_)
+
+            if len(choices) == 2:
+                print(
+                    "There are two Gaia planets in this sector. "
+                    "On which one would you like to build? North or South in "
+                    "relation to the sector arrow? (N/S)"
+                )
+
+                while True:
+                    answer = input("--> ").lower()
+
+                    if answer == "n":
+                        for planet in choices:
+                            if planet.name[-1] == "N":
+                                return planet
+                    elif answer == "s":
+                        for planet in choices:
+                            if planet.name[-1] == "S":
+                                return planet
+                    else:
+                        print("Please type N for North or S for South.")
+            elif len(choices) == 1:
+                return choices[0]
+            else:
+                raise e.PlanetAlreadyOwnedError
         else:
-            raise e.PlanetNotFoundError
+            # Skip center as it's always empty.
+            for circle in eval(f"self.sector{sector}.hexes[1:]"):
+                for hex_ in circle:
+                    if hasattr(hex_, "type"):
+                        if hex_.type.lower() == ptype:
+                            if not hex_.owner:
+                                return hex_
+                            else:
+                                raise e.PlanetAlreadyOwnedError
+            else:
+                raise e.PlanetNotFoundError
 
 
 if __name__ == "__main__":

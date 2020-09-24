@@ -57,7 +57,6 @@ class Automa:
                     planet = universe.locate_planet(
                         sector_choice,
                         self.faction.home_type.lower(),
-                        self.faction
                     )
                 except e.PlanetNotFoundError:
                     print(

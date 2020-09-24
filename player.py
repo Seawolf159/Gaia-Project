@@ -201,30 +201,37 @@ class Player:
             print(f"Power in bowl 2: {self.faction.bowl2}")
             print(f"Power in bowl 3: {self.faction.bowl3}")
 
-    def action_phase(self):
-        faction_name: f"\n{self.faction.name}:\n"
+    def action_phase(self, gp):
+        """Functions for delegating to action functions.
+
+        Args:
+            gp: GaiaProject class
+        """
+
+        faction_name = f"\n{self.faction.name}:\n"
         intro = ("What action do you want to take?\n"
                  "Type the number of your action.\n")
         mine = "1. Build a mine.\n"
         gaia = "2. Start a gaia project.\n"
-        upgrade = "3. Upgrade existing structure.\n"
+        upgrade = "3. Upgrade an existing structure.\n"
         federation = "4. Form a federation.\n"
-        research = "5. Research.\n"
+        research = "5. Do research.\n"
         pq = "6. Power or Q.I.C. (Purple/Green).\n"
-        special = "7. Special (Orange).\n"
+        special = "7. Do a special (Orange) action.\n"
         pass_ = "8. Pass.\n"
-        free = "9. Exchange power for resources .\n"
+        free = "9. Exchange power for resources. (Free action)\n"
 
+        # Value is a list with the function and the arguments it needs.
         options = {
-            "1": self.mine,
-            "2": self.gaia,
-            "3": self.upgrade,
-            "4": self.federation,
-            "5": self.research,
-            "6": self.pq,
-            "7": self.special,
-            "8": self.pass_,
-            "9": self.free
+            "1": [self.mine],
+            "2": [self.gaia, gp.universe],
+            "3": [self.upgrade],
+            "4": [self.federation],
+            "5": [self.research, gp.research_board],
+            "6": [self.pq],
+            "7": [self.special],
+            "8": [self.pass_],
+            "9": [self.free]
         }
 
         prompt = (
@@ -233,11 +240,18 @@ class Player:
         )
 
         while True:
-            action = input(prompt)
+            choice = input(prompt)
 
-            if action in options.keys():
+            if choice in options.keys():
                 try:
-                    action()
+                    action = options[choice]
+                    # If the action function needs additional arguments, unpack
+                    # them in the function call.
+                    if len(action) > 1:
+                        action[0](*action[1:])
+                    # Other wise just call the function.
+                    else:
+                        action[0]()
                 except e.NoGaiaFormerError:
                     print("You have no available Gaiaformers. Please pick a "
                           "different action.")
@@ -272,7 +286,6 @@ class Player:
                     planet = universe.locate_planet(
                         sector_choice,
                         self.faction.home_type.lower(),
-                        self.faction
                     )
                 except e.PlanetNotFoundError:
                     print(
@@ -338,11 +351,7 @@ class Player:
             if sector_choice in C.SECTORS_2P:
                 try:
                     if ptype:
-                        planet = universe.locate_planet(
-                            sector_choice,
-                            ptype,
-                            self.faction
-                        )
+                        planet = universe.locate_planet(sector_choice, ptype)
                     else:
                         # TODO Automation, load a list of planets available in
                         # the sector.
@@ -366,7 +375,7 @@ class Player:
                                     "numbers.")
                 except e.PlanetNotFoundError:
                     print(
-                        f"Your home world ({self.faction.home_type}) doesn't "
+                        f"Your planet type ({ptype or chosen_type}) doesn't "
                         "exist inside this sector! Please choose a different "
                         "sector.")
                 except e.PlanetAlreadyOwnedError:
