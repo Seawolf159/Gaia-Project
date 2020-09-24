@@ -513,6 +513,7 @@ class Universe:
         Args:
             sector (str): Number of the sector where you want to find a planet.
             ptype (str): Specific type of planet that your are looking for.
+            faction: Faction object.
         """
 
         if sector == "6" and ptype == "gaia":

@@ -22,7 +22,12 @@ class Player:
         self.standard_technology = []
         self.advanced_technology = []
         self.booster = False  # This property is set during setup
+
         self.empire = []  # List of owned planets
+        self.federations = []  # List of federation tokens
+        self.gaia_forming = []  # List of trans-dim planets undergoing a
+                                # gaia project
+
         self.universe = False  # This property is set during setup
 
         # Research levels
@@ -183,7 +188,18 @@ class Player:
 
     def gaia_phase(self):
         if self.faction.gaia_bowl > 0:
-            pass
+            self.faction.move_from_gaia_to_bowl()
+
+            while self.gaia_forming:
+                # Set the type property of the trans-dimensional planet to Gaia
+                # as the gaia project is now completed.
+                self.gaia_forming.pop().type = "Gaia"
+
+            print("Your Trans-dimensional planets are now Gaia planets.")
+            print(f"Power in gaia bowl: {self.faction.gaia_bowl}")
+            print(f"Power in bowl 1: {self.faction.bowl1}")
+            print(f"Power in bowl 2: {self.faction.bowl2}")
+            print(f"Power in bowl 3: {self.faction.bowl3}")
 
     def action_phase(self):
         faction_name: f"\n{self.faction.name}:\n"
@@ -225,9 +241,12 @@ class Player:
                 except e.NoGaiaFormerError:
                     print("You have no available Gaiaformers. Please pick a "
                           "different action.")
-                except e.NotEnoughPowerTokens:
+                except e.NotEnoughPowerTokensError:
                     print("You don't have enough power tokens to do this "
                           "action. Please pick a different action.")
+                except e.BackToActionSelection:
+                    # User chose to pick another action.
+                    continue
                 else:
                     return
             else:
@@ -303,8 +322,7 @@ class Player:
         """Function for choosing a planet on the board.
 
         Args:
-            universe (object): The universe object used in the main GaiaProject
-                class.
+            universe: The universe object used in the main GaiaProject class.
             ptype (str): The planet type you already know will be chosen.
                 If not provided, this function will ask for a planet type.
         """
@@ -371,10 +389,11 @@ class Player:
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
             if self.faction.count_powertokens() > self.gaia_project.active:
-                print("You want to start a Gaia Project.")
+                print("\nYou want to start a Gaia Project.")
                 planet = self.choose_planet(universe, "trans-dim")
                 for _ in range(self.gaia_project.active):
-                    # Prioritise taking from the lowest bowl
+                    # Prioritise taking from the lowest bowl as i don't see why
+                    # it would ever be better to not do that.
                     if self.faction.bowl1 > 0:
                         self.faction.bowl1 -= 1
                     elif self.faction.bowl2 > 0:
@@ -383,20 +402,65 @@ class Player:
                         self.faction.bowl3 -= 1
                 planet.owner = self.faction.home_type
                 planet.structure = "gaiaformer"
+                self.gaia_forming.append(planet)
                 self.faction.gaiaformer -= 1
             else:
                 raise e.NotEnoughPowerTokensError
         else:
             raise e.NoGaiaFormerError
 
-    def upgrade(self, research_board):
+    def upgrade(self):
         pass
 
     def federation(self):
         pass
 
-    def research(self):
-        pass
+    def research(self, research_board):
+        faction_name = self.faction.name
+        levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        print("\nOn what research track do you want to go up?")
+        options = (
+            "1. Terraforming\n"
+            "2. Navigation\n"
+            "3. Artificial Intelligence\n"
+            "4. Gaia Project\n"
+            "5. Economy\n"
+            "6. Science\n"
+            "7. I changed my mind. Go back to action selection.\n"
+        )
+        while True:
+            try:
+                answer = input(f"{options}--> ")
+            except e.NoFederationTokensError:
+                print(
+                    "You have no federation tokens. You can't go up on this "
+                    "track. Please choose another."
+                )
+                continue
+            except e.NoFederationGreenError:
+                print(
+                    "You have no federation token with the green side up left."
+                    " You can't go up on this track. Please choose another."
+                )
+                continue
+
+            if answer in ["1", "2", "3", "4", "5", "6"]:
+                current_level = levels[int(answer) - 1]
+                research_board.tech_tracks[int(answer) - 1] \
+                    .research(current_level, self)
+                return
+            elif answer == "7":
+                raise e.BackToActionSelection
+            else:
+                print("Please only type 1-7")
 
     def pq(self):
         pass

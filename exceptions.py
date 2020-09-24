@@ -13,5 +13,21 @@ class NoGaiaFormerError(Exception):
     pass
 
 
-class NotEnoughPowerTokens(Exception):
+class NotEnoughPowerTokensError(Exception):
+    pass
+
+
+class BackToActionSelection(Exception):
+    pass
+
+
+class NoFederationTokensError(Exception):
+    pass
+
+
+class NoFederationGreenError(Exception):
+    pass
+
+
+class NoResearchPossibleError(Exception):
     pass

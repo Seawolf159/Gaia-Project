@@ -58,7 +58,6 @@ class GaiaProject:
 
         # A list with all the player objects in turn order.
         self.players = []
-        self.player_turn = 1
         self.round = 1
 
         self.player1 = Player(player1)
@@ -76,8 +75,6 @@ class GaiaProject:
         if player4:
             self.player4 = Player(player4)
             self.players.append(self.player4)
-
-        self.change_turn()
 
         self.research_board = Research()
         self.scoring_board = Scoring()
@@ -336,9 +333,6 @@ class GaiaProject:
 
     def change_phase(self):
         pass
-
-    def change_turn(self):
-        self.current_player = self.players[self.player_turn]
 
     def play(self):
         """This function will setup and allow you to start playing a game."""

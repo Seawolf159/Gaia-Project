@@ -1,3 +1,4 @@
+import exceptions as e
 import random
 
 from technology import AdvancedTechnology, StandardTechnology
@@ -6,15 +7,23 @@ from technology import AdvancedTechnology, StandardTechnology
 class Level:
     """One single level on the technology track."""
 
-    def __init__(self, active=False, when=False, reward=False):
+    def __init__(self, name, active=False, when=False, reward=False):
+        self.name = name
+
         # Like Terraforming cost or Navigation range.
         self.active = active
 
         self.when = when
         self.reward = reward
 
-        # Players on level.
+        # Players on level. List of faction names.
         self.players = []
+
+    def add(self, faction_name):
+        self.players.append(faction_name)
+
+    def remove(self, faction_name):
+        self.players.remove(faction_name)
 
     def __str__(self):
         if self.active:
@@ -42,19 +51,65 @@ class Level:
         return f"{active}{when}{players}"
 
 
-class Terraforming:
+class TechTrack:
+    """Class for most common similarities between tech track objects."""
+
+    def __init__(self):
+        pass
+
+    def research(self, level, player):
+        """Function for going up the chosen research track.
+
+        Args:
+            level:  Level object where the player currently is on this track.
+            faction_name (str): Player object.
+        """
+
+        num = int(level.name[-1])
+
+        if num < 4:
+            # Remove player from the current level's list of players.
+            level.remove(player.faction.name)
+
+            # Add player to the next level on the track's list of players.
+            exec(f"self.level[num + 1].add(faction_name)")
+        elif num == 4:
+            # Check if the player has any federations.
+            if player.federations:
+                # If they do, check if there are any green sides left and flip
+                # the first one found as i don't think it matters which one is
+                # flipped if there are multiple ones. Do inform the player
+                # which one was turned around.
+                for federation in player.federations:
+                    if federation.state == "green":
+                        federation.state == "grey"
+                        print(
+                            f"Your {federation} token has been flipped to "
+                            "grey and you have been moved to level 5."
+                        )
+                        return
+                else:
+                    raise e.NoFederationGreenError
+            else:
+                raise e.NoFederationTokensError
+        elif num == 5:
+            raise e.NoResearchPossibleError
+
+
+class Terraforming(TechTrack):
     """Technology track for Terraforming."""
 
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level(3)
-        self.level1 = Level(3, "direct", "ore2" )
-        self.level2 = Level(2)
-        self.level3 = Level(1)
-        self.level4 = Level(1, "direct", "ore2" )
+        self.level0 = Level("level0", 3)
+        self.level1 = Level("level1", 3, "direct", "ore2" )
+        self.level2 = Level("level2", 2)
+        self.level3 = Level("level3", 1)
+        self.level4 = Level("level4", 1, "direct", "ore2" )
         self.advanced = False  # This property is set during setup
         # Level 5 reward is a federation which is inserted during setup.
-        self.level5 = Level(1, "direct")
+        self.level5 = Level("level5", 1, "direct")
 
     def __str__(self):
         title = "Terraforming\n"
@@ -83,18 +138,19 @@ class Terraforming:
         return ''.join(output)
 
 
-class Navigation:
+class Navigation(TechTrack):
     """Technology track for Navigation."""
 
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level(1)
-        self.level1 = Level(1, "direct", "qic1")
-        self.level2 = Level(2)
-        self.level3 = Level(2, "direct", "qic1")
-        self.level4 = Level(3)
+        self.level0 = Level("level0", 1)
+        self.level1 = Level("level1", 1, "direct", "qic1")
+        self.level2 = Level("level2", 2)
+        self.level3 = Level("level3", 2, "direct", "qic1")
+        self.level4 = Level("level4", 3)
         self.advanced = False  # This property is set during setup
-        self.level5 = Level(4, "direct", "Lost Planet")  # TODO insert
+        self.level5 = Level("level5", 4, "direct", "Lost Planet")  # TODO insert
                                                          # Lost planet object
 
     def __str__(self):
@@ -117,61 +173,65 @@ class Navigation:
         return ''.join(output)
 
 
-class ArtificialIntelligence:
+class ArtificialIntelligence(TechTrack):
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level()
-        self.level1 = Level(False, "direct", "qic1")
-        self.level2 = Level(False, "direct", "qic1")
-        self.level3 = Level(False, "direct", "qic2")
-        self.level4 = Level(False, "direct", "qic2")
+        self.level0 = Level("level0", )
+        self.level1 = Level("level1", False, "direct", "qic1")
+        self.level2 = Level("level2", False, "direct", "qic1")
+        self.level3 = Level("level3", False, "direct", "qic2")
+        self.level4 = Level("level4", False, "direct", "qic2")
         self.advanced = False  # This property is set during setup
-        self.level5 = Level(False, "direct", "qic4")
+        self.level5 = Level("level5", False, "direct", "qic4")
 
     def __str__(self):
         return f"Terraforming:\n{self.advanced}\n"
 
 
-class GaiaProject:
+class GaiaProject(TechTrack):
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level()
-        self.level1 = Level(6, "direct", "gaiaformer1")
-        self.level2 = Level(6, "direct", "powertoken3")
-        self.level3 = Level(4, "direct", "gaiaformer1")
-        self.level4 = Level(3, "direct", "gaiaformer1")
+        self.level0 = Level("level0", )
+        self.level1 = Level("level1", 6, "direct", "gaiaformer1")
+        self.level2 = Level("level2", 6, "direct", "powertoken3")
+        self.level3 = Level("level3", 4, "direct", "gaiaformer1")
+        self.level4 = Level("level4", 3, "direct", "gaiaformer1")
         self.advanced = False  # This property is set during setup
-        self.level5 = Level(3, "direct", ["vp4", "gaiaplanet1"])
+        self.level5 = Level("level5", 3, "direct", ["vp4", "gaiaplanet1"])
 
     def __str__(self):
         return f"GaiaProject:\n{self.advanced}\n"
 
 
-class Economy:
+class Economy(TechTrack):
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level()
-        self.level1 = Level(False, "income", ["credits2", "power1"])
-        self.level2 = Level(False, "income", ["ore1", "credits2", "power2"])
-        self.level3 = Level(False, "income", ["ore1", "credits3", "power3"])
-        self.level4 = Level(False, "income", ["ore2", "credits4", "power4"])
+        self.level0 = Level("level0", )
+        self.level1 = Level("level1", False, "income", ["credits2", "power1"])
+        self.level2 = Level("level2", False, "income", ["ore1", "credits2", "power2"])
+        self.level3 = Level("level3", False, "income", ["ore1", "credits3", "power3"])
+        self.level4 = Level("level4", False, "income", ["ore2", "credits4", "power4"])
         self.advanced = False  # This property is set during setup
-        self.level5 = Level("False", "direct", ["ore3", "credits6", "power6"])
+        self.level5 = Level("level5", "False", "direct", ["ore3", "credits6", "power6"])
 
     def __str__(self):
         return f"Economy:\n{self.advanced}\n"
 
 
-class Science:
+class Science(TechTrack):
     def __init__(self):
+        TechTrack.__init__(self)
         self.standard = False  # This property is set during setup
-        self.level0 = Level()
-        self.level1 = Level(False, "income", "knowledge1")
-        self.level2 = Level(False, "income", "knowledge2")
-        self.level3 = Level(False, "income", "knowledge3")
-        self.level4 = Level(False, "income", "knowledge4")
+        self.level0 = Level("level0", )
+        self.level1 = Level("level1", False, "income", "knowledge1")
+        self.level2 = Level("level2", False, "income", "knowledge2")
+        self.level3 = Level("level3", False, "income", "knowledge3")
+        self.level4 = Level("level4", False, "income", "knowledge4")
         self.advanced = False  # This property is set during setup
-        self.level5 = Level(False, "direct", "knowledge9")
+        self.level5 = Level("level5", False, "direct", "knowledge9")
 
     def __str__(self):
         return f"Science:\n{self.advanced}\n"
@@ -188,6 +248,16 @@ class Research:
         self.gaia_project = GaiaProject()
         self.economy = Economy()
         self.science = Science()
+
+        # List for easier selection in other functions.
+        self.tech_tracks = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science
+        ]
 
         # Standard technology tiles
         self.free_standard_technology = []
@@ -237,14 +307,6 @@ class Research:
             AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
         ]
 
-        tech_tracks = [
-            self.terraforming,
-            self.navigation,
-            self.a_i,
-            self.gaia_project,
-            self.economy,
-            self.science
-        ]
 
         # Randomly assign standard and advanced tiles a location
         while len(standard) > 3:
@@ -256,7 +318,7 @@ class Research:
 
             # Pick a technology track.
             tech_track = (
-                tech_tracks.pop(random.randrange(len(tech_tracks)))
+                self.tech_tracks.pop(random.randrange(len(self.tech_tracks)))
             )
 
             # Place the standard and advanced tiles on the tech track.
