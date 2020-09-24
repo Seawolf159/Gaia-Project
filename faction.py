@@ -58,12 +58,24 @@ class Faction:
             "knowledge1": "credits1",
             "qic1": ["range2", "ore1"],
             "ore1": ["credits1", "powertoken1"],
-            "bowl3": self.move_from_bowl2_to_bowl3
+            "bowl2tobowl3": self.move_from_bowl2_to_bowl3
         }
+
+    def move_from_gaia_to_bowl(self):
+        """Move power from the gaia project bowl to bowl 1."""
+
+        # Raise an exception if this function hasn't been overwritten in the
+        # Terrans subclass.
+        if self.name == "Terrans":
+            raise NotImplementedError
+
+        while self.gaia_bowl > 0:
+            self.gaia_bowl -= 1
+            self.bowl1 += 1
 
     def move_from_bowl2_to_bowl3(self):
         if self.bowl2 > 1:
-            self.bowl2 -= 1
+            self.bowl2 -= 2
             self.bowl3 += 1
 
     def count_powertokens(self):
@@ -112,6 +124,10 @@ class HadschHalla(Faction):
             "credits3": "ore1",
             "credits4": ["qic1", "knowledge1"]
         }
+
+
+class Terrans(Faction):
+    pass
 
 
 def select_faction(faction):
