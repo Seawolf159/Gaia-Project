@@ -26,21 +26,6 @@ class Level:
         self.players.remove(faction_name)
 
     def __str__(self):
-        if self.active:
-            active = f"Your ongoing bonus is {self.active} "
-        else:
-            active = ""
-
-        if self.when:
-            if self.when == "income":
-                reward_type = "income"
-            else:
-                reward_type = "direct bonus"
-
-            when = f"Your {reward_type} is {self.reward} "
-        else:
-            when = ""
-
         if self.players:
             pointer = "--> "
             players = ' | '.join(self.players)
@@ -48,21 +33,21 @@ class Level:
         else:
             players = ""
 
-        return f"{active}{when}{players}"
+        return f"{self.name[-1]}. {players}"
 
 
 class TechTrack:
     """Class for most common similarities between tech track objects."""
 
-    def __init__(self):
-        pass
+    def __init__(self, name):
+        self.name = name
 
     def research(self, level, player):
         """Function for going up the chosen research track.
 
         Args:
             level:  Level object where the player currently is on this track.
-            faction_name (str): Player object.
+            player: Player object.
         """
 
         num = int(level.name[-1])
@@ -72,7 +57,7 @@ class TechTrack:
             level.remove(player.faction.name)
 
             # Add player to the next level on the track's list of players.
-            exec(f"self.level[num + 1].add(faction_name)")
+            exec(f"self.level{num + 1}.add(player.faction.name)")
         elif num == 4:
             # Check if the player has any federations.
             if player.federations:
@@ -95,12 +80,29 @@ class TechTrack:
         elif num == 5:
             raise e.NoResearchPossibleError
 
+    def str_ (self, title):
+        # From high to low for similarity with the physical game.
+        # This function is only called on sublasses so i can ignore this error.
+        # pylint: disable=no-member
+        output = [
+            title,
+            str(self.level5),
+            str(self.level4),
+            str(self.level3),
+            str(self.level2),
+            str(self.level1),
+            str(self.level0)
+        ]
+
+        return output
+
 
 class Terraforming(TechTrack):
     """Technology track for Terraforming."""
 
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
+
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", 3)
         self.level1 = Level("level1", 3, "direct", "ore2" )
@@ -111,38 +113,12 @@ class Terraforming(TechTrack):
         # Level 5 reward is a federation which is inserted during setup.
         self.level5 = Level("level5", 1, "direct")
 
-    def __str__(self):
-        title = "Terraforming\n"
-        output = [title]
-
-        output = [
-            title,
-            f"5. Terraform cost: 1 ore",
-            f"4. Terraform cost: 1 ore | Gain: 2 ore",
-            f"3. Terraform cost: 1 ore",
-        ]
-
-        # From high to low for similarity with the physical game.
-        levels = [
-            self.level5,
-            self.level4,
-            self.level3,
-            "Charge 3 power.",
-            self.level2,
-            self.level1,
-            self.level0
-        ]
-        for i, level in enumerate(reversed(levels)):
-            output.append(f"{i}. {level}\n")
-
-        return ''.join(output)
-
 
 class Navigation(TechTrack):
     """Technology track for Navigation."""
 
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", 1)
         self.level1 = Level("level1", 1, "direct", "qic1")
@@ -153,29 +129,10 @@ class Navigation(TechTrack):
         self.level5 = Level("level5", 4, "direct", "Lost Planet")  # TODO insert
                                                          # Lost planet object
 
-    def __str__(self):
-        title = "Navigation\n"
-        output = [title]
-
-        # From high to low for similarity with the physical game.
-        levels = [
-            self.level5,
-            self.level4,
-            self.level3,
-            "Charge 3 power.",
-            self.level2,
-            self.level1,
-            self.level0
-        ]
-        for i, level in enumerate(reversed(levels), start=1):
-            output.append(f"{i}. {level}\n")
-
-        return ''.join(output)
-
 
 class ArtificialIntelligence(TechTrack):
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", )
         self.level1 = Level("level1", False, "direct", "qic1")
@@ -190,8 +147,8 @@ class ArtificialIntelligence(TechTrack):
 
 
 class GaiaProject(TechTrack):
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", )
         self.level1 = Level("level1", 6, "direct", "gaiaformer1")
@@ -206,8 +163,8 @@ class GaiaProject(TechTrack):
 
 
 class Economy(TechTrack):
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", )
         self.level1 = Level("level1", False, "income", ["credits2", "power1"])
@@ -222,8 +179,8 @@ class Economy(TechTrack):
 
 
 class Science(TechTrack):
-    def __init__(self):
-        TechTrack.__init__(self)
+    def __init__(self, name):
+        TechTrack.__init__(self, name)
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", )
         self.level1 = Level("level1", False, "income", "knowledge1")
@@ -242,12 +199,12 @@ class Research:
 
     def __init__(self):
         # Techonlogy tracks.
-        self.terraforming = Terraforming()
-        self.navigation = Navigation()
-        self.a_i = ArtificialIntelligence()
-        self.gaia_project = GaiaProject()
-        self.economy = Economy()
-        self.science = Science()
+        self.terraforming = Terraforming("Terraforming")
+        self.navigation = Navigation("Navigation")
+        self.a_i = ArtificialIntelligence("Artificial Intelligence")
+        self.gaia_project = GaiaProject("Gaia Project")
+        self.economy = Economy("Economy")
+        self.science = Science("Science")
 
         # List for easier selection in other functions.
         self.tech_tracks = [
@@ -307,6 +264,14 @@ class Research:
             AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
         ]
 
+        tech_tracks = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science
+        ]
 
         # Randomly assign standard and advanced tiles a location
         while len(standard) > 3:
@@ -318,7 +283,7 @@ class Research:
 
             # Pick a technology track.
             tech_track = (
-                self.tech_tracks.pop(random.randrange(len(self.tech_tracks)))
+                tech_tracks.pop(random.randrange(len(tech_tracks)))
             )
 
             # Place the standard and advanced tiles on the tech track.
@@ -330,12 +295,38 @@ class Research:
             self.free_standard_technology.extend(standard)
 
     def __str__(self):
-        return (
-            "Research tracks:\n"
-            f"{str(self.terraforming)}\n"
-            f"{str(self.navigation)}\n"
-            f"{str(self.a_i)}\n"
-            f"{str(self.gaia_project)}\n"
-            f"{str(self.economy)}\n"
-            f"{str(self.science)}\n"
-        )
+        space = " "
+        width = "  |  "
+
+        terr = self.terraforming.str_("Terraforming:")
+        terr_lengths = max([len(text) for text in terr])
+
+        navi = self.navigation.str_("Navigation:")
+        navi_lengths = max([len(text) for text in navi])
+
+        a_i = self.a_i.str_("Artificial Intellience:")
+        a_i_lengths = max([len(text) for text in a_i])
+
+        gaia = self.gaia_project.str_("Gaia Project:")
+        gaia_lengths = max([len(text) for text in gaia])
+
+        eco = self.economy.str_("Economy:")
+        eco_lengths = max([len(text) for text in eco])
+
+        sci = self.science.str_("Science:")
+        sci_lengths = max([len(text) for text in sci])
+
+        output = []
+        i = 0
+        for t, n, a, g, e, s in zip(terr, navi, a_i, gaia, eco, sci):
+            output.append(
+                f"{t}{space * (terr_lengths - len(terr[i]))}{width}"
+                f"{n}{space * (navi_lengths - len(navi[i]))}{width}"
+                f"{a}{space * (a_i_lengths - len(a_i[i]))}{width}"
+                f"{g}{space * (gaia_lengths - len(gaia[i]))}{width}"
+                f"{e}{space * (eco_lengths - len(eco[i]))}{width}"
+                f"{s}{space * (sci_lengths - len(sci[i]))}"
+            )
+            i += 1
+
+        return '\n'.join(output)
