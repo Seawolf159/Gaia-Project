@@ -188,7 +188,6 @@ class Economy(TechTrack):
         self.level4 = Level("level4", False, "income", ["ore2", "credits4", "power4"])
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", "False", "direct", ["ore3", "credits6", "power6"])
-        self.level5.players.append("Hadsch Halla")
 
 
 class Science(TechTrack):
