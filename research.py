@@ -53,29 +53,13 @@ class TechTrack:
         # num = Number of the level before going up.
         num = int(old_level.name[-1])
 
-        if num < 4:
-            player_level_pos = [
-                "terraforming",
-                "navigation",
-                "a_i",
-                "gaia_project",
-                "economy",
-                "science",
-            ]
+        if num == 4:
+            # Check if there isn't already a player on level 5.
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            if self.level5.players:
+                raise e.Level5IsFullError
 
-            # Remove player from the current level's list of players.
-            old_level.remove(player.faction.name)
-
-            # Add player to the next level on the track's list of players and
-            # to the player objects corresponding technology property.
-            exec(f"self.level{num + 1}.add(player.faction.name)")
-            exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
-
-            # Check if anything is gained directly after researching.
-            level = eval(f"player.{player_level_pos[choice]}")
-            if level.when == "direct":
-                player.resolve_direct(level.reward)
-        elif num == 4:
             # Check if the player has any federations.
             if player.federations:
                 # If they do, check if there are any green sides left and flip
@@ -89,13 +73,33 @@ class TechTrack:
                             f"Your {federation} token has been flipped to "
                             "grey and you have been moved to level 5."
                         )
-                        return
-                else:
-                    raise e.NoFederationGreenError
+                    else:
+                        raise e.NoFederationGreenError
             else:
                 raise e.NoFederationTokensError
         elif num == 5:
             raise e.NoResearchPossibleError
+
+        player_level_pos = [
+            "terraforming",
+            "navigation",
+            "a_i",
+            "gaia_project",
+            "economy",
+            "science",
+        ]
+        # Remove player from the current level's list of players.
+        old_level.remove(player.faction.name)
+
+        # Add player to the next level on the track's list of players and
+        # to the player objects corresponding technology property.
+        exec(f"self.level{num + 1}.add(player.faction.name)")
+        exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
+
+        # Check if anything is gained directly after researching.
+        level = eval(f"player.{player_level_pos[choice]}")
+        if level.when == "direct":
+            player.resolve_direct(level.reward)
 
     def str_ (self, title):
         # From high to low for similarity with the physical game.
@@ -184,6 +188,7 @@ class Economy(TechTrack):
         self.level4 = Level("level4", False, "income", ["ore2", "credits4", "power4"])
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", "False", "direct", ["ore3", "credits6", "power6"])
+        self.level5.players.append("Hadsch Halla")
 
 
 class Science(TechTrack):
@@ -335,3 +340,12 @@ class Research:
             i += 1
 
         return '\n'.join(output)
+
+
+if __name__ == "__main__":
+    test = Research()
+    if eval(f"test.terraforming.level{0}.players"):
+        print("player found")
+    else:
+        print("no player found")
+

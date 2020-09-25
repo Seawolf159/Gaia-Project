@@ -118,7 +118,7 @@ class Player:
                     print("In what order do you want to gain these power "
                         "resources? Please type one number at a time.")
                     for i, to_resolve in enumerate(power_order, start=1):
-                        print(f"{i}, {to_resolve}")
+                        print(f"{i}. {to_resolve}")
 
                     selection = input("--> ")
                     if selection in [
@@ -468,10 +468,6 @@ class Player:
 
             if answer in ["1", "2", "3", "4", "5", "6"]:
                 current_level = levels[int(answer) - 1]
-                print(
-                    f"You have researched "
-                    f"{research_board.tech_tracks[int(answer) - 1].name}."
-                )
                 try:
                     research_board.tech_tracks[int(answer) - 1] \
                         .research(current_level, self, int(answer) - 1)
@@ -493,7 +489,16 @@ class Player:
                         "You are already at the maximum level of 5. Please "
                         "choose a different track."
                     )
+                except e.Level5IsFullError:
+                    print(
+                        "Another player is already on level 5. Only one person"
+                        " can go to level 5. Please choose a different track."
+                    )
                 else:
+                    print(
+                        f"You have researched "
+                        f"{research_board.tech_tracks[int(answer) - 1].name}."
+                    )
                     print(research_board)
                     return
             elif answer == "7":

@@ -31,3 +31,7 @@ class NoFederationGreenError(Exception):
 
 class NoResearchPossibleError(Exception):
     pass
+
+
+class Level5IsFullError(Exception):
+    pass
