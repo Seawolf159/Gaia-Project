@@ -41,6 +41,10 @@ class Faction:
         self.planetary_institute_income = ["power4", "powertoken1"]
 
         # research jump start
+        # Options are:
+        # Terraforming, Navigation,
+        # Artificial Intelligence, Gaia Project
+        # Economy, Science
         self.start_research = False
 
         # power bowls
@@ -103,7 +107,7 @@ class HadschHalla(Faction):
         self.standard_income = ["credits3", "ore1", "knowledge1"]
 
         # research jump start
-        self.start_research = "economy"
+        self.start_research = "Economy"
 
         # power bowls
         self.bowl1 = 2

@@ -42,7 +42,7 @@ class TechTrack:
     def __init__(self, name):
         self.name = name
 
-    def research(self, level, player):
+    def research(self, old_level, player, choice):
         """Function for going up the chosen research track.
 
         Args:
@@ -50,14 +50,25 @@ class TechTrack:
             player: Player object.
         """
 
-        num = int(level.name[-1])
+        num = int(old_level.name[-1])
 
         if num < 4:
-            # Remove player from the current level's list of players.
-            level.remove(player.faction.name)
+            player_level_pos = [
+                "terraforming",
+                "navigation",
+                "a_i",
+                "gaia_project",
+                "economy",
+                "science",
+            ]
 
-            # Add player to the next level on the track's list of players.
+            # Remove player from the current level's list of players.
+            old_level.remove(player.faction.name)
+
+            # Add player to the next level on the track's list of players and
+            # to the player objects corresponding technology property.
             exec(f"self.level{num + 1}.add(player.faction.name)")
+            exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
         elif num == 4:
             # Check if the player has any federations.
             if player.federations:
@@ -298,22 +309,22 @@ class Research:
         space = " "
         width = "  |  "
 
-        terr = self.terraforming.str_("Terraforming:")
+        terr = self.terraforming.str_("Terraforming (1):")
         terr_lengths = max([len(text) for text in terr])
 
-        navi = self.navigation.str_("Navigation:")
+        navi = self.navigation.str_("Navigation (2):")
         navi_lengths = max([len(text) for text in navi])
 
-        a_i = self.a_i.str_("Artificial Intellience:")
+        a_i = self.a_i.str_("Artificial Intellience (3):")
         a_i_lengths = max([len(text) for text in a_i])
 
-        gaia = self.gaia_project.str_("Gaia Project:")
+        gaia = self.gaia_project.str_("Gaia Project (4):")
         gaia_lengths = max([len(text) for text in gaia])
 
-        eco = self.economy.str_("Economy:")
+        eco = self.economy.str_("Economy (5):")
         eco_lengths = max([len(text) for text in eco])
 
-        sci = self.science.str_("Science:")
+        sci = self.science.str_("Science (6):")
         sci_lengths = max([len(text) for text in sci])
 
         output = []

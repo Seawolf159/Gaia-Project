@@ -151,10 +151,18 @@ class GaiaProject:
 
             start_research = p.faction.start_research
             if start_research:
-                exec(f"p.{start_research} "
-                     f"= self.research_board.{start_research}.level1")
-
-        print(self.research_board)
+                levels = [
+                    p.terraforming,
+                    p.navigation,
+                    p.a_i,
+                    p.gaia_project,
+                    p.economy,
+                    p.science,
+                ]
+                for i, track in enumerate(self.research_board.tech_tracks):
+                    if track.name == start_research:
+                        current_level = levels[i]
+                        track.research(current_level, p, i)
 
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
@@ -166,8 +174,7 @@ class GaiaProject:
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
 
-        # TODO Move the setup inside the play function instead and remove this
-        # line.
+        # TODO Move the setup inside the play function instead.
         self.play()
 
     def visual_setup(self):
@@ -350,15 +357,12 @@ class GaiaProject:
 
             # 3. Action phase
             for player in self.players:
-                # TODO No idea why this happens
-                # TypeError: action_phase() takes 1 positional argument but 2
-                # were given
                 player.action_phase(self)
 
             # 4. Clean up phase
 
             # Break to avoid infinite loops while testing
-            break
+            # break
 
 
         # self.update_board()

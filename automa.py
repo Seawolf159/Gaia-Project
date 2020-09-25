@@ -18,6 +18,14 @@ class Automa:
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
 
+        # Research levels
+        self.terraforming = False  # This property is set during setup
+        self.navigation = False  # This property is set during setup
+        self.a_i = False  # This property is set during setup
+        self.gaia_project = False  # This property is set during setup
+        self.economy = False  # This property is set during setup
+        self.science = False  # This property is set during setup
+
     def setup(self, research_board):
         # TODO Set yourself on the proper research level.
         pass
@@ -30,7 +38,7 @@ class Automa:
         # Automa doesn't have a gaia phase.
         pass
 
-    def action_phase(self):
+    def action_phase(self, gp):
         # TODO draw automa cards etc.
         pass
 
@@ -104,7 +112,8 @@ class Automa:
         # sattelite??
         pass
 
-    def gaia(self):
+    def gaia(self, universe):
+        # Automa can't do a Gaia Project action.
         pass
 
     def upgrade(self):
@@ -113,7 +122,7 @@ class Automa:
     def federation(self):
         pass
 
-    def research(self):
+    def research(self, research_board):
         pass
 
     def pq(self):
@@ -140,6 +149,10 @@ class Taklons:
         self.vp = 2
 
         # research jump start
+        # Options are:
+        # Terraforming, Navigation,
+        # Artificial Intelligence, Gaia Project
+        # Economy, Science
         self.start_research = False
 
         # TODO automate more

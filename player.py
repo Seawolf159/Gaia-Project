@@ -216,7 +216,7 @@ class Player:
         upgrade = "3. Upgrade an existing structure.\n"
         federation = "4. Form a federation.\n"
         research = "5. Do research.\n"
-        pq = "6. Power or Q.I.C. (Purple/Green).\n"
+        pq = "6. Power or Q.I.C (Purple/Green) action.\n"
         special = "7. Do a special (Orange) action.\n"
         pass_ = "8. Pass.\n"
         free = "9. Exchange power for resources. (Free action)\n"
@@ -425,7 +425,6 @@ class Player:
         pass
 
     def research(self, research_board):
-        faction_name = self.faction.name
         levels = [
             self.terraforming,
             self.navigation,
@@ -436,36 +435,42 @@ class Player:
         ]
 
         print("\nOn what research track do you want to go up?")
+        print(research_board)
         options = (
-            "1. Terraforming\n"
-            "2. Navigation\n"
-            "3. Artificial Intelligence\n"
-            "4. Gaia Project\n"
-            "5. Economy\n"
-            "6. Science\n"
-            "7. I changed my mind. Go back to action selection.\n"
+            "Please type the corresponding number:\n"
         )
         while True:
-            try:
-                answer = input(f"{options}--> ")
-            except e.NoFederationTokensError:
-                print(
-                    "You have no federation tokens. You can't go up on this "
-                    "track. Please choose another."
-                )
-                continue
-            except e.NoFederationGreenError:
-                print(
-                    "You have no federation token with the green side up left."
-                    " You can't go up on this track. Please choose another."
-                )
-                continue
+            answer = input(f"{options}--> ")
 
             if answer in ["1", "2", "3", "4", "5", "6"]:
                 current_level = levels[int(answer) - 1]
-                research_board.tech_tracks[int(answer) - 1] \
-                    .research(current_level, self)
-                return
+                try:
+                    research_board.tech_tracks[int(answer) - 1] \
+                        .research(current_level, self, int(answer) - 1)
+                except e.NoFederationTokensError:
+                    print(
+                        "You have no federation tokens. You can't go up on this "
+                        "track. Please choose another."
+                    )
+                    continue
+                except e.NoFederationGreenError:
+                    print(
+                        "You have no federation token with the green side up left."
+                        " You can't go up on this track. Please choose another."
+                    )
+                    continue
+                except e.NoResearchPossibleError:
+                    print(
+                        "You are already at the maximum level of 5. Please "
+                        "choose a different track."
+                    )
+                else:
+                    print(
+                        f"You have researched "
+                        f"{research_board.tech_tracks[int(answer) - 1].name}."
+                    )
+                    print(research_board)
+                    return
             elif answer == "7":
                 raise e.BackToActionSelection
             else:
