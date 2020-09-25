@@ -449,14 +449,15 @@ class Player:
                         .research(current_level, self, int(answer) - 1)
                 except e.NoFederationTokensError:
                     print(
-                        "You have no federation tokens. You can't go up on this "
-                        "track. Please choose another."
+                        "You have no federation tokens. You can't go up on "
+                        "this track. Please choose another."
                     )
                     continue
                 except e.NoFederationGreenError:
                     print(
-                        "You have no federation token with the green side up left."
-                        " You can't go up on this track. Please choose another."
+                        "You have no federation token with the green side up "
+                        "left. You can't go up on this track. Please choose "
+                        "another."
                     )
                     continue
                 except e.NoResearchPossibleError:
@@ -465,6 +466,8 @@ class Player:
                         "choose a different track."
                     )
                 else:
+                    # TODO Check if anything is gained directly from going up
+                    # the track.
                     print(
                         f"You have researched "
                         f"{research_board.tech_tracks[int(answer) - 1].name}."
