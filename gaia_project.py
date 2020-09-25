@@ -137,7 +137,7 @@ class GaiaProject:
             p.navigation = self.research_board.navigation.level0
             self.research_board.navigation.level0.players.append(name)
 
-            p.artificial_intelligence = self.research_board.a_i.level0
+            p.a_i = self.research_board.a_i.level0
             self.research_board.a_i.level0.players.append(name)
 
             p.gaia_project = self.research_board.gaia_project.level0
@@ -165,10 +165,16 @@ class GaiaProject:
                         track.research(current_level, p, i)
 
         # Place first structures (start with first player and going clockwise):
-        for player in self.players:
-            player.start_mines("first", self.universe)
-        for player in reversed(self.players):
-            player.start_mines("second", self.universe)
+        # for player in self.players:  # Commented for faster testing
+        #     player.start_mines("first", self.universe)  # Commented for
+                                                          # faster testing.
+                                                          # You'll have 2 less
+                                                          # ore.
+        # for player in reversed(self.players):  # Commented for faster testing
+        #     player.start_mines("second", self.universe)  # Commented for
+                                                           # faster testing.
+                                                           # You'll have 2 less
+                                                           # ore.
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
@@ -353,11 +359,13 @@ class GaiaProject:
             # 1. Income phase followed by Gaia phase.
             for player in self.players:
                 player.income_phase()
-                player.gaia_phase()  # Do this after i finished gaia action.
+                player.gaia_phase()
 
             # 3. Action phase
-            for player in self.players:
-                player.action_phase(self)
+            self.passed = 0
+            while self.passed != len(self.players):
+                for player in self.players:
+                    player.action_phase(self)
 
             # 4. Clean up phase
 

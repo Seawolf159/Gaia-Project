@@ -84,7 +84,20 @@ class Player:
                 power_order.extend(self.resolve_income(technology.reward))
 
         # Fifth look at income from research tracks
-        # TODO
+        levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        for level in levels:
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            if level.when == "income":
+                power_order.extend(self.resolve_income(level.reward))
 
         # Sixth look if there is any power/powertoken gain order that needs to
         # be resolved.
@@ -186,6 +199,17 @@ class Player:
                 return
             amount -= 1
 
+    def resolve_direct(self, rewards):
+        if not isinstance(rewards, list):
+            rewards = [rewards]
+
+        for reward in rewards:
+            if reward.startswith("powertoken"):
+                self.faction.bowl1 += int(reward[-1])
+            else:
+                exec(f"self.faction.{reward[:-1]} += int({reward[-1]})")
+            print(f"You have gained {reward[-1]} {reward[:-1]}.")
+
     def gaia_phase(self):
         if self.faction.gaia_bowl > 0:
             self.faction.move_from_gaia_to_bowl()
@@ -245,12 +269,12 @@ class Player:
             if choice in options.keys():
                 try:
                     action = options[choice]
-                    # If the action function needs additional arguments, unpack
-                    # them in the function call.
                     if len(action) > 1:
+                        # If the action function needs additional arguments,
+                        # unpack them in the function call.
                         action[0](*action[1:])
-                    # Other wise just call the function.
                     else:
+                        # Otherwise just call the function.
                         action[0]()
                 except e.NoGaiaFormerError:
                     print("You have no available Gaiaformers. Please pick a "
@@ -391,7 +415,6 @@ class Player:
                 print("Please only type 1-7")
 
     def gaia(self, universe):
-        # TODO Don't forget to make the gaia phase
         # TODO Automation, load all the trans-dim planets within range and let
         # player choose a number.
         if self.faction.gaiaformer > 0:
@@ -437,13 +460,18 @@ class Player:
         print("\nOn what research track do you want to go up?")
         print(research_board)
         options = (
-            "Please type the corresponding number:\n"
+            "Please type the corresponding number or type 7 if you changed "
+            "your mind:\n"
         )
         while True:
             answer = input(f"{options}--> ")
 
             if answer in ["1", "2", "3", "4", "5", "6"]:
                 current_level = levels[int(answer) - 1]
+                print(
+                    f"You have researched "
+                    f"{research_board.tech_tracks[int(answer) - 1].name}."
+                )
                 try:
                     research_board.tech_tracks[int(answer) - 1] \
                         .research(current_level, self, int(answer) - 1)
@@ -466,12 +494,6 @@ class Player:
                         "choose a different track."
                     )
                 else:
-                    # TODO Check if anything is gained directly from going up
-                    # the track.
-                    print(
-                        f"You have researched "
-                        f"{research_board.tech_tracks[int(answer) - 1].name}."
-                    )
                     print(research_board)
                     return
             elif answer == "7":

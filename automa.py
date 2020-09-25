@@ -31,7 +31,7 @@ class Automa:
         pass
 
     def income_phase(self):
-        # Automa has no income.
+        # Automa doesn't have an income phase.
         pass
 
     def gaia_phase(self):
@@ -39,8 +39,54 @@ class Automa:
         pass
 
     def action_phase(self, gp):
-        # TODO draw automa cards etc.
-        pass
+        """Functions for delegating to action functions.
+
+        Args:
+            gp: GaiaProject class
+        """
+
+        # TODO automate drawing automa cards.
+        # Value is a list with the function and the arguments it needs.
+
+        faction_name = f"\n{self.faction.name}:\n"
+        intro = "I am not automated yet. What action does the Automa choose?\n"
+        mine = "1. Build a mine.\n"
+        upgrade = "2. Upgrade an existing structure.\n"
+        research = "3. Do research.\n"
+        pq = "4. Power or Q.I.C (Purple/Green) action.\n"
+        faction_action = "5. Do a faction action.\n"
+        pass_ = "6. Pass.\n"
+
+        # Value is a list with the function and the arguments it needs.
+        options = {
+            "1": [self.mine],
+            "2": [self.upgrade],
+            "3": [self.research, gp.research_board],
+            "4": [self.pq],
+            "5": [self.faction.faction_action],
+            "6": [self.pass_],
+        }
+
+        prompt = (
+            f"{faction_name}{intro}{mine}{upgrade}"
+            f"{research}{pq}{faction_action}{pass_}--> "
+        )
+
+        while True:
+            choice = input(prompt)
+
+            if choice in options.keys():
+                action = options[choice]
+                if len(action) > 1:
+                    # If the action function needs additional arguments, unpack
+                    # them in the function call.
+                    action[0](*action[1:])
+                else:
+                    # Otherwise just call the function.
+                    action[0]()
+                return
+            else:
+                print("Please type the action's corresponding number.")
 
     def start_mines(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
@@ -123,7 +169,81 @@ class Automa:
         pass
 
     def research(self, research_board):
-        pass
+        levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        print("\nOn what research track does the Automa go up?")
+        print(research_board)
+        options = (
+            "Please type the corresponding number:\n"
+        )
+        while True:
+            choice = input(f"{options}--> ")
+
+            if choice in ["1", "2", "3", "4", "5", "6"]:
+                old_level = levels[int(choice) - 1]
+                track = research_board.tech_tracks[int(choice) - 1]
+
+                print(
+                    f"Automa has researched "
+                    f"{track.name}."
+                )
+                # num = Number of the level before going up.
+                num = int(old_level.name[-1])
+
+                if num < 4:
+                    automa_level_pos = [
+                        "terraforming",
+                        "navigation",
+                        "a_i",
+                        "gaia_project",
+                        "economy",
+                        "science",
+                    ]
+
+                    # Remove automa from the current level's list of players.
+                    old_level.remove(self.faction.name)
+
+                    # Add player to the next level on the track's list of
+                    # players and to the player objects corresponding
+                    # technology property.
+                    exec(
+                        f"self.{automa_level_pos[choice]}"
+                        f".level{num + 1}.add(self.faction.name)"
+                    )
+                    exec(
+                        f"self.{automa_level_pos[choice]} "
+                        f"= self.level{num + 1}"
+                    )
+                elif num == 4:
+                    # Automa removes the advanced technology if there is still
+                    # one.
+                    pass
+                elif num == 5:
+                    print(
+                        "Automa is already at the maximum level of 5. Please "
+                        "choose a different track."
+                    )
+
+                # try:
+                #     research_board.tech_tracks[int(answer) - 1] \
+                #         .research(current_level, self, int(answer) - 1)
+                # except e.NoResearchPossibleError:
+                #     print(
+                #         "Automa is already at the maximum level of 5. Please "
+                #         "choose a different track."
+                #     )
+                # else:
+                #     print(research_board)
+                #     return
+            else:
+                print("Please only type 1-6")
 
     def pq(self):
         pass
@@ -135,21 +255,35 @@ class Automa:
         pass
 
 
-class Taklons:
-
+class Faction:
     def __init__(self):
-        self.name = "Taklons"
-        self.home_type = "Swamp"
-        self.faction_action = ["mine", "pq"]
-        self.range = 3
-        self.tiebreaker = (
-            "TIEBREAKER 3a:\nShortest distance to one of the "
-            "human's' planets"
-        )
-        self.vp = 2
+        self.name = False
+        self.home_type = False
+        self.range = False
+        self.tiebreaker = False
+        self.vp = False
 
         # research jump start
         # Options are:
+        # Terraforming, Navigation,
+        # Artificial Intelligence, Gaia Project
+        # Economy, Science
+        self.start_research = False
+
+    def faction_action(self):
+        # For subclasses to overwrite.
+        raise NotImplementedError
+
+
+class Taklons(Faction):
+
+    def __init__(self):
+        Faction.__init__(self)
+        self.name = "Taklons"
+        self.home_type = "Swamp"
+
+        # research jump start
+        # Options are (exactly as is):
         # Terraforming, Navigation,
         # Artificial Intelligence, Gaia Project
         # Economy, Science
@@ -161,6 +295,16 @@ class Taklons:
         #     ["trans-dim", "volcanic", "ice"],
         #     ["oxide", "terra"]
         # ]
+
+    def faction_action(self):
+        # TODO create the faction action of the automa
+        self.faction_action = ["mine", "pq"]
+        self.range = 3
+        self.tiebreaker = (
+            "TIEBREAKER 3a:\nShortest distance to one of the "
+            "human's' planets"
+        )
+        self.vp = 2
 
 
 def select_faction(faction):

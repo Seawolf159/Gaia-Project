@@ -50,6 +50,7 @@ class TechTrack:
             player: Player object.
         """
 
+        # num = Number of the level before going up.
         num = int(old_level.name[-1])
 
         if num < 4:
@@ -69,6 +70,11 @@ class TechTrack:
             # to the player objects corresponding technology property.
             exec(f"self.level{num + 1}.add(player.faction.name)")
             exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
+
+            # Check if anything is gained directly after researching.
+            level = eval(f"player.{player_level_pos[choice]}")
+            if level.when == "direct":
+                player.resolve_direct(level.reward)
         elif num == 4:
             # Check if the player has any federations.
             if player.federations:
@@ -153,9 +159,6 @@ class ArtificialIntelligence(TechTrack):
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", False, "direct", "qic4")
 
-    def __str__(self):
-        return f"Terraforming:\n{self.advanced}\n"
-
 
 class GaiaProject(TechTrack):
     def __init__(self, name):
@@ -168,9 +171,6 @@ class GaiaProject(TechTrack):
         self.level4 = Level("level4", 3, "direct", "gaiaformer1")
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", 3, "direct", ["vp4", "gaiaplanet1"])
-
-    def __str__(self):
-        return f"GaiaProject:\n{self.advanced}\n"
 
 
 class Economy(TechTrack):
@@ -185,9 +185,6 @@ class Economy(TechTrack):
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", "False", "direct", ["ore3", "credits6", "power6"])
 
-    def __str__(self):
-        return f"Economy:\n{self.advanced}\n"
-
 
 class Science(TechTrack):
     def __init__(self, name):
@@ -200,9 +197,6 @@ class Science(TechTrack):
         self.level4 = Level("level4", False, "income", "knowledge4")
         self.advanced = False  # This property is set during setup
         self.level5 = Level("level5", False, "direct", "knowledge9")
-
-    def __str__(self):
-        return f"Science:\n{self.advanced}\n"
 
 
 class Research:
