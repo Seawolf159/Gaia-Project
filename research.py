@@ -147,8 +147,8 @@ class Navigation(TechTrack):
         self.level3 = Level("level3", 2, "direct", "qic1")
         self.level4 = Level("level4", 3)
         self.advanced = False  # This property is set during setup
-        self.level5 = Level("level5", 4, "direct", "Lost Planet")  # TODO insert
-                                                         # Lost planet object
+        # TODO insert lost planet object as level 5 reward
+        self.level5 = Level("level5", 4, "direct", "Lost Planet")
 
 
 class ArtificialIntelligence(TechTrack):
@@ -183,11 +183,15 @@ class Economy(TechTrack):
         self.standard = False  # This property is set during setup
         self.level0 = Level("level0", )
         self.level1 = Level("level1", False, "income", ["credits2", "power1"])
-        self.level2 = Level("level2", False, "income", ["ore1", "credits2", "power2"])
-        self.level3 = Level("level3", False, "income", ["ore1", "credits3", "power3"])
-        self.level4 = Level("level4", False, "income", ["ore2", "credits4", "power4"])
+        self.level2 = Level("level2", False, "income", ["ore1", "credits2",
+                                                        "power2"])
+        self.level3 = Level("level3", False, "income", ["ore1", "credits3",
+                                                        "power3"])
+        self.level4 = Level("level4", False, "income", ["ore2", "credits4",
+                                                        "power4"])
         self.advanced = False  # This property is set during setup
-        self.level5 = Level("level5", "False", "direct", ["ore3", "credits6", "power6"])
+        self.level5 = Level("level5", "False", "direct", ["ore3", "credits6",
+                                                          "power6"])
 
 
 class Science(TechTrack):
