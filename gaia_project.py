@@ -1,19 +1,14 @@
-"""
-TODO instantiate even the unused tech tiles, boosters etc..??? So the ones that
-don't get used.
-"""
-
 import os
 import random
 
 from PIL import Image
 
 from automa import Automa
+from federation import FederationToken
 from player import Player
 from research import Research
 from scoring import Scoring
 from universe import Universe
-from federation import FederationToken
 
 ROOT = os.path.dirname(__file__)
 IMAGES = os.path.join(ROOT, "images")

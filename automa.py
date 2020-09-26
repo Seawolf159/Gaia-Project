@@ -46,8 +46,6 @@ class Automa:
         """
 
         # TODO automate drawing automa cards.
-        # Value is a list with the function and the arguments it needs.
-
         faction_name = f"\n{self.faction.name}:\n"
         intro = "I am not automated yet. What action does the Automa choose?\n"
         mine = "1. Build a mine.\n"
@@ -212,20 +210,24 @@ class Automa:
                     # Remove automa from the current level's list of players.
                     old_level.remove(self.faction.name)
 
-                    # Add player to the next level on the track's list of
-                    # players and to the player objects corresponding
+                    # Add the Automa to the next level on the track's list of
+                    # players and to the Automa object's corresponding
                     # technology property.
                     exec(
-                        f"self.{automa_level_pos[choice]}"
+                        f"self.{automa_level_pos[int(choice)]}"
                         f".level{num + 1}.add(self.faction.name)"
                     )
                     exec(
-                        f"self.{automa_level_pos[choice]} "
+                        f"self.{automa_level_pos[int(choice)]} "
                         f"= self.level{num + 1}"
                     )
+                    # TODO improve this function same as done in human version
+                    # TODO don't forget to ask how much points the automa got.
                 elif num == 4:
                     # Automa removes the advanced technology if there is still
                     # one.
+                    # TODO also check if there is a player on level 5 when
+                    # there is no tile present.
                     pass
                 elif num == 5:
                     print(

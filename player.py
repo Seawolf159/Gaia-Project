@@ -131,7 +131,7 @@ class Player:
                                 int(power_order[int(selection) - 1][-1])
                             )
                         else:
-                            self.cycle_power(
+                            self.charge_power(
                                 int(power_order[int(selection) - 1][-1])
                             )
                         power_order.pop(int(selection) - 1)
@@ -148,13 +148,13 @@ class Player:
                         power_to_cycle += int(resolved[-1])
 
                 if power_to_cycle:
-                    self.cycle_power(power_to_cycle)
+                    self.charge_power(power_to_cycle)
 
         elif len(power_order) == 1:
             if power_order[0].startswith("powertoken"):
                 self.faction.bowl1 += int(power_order[0][-1])
             else:
-                self.cycle_power(int(power_order[0][-1]))
+                self.charge_power(int(power_order[0][-1]))
 
         print(f"Your resources are now:")
         print(f"Credits: {self.faction.credits}")
@@ -185,7 +185,7 @@ class Player:
 
         return power_order
 
-    def cycle_power(self, amount):
+    def charge_power(self, amount):
         """Amount of total power that will be cycled."""
 
         while amount:

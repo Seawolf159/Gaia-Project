@@ -46,14 +46,20 @@ class TechTrack:
         """Function for going up the chosen research track.
 
         Args:
-            level:  Level object where the player currently is on this track.
+            old_level: Level object of the level the player was on before
+                researching.
             player: Player object.
+            choice (int): Number of the track that will be researched on.
         """
 
         # num = Number of the level before going up.
         num = int(old_level.name[-1])
 
-        if num == 4:
+        if num == 2:
+            # TODO charge 3 power if the old level is level 2
+            pass
+
+        elif num == 4:
             # Check if there isn't already a player on level 5.
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
@@ -238,6 +244,8 @@ class Research:
         self.basic_tech = {x: True for x in range(1, 10)}
 
     def randomise_tech_tiles(self):
+        # TODO Instantiate even the unused tech tiles, boosters etc..???
+        # So the ones that don't get used.
         standard = [
             StandardTechnology("TECqic.png", "direct", ["ore1", "qic1"]),
             StandardTechnology("TECtyp.png", "direct", "knowledge1"),
