@@ -52,13 +52,11 @@ class TechTrack:
             choice (int): Number of the track that will be researched on.
         """
 
-        # num = Number of the level before going up.
+        # num = Number of the level before completing the research.
         num = int(old_level.name[-1])
 
         if num == 2:
-            # TODO charge 3 power if the old level is level 2
-            pass
-
+            player.charge_power(3)
         elif num == 4:
             # Check if there isn't already a player on level 5.
             # Error is corrected at runtime so i can ignore this.
@@ -97,9 +95,10 @@ class TechTrack:
         # Remove player from the current level's list of players.
         old_level.remove(player.faction.name)
 
-        # Add player to the next level on the track's list of players and
-        # to the player objects corresponding technology property.
+        # Add player to the next level on the level's list of players.
         exec(f"self.level{num + 1}.add(player.faction.name)")
+
+        # Add level to the player object's corresponding technology property.
         exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
 
         # Check if anything is gained directly after researching.

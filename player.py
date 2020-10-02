@@ -186,8 +186,13 @@ class Player:
         return power_order
 
     def charge_power(self, amount):
-        """Amount of total power that will be cycled."""
+        """Amount of total power that will be cycled.
 
+        Args:
+            amount (int): Number of the power to be cycled.
+        """
+
+        charged = 0
         while amount:
             if self.faction.bowl1 > 0:
                 self.faction.bowl1 -= 1
@@ -196,8 +201,10 @@ class Player:
                 self.faction.bowl2 -= 1
                 self.faction.bowl3 += 1
             else:
-                return
+                break
             amount -= 1
+            charged += 1
+        print(f"{charged} Power has been charged.")
 
     def resolve_direct(self, rewards):
         if not isinstance(rewards, list):
@@ -448,6 +455,9 @@ class Player:
         pass
 
     def research(self, research_board):
+        # TODO Currently doesn't consume any knowledge. Fix this when
+        # everything works.
+
         levels = [
             self.terraforming,
             self.navigation,
@@ -467,10 +477,11 @@ class Player:
             answer = input(f"{options}--> ")
 
             if answer in ["1", "2", "3", "4", "5", "6"]:
-                current_level = levels[int(answer) - 1]
+                answer = int(answer)
+                current_level = levels[answer - 1]
                 try:
-                    research_board.tech_tracks[int(answer) - 1] \
-                        .research(current_level, self, int(answer) - 1)
+                    research_board.tech_tracks[answer - 1] \
+                        .research(current_level, self, answer - 1)
                 except e.NoFederationTokensError:
                     print(
                         "You have no federation tokens. You can't go up on "
@@ -497,7 +508,7 @@ class Player:
                 else:
                     print(
                         f"You have researched "
-                        f"{research_board.tech_tracks[int(answer) - 1].name}."
+                        f"{research_board.tech_tracks[answer - 1].name}."
                     )
                     print(research_board)
                     return

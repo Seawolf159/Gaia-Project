@@ -167,7 +167,7 @@ class Automa:
         pass
 
     def research(self, research_board):
-        # TODO unfinished function.
+        # TODO unfinished/untestesd function.
 
         levels = [
             self.terraforming,
@@ -187,67 +187,77 @@ class Automa:
             choice = input(f"{options}--> ")
 
             if choice in ["1", "2", "3", "4", "5", "6"]:
-                old_level = levels[int(choice) - 1]
-                track = research_board.tech_tracks[int(choice) - 1]
+                choice = int(choice)
+                current_level = levels[choice - 1]
+                track = research_board.tech_tracks[choice - 1]
 
-                print(
-                    f"Automa has researched "
-                    f"{track.name}."
-                )
-                # num = Number of the level before going up.
-                num = int(old_level.name[-1])
-
-                if num < 4:
-                    automa_level_pos = [
-                        "terraforming",
-                        "navigation",
-                        "a_i",
-                        "gaia_project",
-                        "economy",
-                        "science",
-                    ]
-
-                    # Remove automa from the current level's list of players.
-                    old_level.remove(self.faction.name)
-
-                    # Add the Automa to the next level on the track's list of
-                    # players and to the Automa object's corresponding
-                    # technology property.
-                    exec(
-                        f"self.{automa_level_pos[int(choice)]}"
-                        f".level{num + 1}.add(self.faction.name)"
-                    )
-                    exec(
-                        f"self.{automa_level_pos[int(choice)]} "
-                        f"= self.level{num + 1}"
-                    )
-                    # TODO improve this function same as done in human version
-                    # TODO don't forget to ask how much points the automa got.
-                elif num == 4:
-                    # Automa removes the advanced technology if there is still
-                    # one.
-                    # TODO also check if there is a player on level 5 when
-                    # there is no tile present.
-                    pass
-                elif num == 5:
-                    print(
-                        "Automa is already at the maximum level of 5. Please "
-                        "choose a different track."
-                    )
-
-                # try:
-                #     research_board.tech_tracks[int(answer) - 1] \
-                #         .research(current_level, self, int(answer) - 1)
-                # except e.NoResearchPossibleError:
-                #     print(
-                #         "Automa is already at the maximum level of 5. Please "
-                #         "choose a different track."
-                #     )
-                # else:
-                #     print(research_board)
-                #     return
+                # num = Number of the level before completing the research.
+                num = int(current_level.name[-1])
             else:
                 print("Please only type 1-6")
+                continue
+
+            if num == 4:
+                # Automa removes the advanced technology if there still is one.
+                if track.advanced:
+                    print("Automa has taken the advanced tile.")
+                    track.advanced = False
+                    return
+                else:
+                    # Check if there is a player on level 5 when there is no
+                    # tile present.
+                    next_level = track.level5
+                    if next_level.players:
+                        print(
+                            "There is already a player on level 5. The "
+                            f"Automa can't research {track.name}. Please "
+                            "choose the next technology track."
+                        )
+                        continue
+            elif num == 5:
+                print(
+                    "Automa is already at the maximum level of 5. Please "
+                    "choose the next technology track."
+                )
+                continue
+            break
+
+        print(f"Automa has researched {track.name}.")
+
+        automa_level_pos = [
+            "terraforming",
+            "navigation",
+            "a_i",
+            "gaia_project",
+            "economy",
+            "science",
+        ]
+
+        # Remove automa from the current level's list of players.
+        current_level.remove(self.faction.name)
+
+        # Add the Automa to the next level on the level's list of players.
+        exec(f"track.level{num + 1}.add(self.faction.name)")
+
+        # Add the level to the Automa object's corresponding technology
+        # property.
+        exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
+
+        print(
+            "How many points does the Automa score for doing research? ",
+            "Please type the number of points."
+        )
+        while True:
+            points = input("--> ")
+
+            try:
+                points = int(points)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                self.score += points
+                break
+        print(research_board)
 
     def pq(self):
         pass
