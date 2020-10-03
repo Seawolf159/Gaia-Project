@@ -308,13 +308,14 @@ class Taklons(Faction):
 
     def faction_action(self):
         # TODO create the faction action of the automa
-        faction_action = ["mine", "pq"]
-        range = 3
-        tiebreaker = (
-            "TIEBREAKER 3a:\nShortest distance to one of the "
-            "human's' planets"
-        )
-        vp = 2
+        # faction_action = ["mine", "pq"]
+        # range = 3
+        # tiebreaker = (
+        #     "TIEBREAKER 3a:\nShortest distance to one of the "
+        #     "human's' planets"
+        # )
+        # vp = 2
+        pass
 
 
 def select_faction(faction):
