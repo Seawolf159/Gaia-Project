@@ -167,8 +167,6 @@ class Automa:
         pass
 
     def research(self, research_board):
-        # TODO unfinished/untestesd function.
-
         levels = [
             self.terraforming,
             self.navigation,
