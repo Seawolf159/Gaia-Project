@@ -11,11 +11,11 @@ class Faction:
         self.home_type = False
 
         # resources
-        self.credits = 0
-        self.ore = 0
-        self.knowledge = 0
-        self.qic = 0
-        self.gaiaformer = 0
+        self.credits = 0  # This property is set during setup
+        self.ore = 0  # This property is set during setup
+        self.knowledge = 0  # This property is set during setup
+        self.qic = 0  # This property is set during setup
+        self.gaiaformer = 0  # This property is set during setup
 
         # For subclasses to fill a list []. For example:
         # ["credits3", "ore1", "knowledge1"]. These are the income the

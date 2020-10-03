@@ -278,19 +278,32 @@ class Player:
                     action = options[choice]
                     if len(action) > 1:
                         # If the action function needs additional arguments,
-                        # unpack them in the function call.
+                        # unpack the arguments from the options list.
                         action[0](*action[1:])
                     else:
                         # Otherwise just call the function.
                         action[0]()
                 except e.NoGaiaFormerError:
-                    print("You have no available Gaiaformers. Please pick a "
-                          "different action.")
+                    print(
+                        "You have no available Gaiaformers. Please pick a "
+                        "different action."
+                    )
+                    continue
                 except e.NotEnoughPowerTokensError:
-                    print("You don't have enough power tokens to do this "
-                          "action. Please pick a different action.")
+                    print(
+                        "You don't have enough power tokens to do this "
+                        "action. Please pick a different action."
+                    )
+                    continue
                 except e.BackToActionSelection:
                     # User chose to pick another action.
+                    continue
+                except e.InsufficientKnowledgeError:
+                    print(
+                        "You don't have enough knowledge to research. You "
+                        f"currently have {self.faction.knowledge} knowledge. "
+                        "Please choose a different action."
+                    )
                     continue
                 else:
                     return
@@ -455,8 +468,10 @@ class Player:
         pass
 
     def research(self, research_board):
-        # TODO Currently doesn't consume any knowledge. Fix this when
-        # everything works.
+        # Check if the player has enough knowledge to research.
+        # Researching costs 4 knowledge.
+        if not self.faction.knowledge > 3:
+            raise e.InsufficientKnowledgeError
 
         levels = [
             self.terraforming,

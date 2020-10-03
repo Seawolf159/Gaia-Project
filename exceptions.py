@@ -35,3 +35,7 @@ class NoResearchPossibleError(Exception):
 
 class Level5IsFullError(Exception):
     pass
+
+
+class InsufficientKnowledgeError(Exception):
+    pass
