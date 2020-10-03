@@ -18,6 +18,11 @@ class Automa:
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
 
+        self.empire = []  # List of owned planets
+
+        # Only matters for the “Most Satellites” final scoring tile.
+        self.sattelites = 0
+
         # Research levels
         self.terraforming = False  # This property is set during setup
         self.navigation = False  # This property is set during setup
@@ -152,8 +157,8 @@ class Automa:
                 print("Please only type one of the available numbers.")
 
     def mine(self):
-        # TODO look at end scoring and see if i need to place a
-        # sattelite??
+        # TODO Look at end scoring and see if i need to place increase the
+        # sattelite counter.
         pass
 
     def gaia(self, universe):

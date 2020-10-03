@@ -15,6 +15,9 @@ class Player:
                 Options to choose from are:
                 hadsch halla,
                 TODO name all factions and possibly move the options elsewhere
+
+        TODO:
+            Implement charging power when opponents builds near me.
         """
 
         self.faction = select_faction(faction.lower())()
