@@ -378,4 +378,4 @@ if __name__ == "__main__":
 
 
 
-    # new_game.play()  # Start a game by calling this if possible
+    # new_game.play()  # Start a game by calling this if convenient.

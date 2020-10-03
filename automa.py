@@ -47,7 +47,7 @@ class Automa:
 
         # TODO automate drawing automa cards.
         faction_name = f"\n{self.faction.name}:\n"
-        intro = "I am not automated yet. What action does the Automa choose?\n"
+        intro = "What action does the Automa choose?\n"
         mine = "1. Build a mine.\n"
         upgrade = "2. Upgrade an existing structure.\n"
         research = "3. Do research.\n"
@@ -77,7 +77,7 @@ class Automa:
                 action = options[choice]
                 if len(action) > 1:
                     # If the action function needs additional arguments, unpack
-                    # them in the function call.
+                    # the arguments from the options list.
                     action[0](*action[1:])
                 else:
                     # Otherwise just call the function.
@@ -269,11 +269,9 @@ class Automa:
 
 class Faction:
     def __init__(self):
+        # Common properties of factions.
         self.name = False
         self.home_type = False
-        self.range = False
-        self.tiebreaker = False
-        self.vp = False
 
         # research jump start
         # Options are:
@@ -310,18 +308,18 @@ class Taklons(Faction):
 
     def faction_action(self):
         # TODO create the faction action of the automa
-        self.faction_action = ["mine", "pq"]
-        self.range = 3
-        self.tiebreaker = (
+        faction_action = ["mine", "pq"]
+        range = 3
+        tiebreaker = (
             "TIEBREAKER 3a:\nShortest distance to one of the "
             "human's' planets"
         )
-        self.vp = 2
+        vp = 2
 
 
 def select_faction(faction):
-        factions = {
-            "taklons": Taklons
-        }
+    factions = {
+        "taklons": Taklons
+    }
 
-        return factions[faction]
+    return factions[faction]
