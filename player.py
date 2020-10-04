@@ -262,7 +262,7 @@ class Player:
 
         # Value is a list with the function and the arguments it needs.
         options = {
-            "1": [self.mine],
+            "1": [self.mine, gp.universe],
             "2": [self.gaia, gp.universe],
             "3": [self.upgrade],
             "4": [self.federation],
@@ -390,14 +390,41 @@ class Player:
             else:
                 print("Please only type one of the available numbers.")
 
-    def mine(self):
+    def mine(self, universe):
         # TODO reminder that when building a mine on a planet with a gaiaformer
         # the player gets the gaiaformer back.
-        pass
-        # print(
-        #     f"You have built a mine in sector {sector} on the "
-        #     f"{planet.type} planet."
-        # )
+        print("On what planet do you want to build a mine?")
+        planet = self.choose_planet(universe)
+
+        # Check if there is a gaiaformer on the planet.
+        if planet.structure == "gaiaformer":
+            self.faction.gaiaformer += 1
+            self.gaia_forming.remove(planet)
+
+        # Check if the planet needs to be terraformed.
+        home_types = [
+            "Terra",
+            "Oxide",
+            "Volcanic",
+            "Desert",
+            "Swamp",
+            "Titanium",
+            "Ice",
+        ]
+        if planet.type != self.faction.home_type:
+            terraform1 = [home_types[search - 1], home_types[search + 1]]
+            terraform2 = [home_types[search - 2], home_types[search + 2]]
+            terraform3 = [home_types[search - 3], home_types[search + 3]]
+
+        print(
+            f"You have built a mine in sector {planet.sector} on the "
+            f"{planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structure = "mine"
+        self.faction.mine += 1
+        self.faction.mine_max -= 1
+        self.empire.append(planet)
 
     def choose_planet(self, universe, ptype=False):
         """Function for choosing a planet on the board.
@@ -413,9 +440,12 @@ class Player:
         while True:
             sector = (
                 "Please type the number of the sector your chosen planet "
-                "is in.\n--> "
+                "is in. Type 8 if you want to choose a different action.\n--> "
             )
             sector_choice = input(sector)
+
+            if sector_choice == "8":
+                raise e.BackToActionSelection
 
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
@@ -519,7 +549,7 @@ class Player:
             if type_chosen:
                 break
 
-        return planet, sector_choice
+        return planet
 
     def gaia(self, universe):
         # TODO Automation, load all the trans-dim planets within range and let
@@ -529,7 +559,7 @@ class Player:
             # pylint: disable=no-member
             if self.faction.count_powertokens() >= self.gaia_project.active:
                 print("\nYou want to start a Gaia Project.")
-                planet, sector = self.choose_planet(universe, "trans-dim")
+                planet = self.choose_planet(universe, "trans-dim")
                 for _ in range(self.gaia_project.active):
                     # Prioritise taking from the lowest bowl as i don't see why
                     # it would ever be better to not do that.
@@ -541,8 +571,8 @@ class Player:
                         self.faction.bowl3 -= 1
 
                 print(
-                   f"You have started a gaia project in sector {sector} on "
-                   f"the {planet.type} planet."
+                   f"You have started a gaia project in sector "
+                   f"{planet.sector[-1]} on the {planet.type} planet."
                 )
                 planet.owner = self.faction.name
                 planet.structure = "gaiaformer"
