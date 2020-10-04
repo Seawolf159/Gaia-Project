@@ -108,30 +108,32 @@ class Automa:
             )
             sector_choice = input(sector)
 
-            if sector_choice in C.SECTORS_2P:
-
-                try:
-                    planet = universe.locate_planet(
-                        sector_choice,
-                        self.faction.home_type.lower(),
-                    )
-                except e.PlanetNotFoundError:
-                    print(
-                        f"The automa home world ({self.faction.home_type}) "
-                        "doesn't exist inside this sector. Please choose a "
-                        "different sector."
-                    )
-                except e.PlanetAlreadyOwnedError:
-                    print(
-                        "This planet is already occupied by the Automa. Please"
-                        " choose a different sector."
-                    )
-                else:
-                    planet.owner = self.faction.home_type
-                    planet.structure = "mine"
-                    return
-            else:
+            if not sector_choice in C.SECTORS_2P:
                 print("Please only type 1-7")
+                continue
+
+            try:
+                planet = universe.locate_planet(
+                    sector_choice,
+                    self.faction.home_type.lower(),
+                )
+            except e.PlanetNotFoundError:
+                print(
+                    f"The automa home world ({self.faction.home_type}) "
+                    "doesn't exist inside this sector. Please choose a "
+                    "different sector."
+                )
+                continue
+            except e.PlanetAlreadyOwnedError:
+                print(
+                    "This planet is already occupied by the Automa. Please"
+                    " choose a different sector."
+                )
+                continue
+            else:
+                planet.owner = self.faction.home_type
+                planet.structure = "mine"
+                return
 
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"

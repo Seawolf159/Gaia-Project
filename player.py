@@ -18,6 +18,9 @@ class Player:
 
         TODO:
             Implement charging power when opponents builds near me.
+            Make every action choice possible to return to the action selection
+                menu in case of accidentally choosing the wrong action or
+                changing ones mind.
         """
 
         self.faction = select_faction(faction.lower())()
@@ -276,42 +279,43 @@ class Player:
         while True:
             choice = input(prompt)
 
-            if choice in options.keys():
-                try:
-                    action = options[choice]
-                    if len(action) > 1:
-                        # If the action function needs additional arguments,
-                        # unpack the arguments from the options list.
-                        action[0](*action[1:])
-                    else:
-                        # Otherwise just call the function.
-                        action[0]()
-                except e.NoGaiaFormerError:
-                    print(
-                        "You have no available Gaiaformers. Please pick a "
-                        "different action."
-                    )
-                    continue
-                except e.NotEnoughPowerTokensError:
-                    print(
-                        "You don't have enough power tokens to do this "
-                        "action. Please pick a different action."
-                    )
-                    continue
-                except e.BackToActionSelection:
-                    # User chose to pick another action.
-                    continue
-                except e.InsufficientKnowledgeError:
-                    print(
-                        "You don't have enough knowledge to research. You "
-                        f"currently have {self.faction.knowledge} knowledge. "
-                        "Please choose a different action."
-                    )
-                    continue
-                else:
-                    return
-            else:
+            if not choice in options.keys():
                 print("Please type the action's corresponding number.")
+                continue
+
+            try:
+                action = options[choice]
+                if len(action) > 1:
+                    # If the action function needs additional arguments,
+                    # unpack the arguments from the options list.
+                    action[0](*action[1:])
+                else:
+                    # Otherwise just call the function.
+                    action[0]()
+            except e.NoGaiaFormerError:
+                print(
+                    "You have no available Gaiaformers. Please pick a "
+                    "different action."
+                )
+                continue
+            except e.NotEnoughPowerTokensError:
+                print(
+                    "You don't have enough power tokens to do this "
+                    "action. Please pick a different action."
+                )
+                continue
+            except e.BackToActionSelection:
+                # User chose to pick another action.
+                continue
+            except e.InsufficientKnowledgeError:
+                print(
+                    "You don't have enough knowledge to research. You "
+                    f"currently have {self.faction.knowledge} knowledge. "
+                    "Please choose a different action."
+                )
+                continue
+            else:
+                return
 
     def start_mines(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
@@ -321,39 +325,42 @@ class Player:
         )
         print(f"{faction_name}{question}")
 
+        sector = (
+            "Please type the number of the sector your chosen planet is in.\n"
+            "--> "
+        )
         while True:
-            sector = (
-                "Please type the number of the sector your chosen planet "
-                "is in.\n--> "
-            )
             sector_choice = input(sector)
 
-            if sector_choice in C.SECTORS_2P:
-                try:
-                    planet = universe.locate_planet(
-                        sector_choice,
-                        self.faction.home_type.lower(),
-                    )
-                except e.PlanetNotFoundError:
-                    print(
-                        f"Your home world ({self.faction.home_type}) doesn't "
-                        "exist inside this sector! Please choose a different "
-                        "sector.")
-                except e.PlanetAlreadyOwnedError:
-                    print(
-                        "This planet is already occupied by you. Please choose"
-                        " a different sector."
-                    )
-                else:
-                    planet.owner = self.faction.home_type
-                    self.empire.append(planet)
-                    self.faction.mine += 1
-                    planet.structure = "mine"
-                    return
-            else:
+            if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
                 print("Please only type 1-7")
+                continue
+
+            try:
+                planet = universe.locate_planet(
+                    sector_choice,
+                    self.faction.home_type.lower()
+                )
+            except e.PlanetNotFoundError:
+                print(
+                    f"Your home world ({self.faction.home_type}) doesn't exist"
+                    " inside this sector! Please choose a different sector."
+                    )
+                continue
+            except e.PlanetAlreadyOwnedError:
+                print(
+                    "This planet is already occupied by you. Please choose a "
+                    "different sector."
+                )
+                continue
+            else:
+                planet.owner = self.faction.home_type
+                self.empire.append(planet)
+                self.faction.mine += 1
+                planet.structure = "mine"
+                return
 
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"
@@ -395,47 +402,49 @@ class Player:
             )
             sector_choice = input(sector)
 
-            if sector_choice in C.SECTORS_2P:
-                try:
-                    if ptype:
-                        planet = universe.locate_planet(sector_choice, ptype)
-                    else:
-                        # TODO Automation, load a list of planets available in
-                        # the sector.
-                        while True:
-                            print("What is the type of the planet you want to "
-                                    "build on?")
-                            for i, pt in enumerate(C.PLANETS, start=1):
-                                print(f"{i}. {pt.capitalize()}")
-                            chosen_type = input("--> ")
-                            if chosen_type in [
-                                str(n + 1) for n in range(len(C.PLANETS))
-                            ]:
-                                planet = universe.locate_planet(
-                                    sector_choice,
-                                    chosen_type,
-                                    self.faction
-                                )
-                                break
-                            else:
-                                print("Please only type one of the available "
-                                    "numbers.")
-                except e.PlanetNotFoundError:
-                    print(
-                        f"Your planet type ({ptype or chosen_type}) doesn't "
-                        "exist inside this sector! Please choose a different "
-                        "sector.")
-                except e.PlanetAlreadyOwnedError:
-                    print(
-                        "This planet is already occupied. Please choose a "
-                        "different sector."
-                    )
-                else:
-                    return planet
-            else:
+            if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
                 print("Please only type 1-7")
+                continue
+
+            try:
+                if ptype:
+                    planet = universe.locate_planet(sector_choice, ptype)
+                else:
+                    # TODO Automation, load a list of planets available in the
+                    # sector.
+                    while True:
+                        print("What is the type of the planet you want to "
+                              "build on?")
+                        for i, pt in enumerate(C.PLANETS, start=1):
+                            print(f"{i}. {pt.capitalize()}")
+                        chosen_type = input("--> ")
+                        if chosen_type in [
+                            str(n + 1) for n in range(len(C.PLANETS))
+                        ]:
+                            planet = universe.locate_planet(
+                                sector_choice,
+                                chosen_type,
+                                self.faction
+                            )
+                            break
+                        else:
+                            print("Please only type one of the available "
+                                  "numbers.")
+                            continue
+            except e.PlanetNotFoundError:
+                print(
+                    f"Your planet type ({ptype or chosen_type}) doesn't inside"
+                    " this sector! Please choose a different sector."
+                )
+            except e.PlanetAlreadyOwnedError:
+                print(
+                    "This planet is already occupied. Please choose a "
+                    "different sector."
+                )
+            else:
+                return planet
 
     def gaia(self, universe):
         # TODO Automation, load all the trans-dim planets within range and let
@@ -494,46 +503,48 @@ class Player:
         while True:
             answer = input(f"{options}--> ")
 
-            if answer in ["1", "2", "3", "4", "5", "6"]:
-                answer = int(answer)
-                current_level = levels[answer - 1]
-                try:
-                    research_board.tech_tracks[answer - 1] \
-                        .research(current_level, self, answer - 1)
-                except e.NoFederationTokensError:
-                    print(
-                        "You have no federation tokens. You can't go up on "
-                        "this track. Please choose another."
-                    )
-                    continue
-                except e.NoFederationGreenError:
-                    print(
-                        "You have no federation token with the green side up "
-                        "left. You can't go up on this track. Please choose "
-                        "another."
-                    )
-                    continue
-                except e.NoResearchPossibleError:
-                    print(
-                        "You are already at the maximum level of 5. Please "
-                        "choose a different track."
-                    )
-                except e.Level5IsFullError:
-                    print(
-                        "Another player is already on level 5. Only one person"
-                        " can go to level 5. Please choose a different track."
-                    )
-                else:
-                    print(
-                        f"You have researched "
-                        f"{research_board.tech_tracks[answer - 1].name}."
-                    )
-                    print(research_board)
-                    return
+            if not answer in ["1", "2", "3", "4", "5", "6"]:
+                print("Please only type 1-7")
+                continue
             elif answer == "7":
                 raise e.BackToActionSelection
+
+            answer = int(answer)
+            current_level = levels[answer - 1]
+            try:
+                research_board.tech_tracks[answer - 1] \
+                    .research(current_level, self, answer - 1)
+            except e.NoFederationTokensError:
+                print(
+                    "You have no federation tokens. You can't go up on this "
+                    "track. Please choose another."
+                )
+                continue
+            except e.NoFederationGreenError:
+                print(
+                    "You have no federation token with the green side up left."
+                    " You can't go up on this track. Please choose another."
+                )
+                continue
+            except e.NoResearchPossibleError:
+                print(
+                    "You are already at the maximum level of 5. Please choose "
+                    "a different track."
+                )
+            except e.Level5IsFullError:
+                print(
+                    "Another player is already on level 5. Only one person can"
+                    " go to level 5. Please choose a different track."
+                )
+                continue
             else:
-                print("Please only type 1-7")
+                print(
+                    f"You have researched "
+                    f"{research_board.tech_tracks[answer - 1].name}."
+                )
+                print(research_board)
+                return
+
 
     def pq(self):
         pass

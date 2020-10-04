@@ -175,7 +175,7 @@ class GaiaProject:
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
 
-        # TODO Move the setup inside the play function instead.
+        # TODO Move the setup function inside the play function instead.
         self.play()
 
     def visual_setup(self):
