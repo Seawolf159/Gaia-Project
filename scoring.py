@@ -51,10 +51,10 @@ class Scoring:
         self.boosters = []
 
         # Round scoring
-        self.rounds = []
+        self.rounds = []  # Filled in the randomise_scoring function.
 
         # End scoring
-        self.end_scoring = []
+        self.end_scoring = []  # Filled in the randomise_scoring function.
 
     def randomise_boosters(self, players):
         boosters = [
@@ -100,9 +100,9 @@ class Scoring:
             EndScoring("FINfed.png", "structures_federation", 10),
             EndScoring("FINbld.png", "structures", 11),
             EndScoring("FINtyp.png", "different_planets", 5),
-            EndScoring("FINgai.png", "gaia planets", 4),
+            EndScoring("FINgai.png", "gaia_planets", 4),
             EndScoring("FINsec.png", "sectors", 6),
-            EndScoring("FINsat.png", "sattelites", 8)
+            EndScoring("FINsat.png", "satellites", 8)
         ]
 
         self.end_scoring = [

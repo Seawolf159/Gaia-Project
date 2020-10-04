@@ -62,7 +62,7 @@ class Automa:
 
         # Value is a list with the function and the arguments it needs.
         options = {
-            "1": [self.mine],
+            "1": [self.mine, gp.universe, gp.scoring_board],
             "2": [self.upgrade],
             "3": [self.research, gp.research_board],
             "4": [self.pq],
@@ -78,8 +78,12 @@ class Automa:
         while True:
             choice = input(prompt)
 
-            if choice in options.keys():
-                action = options[choice]
+            if not choice in options.keys():
+                print("Please type the action's corresponding number.")
+                continue
+
+            action = options[choice]
+            try:
                 if len(action) > 1:
                     # If the action function needs additional arguments, unpack
                     # the arguments from the options list.
@@ -87,16 +91,22 @@ class Automa:
                 else:
                     # Otherwise just call the function.
                     action[0]()
-                return
+            except e.NotEnoughMinesError:
+                print(
+                    "Automa doesn't have any mines left. It will upgrade "
+                    "instead."
+                )
+                continue
             else:
-                print("Please type the action's corresponding number.")
+                return
 
     def start_mines(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the automa place its {count.upper()} mine?\n"
         rules = (
-            "The automa places it's mines closest to the center. If there "
-            "is a tie, use directional selection with a random card."
+            "The automa places it's mine closest to the center on its own "
+            f"home type ({self.faction.home_type}). If there is a tie, use "
+            "directional selection with a random card."
         )
 
         print(f"{faction_name}{question}{rules}")
@@ -131,9 +141,16 @@ class Automa:
                 )
                 continue
             else:
-                planet.owner = self.faction.home_type
-                planet.structure = "mine"
-                return
+                break
+
+        print(
+           f"The Automa has built a mine in sector {sector_choice} on the "
+           f"{planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structure = "mine"
+        self.faction.mine_max -= 1
+        self.empire.append(planet)
 
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"
@@ -154,14 +171,116 @@ class Automa:
             ):
                 self.booster = scoring_board.boosters.pop(int(choice) - 1)
                 print(f"Automa chose {self.booster}.")
-                return
+                break
             else:
                 print("Please only type one of the available numbers.")
 
-    def mine(self):
-        # TODO Look at end scoring and see if i need to place increase the
-        # sattelite counter.
-        pass
+        # Instruct player to now shuffle the automa deck.
+        print(
+            "You must now shuffle the automa deck with the cards your chosen"
+            " difficulty requires. Don't forget to rotate the 3 bottom cards "
+            "to see when the automa could pass."
+        )
+
+        # Allow the player to setup the deck without the game starting yet.
+        input(
+            "Press enter when you are ready to select your own booster and "
+            "begin the game.\n--> "
+        )
+
+    def mine(self, universe, scoring_board):
+        if not self.faction.mine_max:
+            raise e.NotEnoughMinesError
+
+        question = f"\nWhere does the automa place its mine?\n"
+        rules = (
+            "Valid Options: Any empty planet (including Trans-dim Planets) "
+            "within the Automa’s range of a planet the Automa has colonized."
+        )
+
+        print(f"{question}{rules}")
+
+        type_chosen = False
+        while True:
+            sector = (
+                "Please type the number of the sector the chosen planet "
+                "is in.\n--> "
+            )
+            sector_choice = input(sector)
+
+            if not sector_choice in C.SECTORS_2P:
+                print("Please only type 1-7")
+                continue
+
+            # TODO Automation, load a list of planets available in the sector.
+            # Ask the user for the planet type.
+            while True:
+                print(
+                    "What is the type of the planet the Automa wants to build "
+                    "on?"
+                )
+                for i, pt in enumerate(C.PLANETS, start=1):
+                    print(f"{i}. {pt.capitalize()}")
+                print("10. Go back to sector selection")
+                chosen_type = input("--> ")
+                if chosen_type in [str(n + 1) for n in range(len(C.PLANETS))]:
+                    try:
+                        planet = universe.locate_planet(
+                            sector_choice,
+                            C.PLANETS[int(chosen_type) - 1],
+                        )
+                    except e.PlanetNotFoundError:
+                        planet_type = C.PLANETS[int(chosen_type) - 1]
+                        print(
+                            "The selected planet type "
+                           f"({planet_type.capitalize()}) doesn't exist inside"
+                           f" this sector! ({sector_choice}) Please choose a "
+                            "different planet."
+                        )
+                        continue
+                    except e.PlanetAlreadyOwnedError as error:
+                        if error.planet.owner == self.faction.name:
+                            owner = "you"
+                        else:
+                            owner = error.planet.owner
+                        print(
+                           f"The selected planet type ({error.planet.type}) is"
+                           f" already occupied by {owner}. "
+                            "Please choose a different planet."
+                        )
+                        continue
+                    except e.BothPlanetsAlreadyOwnedError:
+                        planet_type = C.PLANETS[int(chosen_type) - 1] \
+                            .capitalize()
+                        print(
+                           f"Both {planet_type} planets are already occupied. "
+                            "Please choose a different sector."
+                        )
+                        break
+                    else:
+                        type_chosen = True
+                        break
+                elif chosen_type == "10":
+                    break
+                else:
+                    print("Please only type one of the available numbers.")
+                    continue
+            if type_chosen:
+                break
+
+        print(
+           f"The Automa has built a mine in sector {sector_choice} on the "
+           f"{planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structere = "mine"
+        self.faction.mine_max -= 1
+        self.empire.append(planet)
+
+        # Check if the end tile with goal "Most Satellites" is active.
+        for end in scoring_board.end_scoring:
+            if end.goal == "satellites":
+                self.sattelites += 1
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.
@@ -248,20 +367,8 @@ class Automa:
         # property.
         exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
 
-        print(
-            "How many points does the Automa score for doing research? ",
-            "Please type the number of points."
-        )
-        while True:
-            points = input("--> ")
+        self.points("Research")
 
-            try:
-                points = int(points)
-            except ValueError:
-                print("Please only type a number.")
-            else:
-                self.score += points
-                break
         print(research_board)
 
     def pq(self):
@@ -273,12 +380,41 @@ class Automa:
     def pass_(self):
         pass
 
+    def points(self, action):
+        print(
+            f"How many points does the Automa score for doing {action}? "
+             "Please type the number of points."
+        )
+
+        while True:
+            points = input("--> ")
+
+            try:
+                points = int(points)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                self.score += points
+                break
+
 
 class Faction:
     def __init__(self):
         # Common properties of factions.
         self.name = False
         self.home_type = False
+
+        # Structures
+        # Total amount of mines available at the start.
+        self.mine_max = 8
+        # Total amount of trading stations available at the start.
+        self.trading_station_max = 4
+        # Total amount of research labs available at the start.
+        self.research_lab_max = 3
+        # Total amount of academies available at the start.
+        self.academy_max = 2
+        # Total amount of planetary institutes available at the start.
+        self.planetary_institute_max = 1
 
         # research jump start
         # Options are:

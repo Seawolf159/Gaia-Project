@@ -524,7 +524,7 @@ class Universe:
             for circle in self.sector6.hexes[1:]:
                 for hex_ in circle:
                     if hasattr(hex_, "type"):
-                        if hex_.type.lower() == ptype:
+                        if hex_.type.lower()[:-1] == ptype:
                             if not hex_.owner:
                                 choices.append(hex_)
 
@@ -540,18 +540,18 @@ class Universe:
 
                     if answer == "n":
                         for planet in choices:
-                            if planet.name[-1] == "N":
+                            if planet.type[-1] == "N":
                                 return planet
                     elif answer == "s":
                         for planet in choices:
-                            if planet.name[-1] == "S":
+                            if planet.type[-1] == "S":
                                 return planet
                     else:
                         print("Please type N for North or S for South.")
             elif len(choices) == 1:
                 return choices[0]
             else:
-                raise e.PlanetAlreadyOwnedError
+                raise e.BothPlanetsAlreadyOwnedError
 
         # More players TODO this is not future proof as on
         # the bigger board this sectors front side has the
@@ -563,7 +563,7 @@ class Universe:
             for circle in self.sector7.hexes[1:]:
                 for hex_ in circle:
                     if hasattr(hex_, "type"):
-                        if hex_.type.lower() == ptype:
+                        if hex_.type.lower()[:-1] == ptype:
                             if not hex_.owner:
                                 choices.append(hex_)
 
@@ -579,18 +579,18 @@ class Universe:
 
                     if answer == "n":
                         for planet in choices:
-                            if planet.name[-1] == "N":
+                            if planet.type[-1] == "N":
                                 return planet
                     elif answer == "s":
                         for planet in choices:
-                            if planet.name[-1] == "S":
+                            if planet.type[-1] == "S":
                                 return planet
                     else:
                         print("Please type N for North or S for South.")
             elif len(choices) == 1:
                 return choices[0]
             else:
-                raise e.PlanetAlreadyOwnedError
+                raise e.BothPlanetsAlreadyOwnedError
         else:
             # Skip center as it's always empty.
             for circle in eval(f"self.sector{sector}.hexes[1:]"):
@@ -600,7 +600,7 @@ class Universe:
                             if not hex_.owner:
                                 return hex_
                             else:
-                                raise e.PlanetAlreadyOwnedError
+                                raise e.PlanetAlreadyOwnedError(hex_)
             else:
                 raise e.PlanetNotFoundError
 

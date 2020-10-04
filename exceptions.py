@@ -2,6 +2,12 @@
 
 
 class PlanetAlreadyOwnedError(Exception):
+
+    def __init__(self, planet):
+        self.planet = planet
+
+
+class BothPlanetsAlreadyOwnedError(Exception):
     pass
 
 
@@ -38,4 +44,12 @@ class Level5IsFullError(Exception):
 
 
 class InsufficientKnowledgeError(Exception):
+    pass
+
+
+class NotEnoughMinesError(Exception):
+    pass
+
+
+class GoBackToSectorSelection(Exception):
     pass

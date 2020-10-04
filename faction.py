@@ -23,21 +23,31 @@ class Faction:
         # income.
         self.standard_income = False
 
-        # built structures
+        # Structures
         self.mine = 0
+        # Total amount of mines available at the start.
+        self.mine_max = 8
         self.mine_income = [1, 1, 0, 1, 1, 1, 1, 1]
 
         self.trading_station = 0
+        # Total amount of trading stations available at the start.
+        self.trading_station_max = 4
         self.trading_station_income = [3, 4, 4, 5]
 
         self.research_lab = 0
+        # Total amount of research labs available at the start.
+        self.research_lab_max = 3
         self.research_lab_income = [1, 1, 1]
 
         self.academy = 0
+        # Total amount of academies available at the start.
+        self.academy_max = 2
         self.academy_income = [False, 2]  # True means that it is built
         self.academy_special = [False, "qic1"]  # True means that it is built
 
         self.planetary_institute = 0
+        # Total amount of planetary institutes available at the start.
+        self.planetary_institute_max = 1
         self.planetary_institute_income = ["power4", "powertoken1"]
 
         # research jump start
