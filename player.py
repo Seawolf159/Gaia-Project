@@ -351,8 +351,8 @@ class Player:
                 continue
             except e.PlanetAlreadyOwnedError:
                 print(
-                    "This planet is already occupied by you. Please choose a "
-                    "different sector."
+                    f"This {self.faction.home_type} planet is already occupied"
+                    " by you. Please choose a different sector."
                 )
                 continue
             else:

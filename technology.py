@@ -5,14 +5,8 @@ class StandardTechnology:
         self.when = when
         self.reward = reward
 
-        # Visual setup coordinates
-        self.vsetup = False
-
     def __str__(self):
-        return (
-            f"when: {self.when}\n"
-            f"reward: {self.reward}\n"
-        )
+        return f"when: {self.when} | reward: {self.reward}"
 
 
 class AdvancedTechnology:
@@ -23,17 +17,10 @@ class AdvancedTechnology:
         self.effect = effect
         self.reward = reward
 
-        # Visual setup coordinates
-        self.vsetup = False
-
     def __str__(self):
         if self.effect:
-            effect = f"effect: {self.effect}\n"
+            effect = f"effect: {self.effect}"
         else:
             effect = ""
 
-        return (
-            f"when: {self.when}\n"
-            f"{effect}"
-            f"reward: {self.reward}\n"
-        )
+        return f"when: {self.when} | {effect} | reward: {self.reward}"
