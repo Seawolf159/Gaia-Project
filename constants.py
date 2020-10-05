@@ -10,3 +10,12 @@ PLANETS = [
     "gaia",
     "trans-dim",
 ]
+home_types = [
+    "Terra",
+    "Oxide",
+    "Volcanic",
+    "Desert",
+    "Swamp",
+    "Titanium",
+    "Ice",
+]

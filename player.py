@@ -402,19 +402,12 @@ class Player:
             self.gaia_forming.remove(planet)
 
         # Check if the planet needs to be terraformed.
-        home_types = [
-            "Terra",
-            "Oxide",
-            "Volcanic",
-            "Desert",
-            "Swamp",
-            "Titanium",
-            "Ice",
-        ]
+        # start is the index of the player's faction home_type
+        start = C.home_types.index(self.faction.home_type)
         if planet.type != self.faction.home_type:
-            terraform1 = [home_types[search - 1], home_types[search + 1]]
-            terraform2 = [home_types[search - 2], home_types[search + 2]]
-            terraform3 = [home_types[search - 3], home_types[search + 3]]
+            terraform1 = [C.home_types[start - 1], C.home_types[start + 1]]
+            terraform2 = [C.home_types[start - 2], C.home_types[start + 2]]
+            terraform3 = [C.home_types[start - 3], C.home_types[start + 3]]
 
         print(
             f"You have built a mine in sector {planet.sector} on the "
