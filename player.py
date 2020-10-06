@@ -226,6 +226,9 @@ class Player:
             print(f"You have gained {reward[-1]} {reward[:-1]}.")
 
     def gaia_phase(self):
+        # TODO untested function
+        # TODO Faction incompatibility. Might not work with faction Itars,
+        # Bal Tak's
         if self.faction.gaia_bowl > 0:
             self.faction.move_from_gaia_to_bowl()
 
@@ -522,17 +525,32 @@ class Player:
         # TODO Check if the nearest planet owned by the player is within range.
 
         # Check if there is a gaiaformer on the planet.
+        # TODO closely related to the untested gaia_phase function
+        gaiaformer = False
         if planet.structure == "gaiaformer":
             self.faction.gaiaformer += 1
-            self.gaia_forming.remove(planet)
+            gaiaformer = True
 
         # TODO Check if the planet is a gaia planet or trans-dim planet
         # Check if the planet needs to be terraformed.
         # start is the index of the player's faction home_type
-        start = C.home_types.index(self.faction.home_type)
-        target = planet.type
         difficulty = 0
-        if self.faction.home_type != target:
+        if planet.type == "Gaia" and not gaiaformer:
+            print(
+                "To build a mine on this planet, you need to pay 1 QIC. "
+               f"You now have {self.faction.qic} QIC's. Use a QIC?"
+            )
+            answer = input("--> ")
+        elif planet.type == "Trans-dim":
+            # TODO finish message
+            print(
+                "To build a mine on this planet, you need to gaia form this "
+               f"planet first You now have {self.faction.qic} QIC's. "
+                "Use a QIC?"
+            )
+        elif self.faction.home_type != target and not gaiaformer:
+            start = C.home_types.index(self.faction.home_type)
+            target = planet.type
             i = start + 1
             # difficulty == amount of terraform steps.
             for difficulty in range(1, 4):
@@ -549,6 +567,7 @@ class Player:
                 "first. Terraforming will cost "
                f"{self.terraforming.active * difficulty} ore."
             )
+
 
         # TODO Ask if the terraforming cost is acceptable. If it is, subtact
         # the ore from players supply.
