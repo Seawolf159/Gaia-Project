@@ -126,7 +126,7 @@ class Player:
                     print("In what order do you want to gain these power "
                         "resources? Please type one number at a time.")
                     for i, to_resolve in enumerate(power_order, start=1):
-                        print(f"{i}. {to_resolve}")
+                        print(f"{i}. {to_resolve[:-1]} x{to_resolve[-1]}")
 
                     selection = input("--> ")
                     if selection in [
@@ -390,35 +390,6 @@ class Player:
             else:
                 print("Please only type one of the available numbers.")
 
-    def mine(self, universe):
-        # TODO reminder that when building a mine on a planet with a gaiaformer
-        # the player gets the gaiaformer back.
-        print("On what planet do you want to build a mine?")
-        planet = self.choose_planet(universe)
-
-        # Check if there is a gaiaformer on the planet.
-        if planet.structure == "gaiaformer":
-            self.faction.gaiaformer += 1
-            self.gaia_forming.remove(planet)
-
-        # Check if the planet needs to be terraformed.
-        # start is the index of the player's faction home_type
-        start = C.home_types.index(self.faction.home_type)
-        if planet.type != self.faction.home_type:
-            terraform1 = [C.home_types[start - 1], C.home_types[start + 1]]
-            terraform2 = [C.home_types[start - 2], C.home_types[start + 2]]
-            terraform3 = [C.home_types[start - 3], C.home_types[start + 3]]
-
-        print(
-            f"You have built a mine in sector {planet.sector} on the "
-            f"{planet.type} planet."
-        )
-        planet.owner = self.faction.name
-        planet.structure = "mine"
-        self.faction.mine += 1
-        self.faction.mine_max -= 1
-        self.empire.append(planet)
-
     def choose_planet(self, universe, ptype=False):
         """Function for choosing a planet on the board.
 
@@ -476,8 +447,6 @@ class Player:
                     "Please choose a different sector."
                 )
                 break
-            else:
-                break
 
             # TODO Automation, load a list of planets available in the
             # sector.
@@ -516,7 +485,7 @@ class Player:
                             owner = error.planet.owner
                         print(
                            f"The selected planet type ({error.planet.type}) "
-                           f"is already occupied. by {owner}. Please choose a "
+                           f"is already occupied by {owner}. Please choose a "
                             "different planet."
                         )
                         continue
@@ -543,6 +512,55 @@ class Player:
                 break
 
         return planet
+
+    def mine(self, universe):
+        # TODO reminder that when building a mine on a planet with a gaiaformer
+        # the player gets the gaiaformer back.
+        print("On what planet do you want to build a mine?")
+        planet = self.choose_planet(universe)
+
+        # TODO Check if the nearest planet owned by the player is within range.
+
+        # Check if there is a gaiaformer on the planet.
+        if planet.structure == "gaiaformer":
+            self.faction.gaiaformer += 1
+            self.gaia_forming.remove(planet)
+
+        # TODO Check if the planet is a gaia planet or trans-dim planet
+        # Check if the planet needs to be terraformed.
+        # start is the index of the player's faction home_type
+        start = C.home_types.index(self.faction.home_type)
+        target = planet.type
+        difficulty = 0
+        if self.faction.home_type != target:
+            i = start + 1
+            # difficulty == amount of terraform steps.
+            for difficulty in range(1, 4):
+                if i > 6:
+                    i = 0
+                if C.home_types[start - difficulty] == target \
+                    or C.home_types[i] == target:
+                    break
+                i += 1
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            print(
+                "To build a mine on this planet, you need to terraform it "
+                "first. Terraforming will cost "
+               f"{self.terraforming.active * difficulty} ore."
+            )
+
+        # TODO Ask if the terraforming cost is acceptable. If it is, subtact
+        # the ore from players supply.
+        print(
+            f"You have built a mine in sector {planet.sector[-1]} on the "
+            f"{planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structure = "mine"
+        self.faction.mine += 1
+        self.faction.mine_max -= 1
+        self.empire.append(planet)
 
     def gaia(self, universe):
         # TODO Automation, load all the trans-dim planets within range and let
