@@ -46,6 +46,77 @@ class Player:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
+    def start_mines(self, count, universe):
+        faction_name = f"\n{self.faction.name}:\n"
+        question = (
+            f"Where whould you like to place your {count.upper()} "
+            "mine?"
+        )
+        print(f"{faction_name}{question}")
+
+        sector = (
+            "Please type the number of the sector your chosen planet is in.\n"
+            "--> "
+        )
+        while True:
+            sector_choice = input(sector)
+
+            if not sector_choice in C.SECTORS_2P:
+                # More players TODO make this message dynamic to the board.
+                # If playing with more players it would be 1-10 for example.
+                print("Please only type 1-7")
+                continue
+
+            try:
+                planet = universe.locate_planet(
+                    sector_choice,
+                    self.faction.home_type.lower()
+                )
+            except e.PlanetNotFoundError:
+                print(
+                    f"Your home world ({self.faction.home_type}) doesn't exist"
+                    " inside this sector! Please choose a different sector."
+                    )
+                continue
+            except e.PlanetAlreadyOwnedError:
+                print(
+                    f"This {self.faction.home_type} planet is already occupied"
+                    " by you. Please choose a different sector."
+                )
+                continue
+            else:
+                break
+
+        print(
+           f"You have built a mine in sector {sector_choice} on the "
+           f"{planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structure = "mine"
+        self.faction.mine += 1
+        self.faction.mine_max -= 1
+        self.empire.append(planet)
+
+    def choose_booster(self, scoring_board):
+        faction_name = f"\n{self.faction.name}:\n"
+        question = "Which booster would you like to pick?"
+        print(f"{faction_name}{question}")
+
+        while True:
+            for x, booster in enumerate(scoring_board.boosters, start=1):
+                print(f"{x}. {booster}")
+
+            choice = input(f"--> ")
+
+            if choice in (
+                [str(num + 1) for num in range(len(scoring_board.boosters))]
+            ):
+                self.booster = scoring_board.boosters.pop(int(choice) - 1)
+                print(f"You chose {self.booster}.")
+                return
+            else:
+                print("Please only type one of the available numbers.")
+
     def income_phase(self):
         print(f"\nDoing income for {self.faction.name}.")
 
@@ -322,77 +393,6 @@ class Player:
             else:
                 return
 
-    def start_mines(self, count, universe):
-        faction_name = f"\n{self.faction.name}:\n"
-        question = (
-            f"Where whould you like to place your {count.upper()} "
-            "mine?"
-        )
-        print(f"{faction_name}{question}")
-
-        sector = (
-            "Please type the number of the sector your chosen planet is in.\n"
-            "--> "
-        )
-        while True:
-            sector_choice = input(sector)
-
-            if not sector_choice in C.SECTORS_2P:
-                # More players TODO make this message dynamic to the board.
-                # If playing with more players it would be 1-10 for example.
-                print("Please only type 1-7")
-                continue
-
-            try:
-                planet = universe.locate_planet(
-                    sector_choice,
-                    self.faction.home_type.lower()
-                )
-            except e.PlanetNotFoundError:
-                print(
-                    f"Your home world ({self.faction.home_type}) doesn't exist"
-                    " inside this sector! Please choose a different sector."
-                    )
-                continue
-            except e.PlanetAlreadyOwnedError:
-                print(
-                    f"This {self.faction.home_type} planet is already occupied"
-                    " by you. Please choose a different sector."
-                )
-                continue
-            else:
-                break
-
-        print(
-           f"You have built a mine in sector {sector_choice} on the "
-           f"{planet.type} planet."
-        )
-        planet.owner = self.faction.name
-        planet.structure = "mine"
-        self.faction.mine += 1
-        self.faction.mine_max -= 1
-        self.empire.append(planet)
-
-    def choose_booster(self, scoring_board):
-        faction_name = f"\n{self.faction.name}:\n"
-        question = "Which booster would you like to pick?"
-        print(f"{faction_name}{question}")
-
-        while True:
-            for x, booster in enumerate(scoring_board.boosters, start=1):
-                print(f"{x}. {booster}")
-
-            choice = input(f"--> ")
-
-            if choice in (
-                [str(num + 1) for num in range(len(scoring_board.boosters))]
-            ):
-                self.booster = scoring_board.boosters.pop(int(choice) - 1)
-                print(f"You chose {self.booster}.")
-                return
-            else:
-                print("Please only type one of the available numbers.")
-
     def choose_planet(self, universe, ptype=False):
         """Function for choosing a planet on the board.
 
@@ -440,8 +440,8 @@ class Player:
                     owner = error.planet.owner
                 print(
                    f"The needed planet type ({ptype.capitalize()}) is already "
-                   f"occupied in this sector ({sector_choice}) by "
-                   f"{owner}. Please choose a different sector."
+                   f"occupied in this sector ({sector_choice}) by {owner}. "
+                   "Please choose a different sector."
                 )
                 continue
             except e.BothPlanetsAlreadyOwnedError:
@@ -519,54 +519,85 @@ class Player:
     def mine(self, universe):
         # TODO reminder that when building a mine on a planet with a gaiaformer
         # the player gets the gaiaformer back.
-        print("On what planet do you want to build a mine?")
-        planet = self.choose_planet(universe)
+        # TODO Don't allow gaia planets to show up if player can't pay qic's.
+        # TODO untested/unfinished funtion
+        while True:
+            print("On what planet do you want to build a mine?")
+            planet = self.choose_planet(universe)
 
-        # TODO Check if the nearest planet owned by the player is within range.
+            # Check if there is a gaiaformer on the planet.
+            # TODO test closely related to the untested gaia_phase function
+            gaiaformer = False
+            if planet.structure == "gaiaformer":
+                self.faction.gaiaformer += 1
+                gaiaformer = True
+                break
 
-        # Check if there is a gaiaformer on the planet.
-        # TODO closely related to the untested gaia_phase function
-        gaiaformer = False
-        if planet.structure == "gaiaformer":
-            self.faction.gaiaformer += 1
-            gaiaformer = True
+            # TODO Check if the nearest planet owned by the player is within
+            # range and ask if the player wants to pay qic if range is
+            # insufficient.
 
-        # TODO Check if the planet is a gaia planet or trans-dim planet
-        # Check if the planet needs to be terraformed.
-        # start is the index of the player's faction home_type
-        difficulty = 0
-        if planet.type == "Gaia" and not gaiaformer:
-            print(
-                "To build a mine on this planet, you need to pay 1 QIC. "
-               f"You now have {self.faction.qic} QIC's. Use a QIC?"
-            )
-            answer = input("--> ")
-        elif planet.type == "Trans-dim":
-            # TODO finish message
-            print(
-                "To build a mine on this planet, you need to gaia form this "
-               f"planet first You now have {self.faction.qic} QIC's. "
-                "Use a QIC?"
-            )
-        elif self.faction.home_type != target and not gaiaformer:
-            start = C.home_types.index(self.faction.home_type)
-            target = planet.type
-            i = start + 1
-            # difficulty == amount of terraform steps.
-            for difficulty in range(1, 4):
-                if i > 6:
-                    i = 0
-                if C.home_types[start - difficulty] == target \
-                    or C.home_types[i] == target:
-                    break
-                i += 1
-            # Error is corrected at runtime so i can ignore this.
-            # pylint: disable=no-member
-            print(
-                "To build a mine on this planet, you need to terraform it "
-                "first. Terraforming will cost "
-               f"{self.terraforming.active * difficulty} ore."
-            )
+            # TODO Check if the planet is a gaia planet or trans-dim planet
+            # Check if the planet needs to be terraformed.
+            # start is the index of the player's faction home_type
+            difficulty = 0
+            if planet.type == "Gaia" and not gaiaformer:
+                if not self.faction.qic > 0:
+                    print(
+                        "You don't have a QIC to build on a Gaia planet. "
+                        "Please choose a different type of planet."
+                    )
+                    continue
+
+                print(
+                    "To build a mine on this planet, you need to pay 1 QIC. "
+                   f"You now have {self.faction.qic} QIC's. Use a QIC? (Y/N)"
+                )
+
+                while True:
+                    pay_qic = input("--> ").lower()
+
+                    if not pay_qic in ['y', 'n']:
+                        print("Please type Y for yes or N for no.")
+                        continue
+                    elif pay_qic == "n":
+                        choose_another_planet = False
+                        break
+
+                if choose_another_planet:
+                    continue
+
+                # Player wants to pay the cost.
+                self.faction.qic -= 1
+                break
+
+            elif planet.type == "Trans-dim":
+                print(
+                    "To build a mine on this planet, you first need turn this "
+                    "planet into a Gaia planet with the Gaia Project action. "
+                    "Please choose a different type of planet."
+                )
+                continue
+            elif self.faction.home_type != target and not gaiaformer:
+                start = C.home_types.index(self.faction.home_type)
+                target = planet.type
+                i = start + 1
+                # difficulty == amount of terraform steps.
+                for difficulty in range(1, 4):
+                    if i > 6:
+                        i = 0
+                    if C.home_types[start - difficulty] == target \
+                        or C.home_types[i] == target:
+                        break
+                    i += 1
+                # Error is corrected at runtime so i can ignore this.
+                # pylint: disable=no-member
+                print(
+                    "To build a mine on this planet, you need to terraform it "
+                    "first. Terraforming will cost "
+                   f"{self.terraforming.active * difficulty} ore. You now "
+                   f"have {self.faction.ore}."
+                )
 
 
         # TODO Ask if the terraforming cost is acceptable. If it is, subtact
