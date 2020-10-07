@@ -1,6 +1,6 @@
-import exceptions as e
 import random
 
+import exceptions as e
 from technology import AdvancedTechnology, StandardTechnology
 
 

@@ -1,7 +1,8 @@
 import os
-import exceptions as e
 
 from PIL import Image
+
+import exceptions as e
 
 ROOT = os.path.dirname(__file__)
 IMAGES = os.path.join(ROOT, "images")

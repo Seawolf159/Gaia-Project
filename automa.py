@@ -1,7 +1,7 @@
-import exceptions as e
 import random
 
 import constants as C
+import exceptions as e
 
 
 class Automa:
