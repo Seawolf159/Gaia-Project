@@ -160,16 +160,13 @@ class GaiaProject:
                         track.research(current_level, p, i)
 
         # Place first structures (start with first player and going clockwise):
-        # for player in self.players:  # Commented for faster testing
-        #     player.start_mines("first", self.universe)  # Commented for
-                                                          # faster testing.
-                                                          # You'll have 2 less
-                                                          # ore.
-        # for player in reversed(self.players):  # Commented for faster testing
-        #     player.start_mines("second", self.universe)  # Commented for
-                                                           # faster testing.
-                                                           # You'll have 2 less
-                                                           # ore.
+        # TODO Final Commented for faster testing. Uncomment code block:
+        for player in self.players:
+            player.start_mines("first", self.universe)
+
+        # TODO Final Commented for faster testing. Uncomment code block:
+        for player in reversed(self.players):
+            player.start_mines("second", self.universe)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
