@@ -419,9 +419,9 @@ class Universe:
         )
 
     def generate(self):
-        self.universe = "default_2p"
+        self.universe = "default_2p_map"
 
-        default_2p = {
+        default_2p_map = {
             1: (1632, 1769),  # Center
             2: (1837, 0),  # North
             3: (3265, 1060),  # North East

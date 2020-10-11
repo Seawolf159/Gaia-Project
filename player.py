@@ -93,7 +93,7 @@ class Player:
         )
         planet.owner = self.faction.name
         planet.structure = "mine"
-        self.faction.mine += 1
+        self.faction.mine.built += 1
         self.faction.mine_max -= 1
         self.empire.append(planet)
 
@@ -130,15 +130,15 @@ class Player:
 
         # Second look at income from structures.
         # Ore from mines.
-        for i, _ in enumerate(range(self.faction.mine)):
+        for i, _ in enumerate(range(self.faction.mine.built)):
             self.faction.ore += self.faction.mine_income[i]
 
         # Credits from trading stations.
-        for i, _ in enumerate(range(self.faction.trading_station)):
+        for i, _ in enumerate(range(self.faction.trading_station_built)):
             self.faction.credits += self.faction.trading_station_income[i]
 
         # Knowledge from research labs.
-        for i, _ in enumerate(range(self.faction.research_lab)):
+        for i, _ in enumerate(range(self.faction.research_lab_built)):
             self.faction.credits += self.faction.research_lab_income[i]
 
         # Knowledge from academy.
@@ -146,7 +146,7 @@ class Player:
             self.faction.knowledge += self.faction.academy_income[1]
 
         # Income from planetary_institute.
-        if self.faction.planetary_institute == 1:
+        if self.faction.planetary_institute_built == 1:
             power_order.extend(
                 self.resolve_income(self.faction.planetary_institute_income)
             )
@@ -607,9 +607,14 @@ class Player:
                     )
                     continue
 
+                qic_storage = self.faction.qic
+                if qic_storage == 1:
+                    QIC = "QIC"
+                else:
+                    QIC = "QIC's"
                 print(
                     "To build a mine on this planet, you need to pay 1 QIC. "
-                   f"You now have {self.faction.qic} QIC's. Use a QIC? (Y/N)"
+                   f"You now have {qic_storage} {QIC}. Use a QIC? (Y/N)"
                 )
 
                 choose_another_planet = False
@@ -655,11 +660,12 @@ class Player:
 
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
-                if self.faction.ore < (self.terraforming.active * difficulty):
+                terraform_cost = self.terraforming.active * difficulty
+                if self.faction.ore < ():
                     print(
                         "You don't have enough ore to pay the "
                         "terraforming cost needed to terraform this planet "
-                       f"({self.terraforming.active * difficulty} ore). "
+                       f"({terraform_cost} ore). "
                         "Please choose a different type of planet."
                     )
                     continue
@@ -668,10 +674,9 @@ class Player:
                 # pylint: disable=no-member
                 print(
                     "To build a mine on this planet, you need to terraform it "
-                    "first. Terraforming will cost "
-                   f"{self.terraforming.active * difficulty} ore. You now "
-                   f"have {self.faction.ore}. Do you want to pay "
-                   f"{self.terraforming.active * difficulty} ore? (Y/N)"
+                   f"first. Terraforming will cost {terraform_cost} ore. You "
+                   f"now have {self.faction.ore}. Do you want to pay "
+                   f"{terraform_cost} ore? (Y/N)"
                 )
 
                 choose_another_planet = False
@@ -698,7 +703,7 @@ class Player:
         )
         planet.owner = self.faction.name
         planet.structure = "mine"
-        self.faction.mine += 1
+        self.faction.mine.built += 1
         self.faction.mine_max -= 1
         self.empire.append(planet)
 
