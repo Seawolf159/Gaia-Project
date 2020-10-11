@@ -97,6 +97,9 @@ class Automa:
                     "instead."
                 )
                 continue
+            except e.BackToActionSelection:
+                # User made a mistake and chose the wrong action for the automa
+                continue
             else:
                 return
 
@@ -204,9 +207,12 @@ class Automa:
         while True:
             sector = (
                 "Please type the number of the sector the chosen planet "
-                "is in.\n--> "
+                "is in. Type 8 if you chose the wrong action.\n--> "
             )
             sector_choice = input(sector)
+
+            if sector_choice == "8":
+                raise e.BackToActionSelection
 
             if not sector_choice in C.SECTORS_2P:
                 print("Please only type 1-7")
@@ -305,7 +311,8 @@ class Automa:
         print("\nOn what research track does the Automa go up?")
         print(research_board)
         options = (
-            "Please type the corresponding number:\n"
+            "Please type the corresponding number or type 7 if you chose the "
+            "wrong action.\n"
         )
         while True:
             choice = input(f"{options}--> ")
@@ -317,6 +324,8 @@ class Automa:
 
                 # num = Number of the level before completing the research.
                 num = int(current_level.name[-1])
+            elif choice == "7":
+                raise e.BackToActionSelection
             else:
                 print("Please only type 1-6")
                 continue

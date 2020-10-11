@@ -1,4 +1,5 @@
 import random
+from math import ceil
 
 import constants as C
 import exceptions as e
@@ -93,7 +94,7 @@ class Player:
         )
         planet.owner = self.faction.name
         planet.structure = "mine"
-        self.faction.mine.built += 1
+        self.faction.mine_built += 1
         self.faction.mine_max -= 1
         self.empire.append(planet)
 
@@ -118,6 +119,7 @@ class Player:
                 print("Please only type one of the available numbers.")
 
     def income_phase(self):
+        # TODO print everything that is gained from income?
         print(f"\nDoing income for {self.faction.name}.")
 
         # Income from faction board.
@@ -130,7 +132,7 @@ class Player:
 
         # Second look at income from structures.
         # Ore from mines.
-        for i, _ in enumerate(range(self.faction.mine.built)):
+        for i, _ in enumerate(range(self.faction.mine_built)):
             self.faction.ore += self.faction.mine_income[i]
 
         # Credits from trading stations.
@@ -345,6 +347,7 @@ class Player:
         print(f"Ore: {self.faction.ore}")
         print(f"Knowledge: {self.faction.knowledge}")
         print(f"Qic: {self.faction.qic}")
+        print(f"Gaia formers: {self.faction.gaiaformer}")
         print(f"Power in bowl 1: {self.faction.bowl1}")
         print(f"Power in bowl 2: {self.faction.bowl2}")
         print(f"Power in bowl 3: {self.faction.bowl3}")
@@ -383,12 +386,13 @@ class Player:
                 )
                 continue
             except e.BackToActionSelection:
-                # User chose to pick another action.
+                # User chose to pick another action or wasn't able to pay for
+                # some costs.
                 continue
             except e.InsufficientKnowledgeError:
                 print(
                     "You don't have enough knowledge to research. You "
-                    f"currently have {self.faction.knowledge} knowledge. "
+                   f"currently have {self.faction.knowledge} knowledge. "
                     "Please choose a different action."
                 )
                 continue
@@ -428,6 +432,7 @@ class Player:
             try:
                 if ptype:
                     planet = universe.locate_planet(sector_choice, ptype)
+                    return planet
             except e.PlanetNotFoundError:
                 print(
                    f"The selected sector ({sector_choice}) doesn't have "
@@ -520,20 +525,37 @@ class Player:
 
     def mine(self, universe):
         # TODO untested/unfinished funtion
+        # TODO test if after gaia project in same turn if it is possible to
+        # TODO move planet validity checks into a function so gaia action can
+        # also use it.
+        # build a mine already
+        # Check if the player has enough resources to pay for the mine.
+        if not self.faction.credits >= 2 and not self.faction.ore >= 1:
+            print(
+               f"You don't have enough credits ({self.faction.credits}) "
+               f"or ore ({self.faction.ore}) to built a mine. Building a mine "
+                "costs 2 credits and 1 ore."
+            )
+            raise e.BackToActionSelection
+
         while True:
+            # Payment flags
+            pay_range_qic = False
+            pay_gaia_qic = False
+            pay_terraform_ore = False
+
             print("On what planet do you want to build a mine?")
             planet = self.choose_planet(universe)
 
             # Check if there is a gaiaformer on the planet.
             # TODO test closely related to the untested gaia_phase function
-            gaiaformer = False
             if planet.structure == "gaiaformer":
                 self.faction.gaiaformer += 1
-                gaiaformer = True
                 break
 
             # Check if the player is within range of the target planet.
             not_enough_range = False
+            all_distances = []
             for owned_planet in self.empire:
                 startx = owned_planet.location[0]
                 starty = owned_planet.location[1]
@@ -542,22 +564,24 @@ class Player:
                 targety = planet.location[1]
 
                 distance = universe.distance(startx, starty, targetx, targety)
+                all_distances.append(distance)
 
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
                 # If the distance of the planet to one of the players planets
                 # is ever smaller or equal to the amount of range the player
                 # has, the planet is close enough.
+                # Error is corrected at runtime so i can ignore this.
+                # pylint: disable=no-member
                 if distance <= self.navigation.active:
                     break
             else:
+                distance = min(all_distances)
                 not_enough_range = True
 
             if not_enough_range:
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
                 extra_range_needed = distance - self.navigation.active
-                qic_needed = (extra_range_needed // 2) + 1
+                qic_needed = ceil(extra_range_needed / 2)
 
                 # Check if player has the required amount of qic needed to
                 # increase the range enough.
@@ -567,6 +591,17 @@ class Player:
                        f"({self.navigation.active}) to build on your chosen "
                         "planet and you don't have enough QIC "
                        f"({self.faction.qic}) to increase your range."
+                    )
+                    continue
+
+                # Check if the player is building on a gaia planet and if
+                # he/she has enough qic to increase the range AND pay a qic for
+                # building on a gaia planet type.
+                if planet.type == "Gaia" and not self.faction.qic > qic_needed:
+                    print(
+                       f"You don't have enough QIC ({self.faction.qic}) to "
+                       "increase your range AND build on a gaia planet. "
+                       "Please choose a different planet."
                     )
                     continue
 
@@ -580,7 +615,7 @@ class Player:
                     "increase your range? (Y/N)"
                 )
 
-                choose_another_planet = False
+                dont_increase_range = False
                 while True:
                     increase_range = input("--> ").lower()
 
@@ -588,26 +623,35 @@ class Player:
                         print("Please type Y for yes or N for no.")
                         continue
                     elif increase_range == "n":
-                        choose_another_planet = True
+                        dont_increase_range = True
+                        break
+                    else:
                         break
 
-                if choose_another_planet:
+                if dont_increase_range:
                     continue
 
                 # Player wants to pay QIC.
-                self.faction.qic -= qic_needed
-                break
+                # TODO if user player qic for range, and builds on gaia type
+                # he/she could find himself without qic and wants to undo the
+                # action, but it is already taken 1 qic for the range and right
+                # now that isn't being returned.
+                pay_range_qic = qic_needed
 
+            if planet.type in ["Gaia","GaiaN", "GaiaS"]:
+                # TODO faction compatibility this function doesn't work for the
+                # gleens faction as they pay ore to build on gaia planets
+                qic_storage = self.faction.qic
+                if pay_range_qic:
+                    qic_storage -= pay_range_qic
 
-            if planet.type == "Gaia" and not gaiaformer:
-                if not self.faction.qic > 0:
+                if not qic_storage > 0:
                     print(
                         "You don't have a QIC to build on a Gaia planet. "
                         "Please choose a different type of planet."
                     )
                     continue
 
-                qic_storage = self.faction.qic
                 if qic_storage == 1:
                     QIC = "QIC"
                 else:
@@ -627,15 +671,17 @@ class Player:
                     elif pay_qic == "n":
                         choose_another_planet = True
                         break
+                    else:
+                        break
 
                 if choose_another_planet:
                     continue
 
                 # Player wants to pay QIC.
-                self.faction.qic -= 1
+                pay_gaia_qic = True
                 break
 
-            elif planet.type == "Trans-dim":
+            elif planet.type in ["Trans-dim", "Trans-dimN", "Trans-dimS"]:
                 print(
                     "To build a mine on this planet, you first need turn this "
                     "planet into a Gaia planet with the Gaia Project action. "
@@ -644,7 +690,7 @@ class Player:
                 continue
 
             # Check if the player needs to first terraform the planet.
-            elif self.faction.home_type != planet.type and not gaiaformer:
+            elif self.faction.home_type != planet.type:
                 start = C.home_types.index(self.faction.home_type)
                 target = planet.type
                 i = start + 1
@@ -661,7 +707,7 @@ class Player:
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
                 terraform_cost = self.terraforming.active * difficulty
-                if self.faction.ore < ():
+                if self.faction.ore < terraform_cost:
                     print(
                         "You don't have enough ore to pay the "
                         "terraforming cost needed to terraform this planet "
@@ -675,7 +721,7 @@ class Player:
                 print(
                     "To build a mine on this planet, you need to terraform it "
                    f"first. Terraforming will cost {terraform_cost} ore. You "
-                   f"now have {self.faction.ore}. Do you want to pay "
+                   f"now have {self.faction.ore} ore. Do you want to pay "
                    f"{terraform_cost} ore? (Y/N)"
                 )
 
@@ -689,55 +735,67 @@ class Player:
                     elif pay_terraform_cost == "n":
                         choose_another_planet = True
                         break
+                    else:
+                        break
 
                 if choose_another_planet:
                     continue
 
                 # Player wants to pay terraforming cost.
-                self.faction.ore -= difficulty
+                pay_terraform_ore = True
                 break
 
         print(
             f"You have built a mine in sector {planet.sector[-1]} on the "
             f"{planet.type} planet."
         )
+        # Apply the various payment options.
+        if pay_range_qic:
+            self.faction.qic -= qic_needed
+        if pay_gaia_qic:
+            self.faction.qic -= 1
+        if pay_terraform_ore:
+            self.faction.ore -= difficulty
+
         planet.owner = self.faction.name
         planet.structure = "mine"
-        self.faction.mine.built += 1
+        self.faction.credits -= 2
+        self.faction.ore -= 1
+        self.faction.mine_built += 1
         self.faction.mine_max -= 1
         self.empire.append(planet)
 
     def gaia(self, universe):
         # TODO Automation, load all the trans-dim planets within range and let
         # player choose a number.
-        if self.faction.gaiaformer > 0:
-            # Error is corrected at runtime so i can ignore this.
-            # pylint: disable=no-member
-            if self.faction.count_powertokens() >= self.gaia_project.active:
-                print("\nYou want to start a Gaia Project.")
-                planet = self.choose_planet(universe, "trans-dim")
-                for _ in range(self.gaia_project.active):
-                    # Prioritise taking from the lowest bowl as i don't see why
-                    # it would ever be better to not do that.
-                    if self.faction.bowl1 > 0:
-                        self.faction.bowl1 -= 1
-                    elif self.faction.bowl2 > 0:
-                        self.faction.bowl2 -= 1
-                    elif self.faction.bowl3 > 0:
-                        self.faction.bowl3 -= 1
-
-                print(
-                   f"You have started a gaia project in sector "
-                   f"{planet.sector[-1]} on the {planet.type} planet."
-                )
-                planet.owner = self.faction.name
-                planet.structure = "gaiaformer"
-                self.gaia_forming.append(planet)
-                self.faction.gaiaformer -= 1
-            else:
-                raise e.NotEnoughPowerTokensError
-        else:
+        if not self.faction.gaiaformer > 0:
             raise e.NoGaiaFormerError
+
+        # Error is corrected at runtime so i can ignore this.
+        # pylint: disable=no-member
+        if not self.faction.count_powertokens() >= self.gaia_project.active:
+            raise e.NotEnoughPowerTokensError
+
+        print("\nYou want to start a Gaia Project.")
+        planet = self.choose_planet(universe, "trans-dim")
+        for _ in range(self.gaia_project.active):
+            # Prioritise taking from the lowest bowl as i don't see why
+            # it would ever be better to not do that.
+            if self.faction.bowl1 > 0:
+                self.faction.bowl1 -= 1
+            elif self.faction.bowl2 > 0:
+                self.faction.bowl2 -= 1
+            elif self.faction.bowl3 > 0:
+                self.faction.bowl3 -= 1
+
+        print(
+            f"You have started a gaia project in sector "
+            f"{planet.sector[-1]} on the {planet.type} planet."
+        )
+        planet.owner = self.faction.name
+        planet.structure = "gaiaformer"
+        self.gaia_forming.append(planet)
+        self.faction.gaiaformer -= 1
 
     def upgrade(self):
         pass
@@ -770,10 +828,10 @@ class Player:
             answer = input(f"{options}--> ")
 
             if not answer in ["1", "2", "3", "4", "5", "6"]:
+                if answer == "7":
+                    raise e.BackToActionSelection
                 print("Please only type 1-7")
                 continue
-            elif answer == "7":
-                raise e.BackToActionSelection
 
             answer = int(answer)
             current_level = levels[answer - 1]
