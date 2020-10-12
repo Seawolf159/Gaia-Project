@@ -75,22 +75,20 @@ class Scoring:
                 boosters.pop(random.randrange(len(boosters)))
             )
 
-
     def randomise_scoring(self):
         round_tiles = [
             RoundScoring("RNDter.png", 2, "terraforming", 4, 6),
             RoundScoring("RNDstp.png", 2, "research", 2, 4),
             RoundScoring("RNDmin.png", 2, "mine", 4, 6),
             RoundScoring("RNDfed.png", 5, "fedtoken", 0, 5),
-            RoundScoring("RNDtrs3.png", 3, "trade3", 3, 6),
-            RoundScoring("RNDtrs4.png", 4, "trade4", 3, 6),
-            RoundScoring("RNDgai3.png", 3, "gaiamine3", 2, 2),
-            RoundScoring("RNDgai4.png", 4, "gaiamine4", 2, 2),
+            RoundScoring("RNDtrs3.png", 3, "trade", 3, 6),
+            RoundScoring("RNDtrs4.png", 4, "trade", 3, 6),
+            RoundScoring("RNDgai3.png", 3, "gaiamine", 2, 2),
+            RoundScoring("RNDgai4.png", 4, "gaiamine", 2, 2),
             RoundScoring("RNDpia.png", 5, "planetaryacademy", 0, 5),
             RoundScoring("RNDpia.png", 5, "planetaryacademy", 0, 5)
         ]
 
-        self.rounds = []
         for _ in range(6):
             self.rounds.append(
                 round_tiles.pop(random.randrange(len(round_tiles)))

@@ -30,12 +30,15 @@ class Player:
         self.score = 10
         self.standard_technology = []
         self.advanced_technology = []
-        self.booster = False  # This property is set during setup
+
+        # This property is set during setup and when passing.
+        self.booster = False
 
         self.empire = []  # List of owned planets
         self.federations = []  # List of federation tokens
-        self.gaia_forming = []  # List of trans-dim planets undergoing a
-                                # gaia project
+
+        # List of trans-dim planets undergoing a gaia project.
+        self.gaia_forming = []
 
         self.universe = False  # This property is set during setup
 
@@ -47,7 +50,7 @@ class Player:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
-        self.passed = False
+        self.passed = False  # Wether or not the player has passed.
 
     def start_mines(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
@@ -240,6 +243,18 @@ class Player:
                 self.charge_power(int(power_order[0][-1]))
 
     def resolve_income(self, incomes):
+        """Give a player the resources gained from income.
+
+        Args:
+            incomes (list): A list with the income to be resolved. Format:
+                ["credits3", "ore1", "knowledge1"].
+
+        Returns:
+            A list with all the power and power tokens gained where the order
+            of gaining them still needs to be resolved if any power or
+            powertokens were gained.
+        """
+
         # If incomes is not a list and therefore a single income, put that
         # single income in a list to not iterate over a string instead. For
         # example if incomes == "ore2" the iteration below would fail so
@@ -309,7 +324,7 @@ class Player:
             print(f"Power in bowl 2: {self.faction.bowl2}")
             print(f"Power in bowl 3: {self.faction.bowl3}")
 
-    def action_phase(self, gp):
+    def action_phase(self, gp, rnd):
         """Functions for delegating to action functions.
 
         Args:
@@ -331,7 +346,7 @@ class Player:
 
         # Value is a list with the function and the arguments it needs.
         options = {
-            "1": [self.mine, gp.universe],
+            "1": [self.mine, gp.universe, rnd],
             "2": [self.gaia, gp.universe],
             "3": [self.upgrade],
             "4": [self.federation],
@@ -525,7 +540,8 @@ class Player:
 
         return planet
 
-    def mine(self, universe):
+    def mine(self, universe, rnd):
+        # TODO how to deal with power charging??
         # TODO untested/unfinished funtion
         # TODO test if after gaia project in same turn if it is possible to
         # TODO Some tech tiles give some points on building a mine same with
@@ -765,6 +781,23 @@ class Player:
         if pay_terraform_ore:
             self.faction.ore -= difficulty
 
+        # Check if the current round awards points for terraforming.
+        # TODO test that the round bonuses are gained.
+        if rnd.goal == "terraforming":
+            self.score += rnd.vp * difficulty
+            print(
+               f"Because of the round you have gained {rnd.vp * difficulty} "
+                "victory points."
+            )
+
+        # Check if the current round awards points for building a mine on a
+        # Gaia planet.
+        if rnd.goal == "gaiamine":
+            self.score += rnd.vp
+            print(
+               f"Because of the round you have gained {rnd.vp} victory points."
+            )
+
         planet.owner = self.faction.name
         planet.structure = "mine"
         self.faction.credits -= 2
@@ -976,7 +1009,6 @@ class Player:
                 print(research_board)
                 return
 
-
     def pq(self):
         pass
 
@@ -984,13 +1016,17 @@ class Player:
         pass
 
     def pass_(self, gp):
+        # TODO if it is the last round, you don't have to pick a booster
         gp.passed += 1
         self.passed = True
+        print("You Pass.")
+        if self.booster.vp:
+            # TODO Make every booster it's own class to handle the vp gain when
+            # passing? Do the same for researchh tiles??
+            pass
 
-        # TODO if it is the last round, you don't have to pick a booster
-        question = "You pass. Which booster would you like to pick?"
-        print(f"{question}")
 
+        print("Which booster would you like to pick?")
         while True:
             for x, booster in enumerate(gp.scoring_board.boosters, start=1):
                 print(f"{x}. {booster}")
@@ -1005,8 +1041,6 @@ class Player:
                 return
             else:
                 print("Please only type one of the available numbers.")
-
-
 
     def free(self):
         pass

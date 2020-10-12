@@ -345,9 +345,8 @@ class GaiaProject:
         # TODO generate the board and show some sort of summary of the current
         # board?
 
-        playing = True
-        while playing:
-            # During 6 rounds, cycle through the 4 phases of the game.
+        # During 6 rounds, cycle through the 4 phases of the game.
+        for rnd in self.scoring_board.rounds:
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
                 player.income_phase()
@@ -358,7 +357,7 @@ class GaiaProject:
             while self.passed != len(self.players):
                 for player in self.players:
                     if not player.passed:
-                        player.action_phase(self)
+                        player.action_phase(self, rnd)
 
             # 4. Clean up phase
 

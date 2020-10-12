@@ -19,8 +19,8 @@ class AdvancedTechnology:
 
     def __str__(self):
         if self.effect:
-            effect = f"effect: {self.effect}"
+            effect = f"effect: {self.effect} | "
         else:
             effect = ""
 
-        return f"when: {self.when} | {effect} | reward: {self.reward}"
+        return f"when: {self.when} | {effect}reward: {self.reward}"
