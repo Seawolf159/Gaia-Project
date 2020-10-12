@@ -31,7 +31,7 @@ class Planet:
         self.sector = sector  # Name of the sector this planet is in.
         self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
         self.location = location  # (x, y)
-        self.owner = False  # Home world of owner
+        self.owner = False  # Faction name of owner
         self.structure = False  # Type of building built
         self.federation = False  # Part of federation? True or False
 
@@ -544,6 +544,8 @@ class Universe:
                         if hex_.type.lower()[:-1] == ptype:
                             if not hex_.owner:
                                 choices.append(hex_)
+                            elif hex_.owner and hex_.structure == "gaiaformer":
+                                choices.append(hex_)
 
             if len(choices) == 2:
                 print(
@@ -583,6 +585,8 @@ class Universe:
                         if hex_.type.lower()[:-1] == ptype:
                             if not hex_.owner:
                                 choices.append(hex_)
+                            elif hex_.owner and hex_.structure == "gaiaformer":
+                                choices.append(hex_)
 
             if len(choices) == 2:
                 print(
@@ -616,6 +620,8 @@ class Universe:
                         if hex_.type.lower() == ptype:
                             if not hex_.owner:
                                 return hex_
+                            elif hex_.owner and hex_.structure == "gaiaformer":
+                                choices.append(hex_)
                             else:
                                 raise e.PlanetAlreadyOwnedError(hex_)
             else:

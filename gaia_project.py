@@ -348,7 +348,7 @@ class GaiaProject:
         playing = True
         while playing:
             # During 6 rounds, cycle through the 4 phases of the game.
-            # 1. Income phase followed by Gaia phase.
+            # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
                 player.income_phase()
                 player.gaia_phase()
@@ -357,7 +357,8 @@ class GaiaProject:
             self.passed = 0
             while self.passed != len(self.players):
                 for player in self.players:
-                    player.action_phase(self)
+                    if not player.passed:
+                        player.action_phase(self)
 
             # 4. Clean up phase
 

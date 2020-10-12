@@ -47,6 +47,8 @@ class Player:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
+        self.passed = False
+
     def start_mines(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
         question = (
@@ -336,7 +338,7 @@ class Player:
             "5": [self.research, gp.research_board],
             "6": [self.pq],
             "7": [self.special],
-            "8": [self.pass_],
+            "8": [self.pass_, gp],
             "9": [self.free]
         }
 
@@ -423,7 +425,7 @@ class Player:
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
-                print("Please only type 1-7")
+                print("Please only type 1-8")
                 continue
 
             # If the function is called with a ptype, the planet type is
@@ -526,9 +528,9 @@ class Player:
     def mine(self, universe):
         # TODO untested/unfinished funtion
         # TODO test if after gaia project in same turn if it is possible to
-        # TODO move planet validity checks into a function so gaia action can
-        # also use it.
-        # build a mine already
+        # TODO Some tech tiles give some points on building a mine same with
+        # round tiles.
+
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
             print(
@@ -547,9 +549,19 @@ class Player:
             print("On what planet do you want to build a mine?")
             planet = self.choose_planet(universe)
 
-            # Check if there is a gaiaformer on the planet.
+            # Check if there is a gaiaformer on the planet and if the planet
+            # is owned by the player.
             # TODO test closely related to the untested gaia_phase function
+            # TODO choose planet function might say a planet with a gaiaformer
+            # is already occupied and won't reach this. TEST AND POTENTIALLY
+            # FIX THIS!!
             if planet.structure == "gaiaformer":
+                if not planet.owner == self.faction.name:
+                    print(
+                        f"The selected gaiaformer belongs to {planet.owner}. "
+                         "Please choose a different planet."
+                    )
+                    continue
                 self.faction.gaiaformer += 1
                 break
 
@@ -632,10 +644,6 @@ class Player:
                     continue
 
                 # Player wants to pay QIC.
-                # TODO if user player qic for range, and builds on gaia type
-                # he/she could find himself without qic and wants to undo the
-                # action, but it is already taken 1 qic for the range and right
-                # now that isn't being returned.
                 pay_range_qic = qic_needed
 
             if planet.type in ["Gaia","GaiaN", "GaiaS"]:
@@ -743,7 +751,7 @@ class Player:
 
                 # Player wants to pay terraforming cost.
                 pay_terraform_ore = True
-                break
+            break
 
         print(
             f"You have built a mine in sector {planet.sector[-1]} on the "
@@ -751,7 +759,7 @@ class Player:
         )
         # Apply the various payment options.
         if pay_range_qic:
-            self.faction.qic -= qic_needed
+            self.faction.qic -= pay_range_qic
         if pay_gaia_qic:
             self.faction.qic -= 1
         if pay_terraform_ore:
@@ -768,30 +776,128 @@ class Player:
     def gaia(self, universe):
         # TODO Automation, load all the trans-dim planets within range and let
         # player choose a number.
+        # Check if the player has an available gaiaformer.
         if not self.faction.gaiaformer > 0:
             raise e.NoGaiaFormerError
 
         # Error is corrected at runtime so i can ignore this.
         # pylint: disable=no-member
+        # Check if the player has enough powertokens to do a gaia project.
         if not self.faction.count_powertokens() >= self.gaia_project.active:
             raise e.NotEnoughPowerTokensError
 
-        print("\nYou want to start a Gaia Project.")
-        planet = self.choose_planet(universe, "trans-dim")
+        while True:
+            # Payment flag
+            pay_range_qic = False
+
+            print("\nYou want to start a Gaia Project.")
+            planet = self.choose_planet(universe, "trans-dim")
+
+            # Check if the player is within range of the target planet.
+            not_enough_range = False
+            all_distances = []
+            for owned_planet in self.empire:
+                startx = owned_planet.location[0]
+                starty = owned_planet.location[1]
+
+                targetx = planet.location[0]
+                targety = planet.location[1]
+
+                distance = universe.distance(startx, starty, targetx, targety)
+                all_distances.append(distance)
+
+                # If the distance of the planet to one of the players planets
+                # is ever smaller or equal to the amount of range the player
+                # has, the planet is close enough.
+                # Error is corrected at runtime so i can ignore this.
+                # pylint: disable=no-member
+                if distance <= self.navigation.active:
+                    break
+            else:
+                distance = min(all_distances)
+                not_enough_range = True
+
+            if not_enough_range:
+                # Error is corrected at runtime so i can ignore this.
+                # pylint: disable=no-member
+                extra_range_needed = distance - self.navigation.active
+                qic_needed = ceil(extra_range_needed / 2)
+
+                # Check if player has the required amount of qic needed to
+                # increase the range enough.
+                if qic_needed > self.faction.qic:
+                    print(
+                        "You don't have enough range "
+                        f"({self.navigation.active}) to build on your chosen "
+                        "planet and you don't have enough QIC "
+                        f"({self.faction.qic}) to increase your range."
+                    )
+                    continue
+
+                # Check if the player is building on a gaia planet and if
+                # he/she has enough qic to increase the range AND pay a qic for
+                # building on a gaia planet type.
+                if planet.type == "Gaia" and not self.faction.qic > qic_needed:
+                    print(
+                        f"You don't have enough QIC ({self.faction.qic}) to "
+                        "increase your range AND build on a gaia planet. "
+                        "Please choose a different planet."
+                    )
+                    continue
+
+                if qic_needed == 1:
+                    QIC = "QIC"
+                else:
+                    QIC = "QIC's"
+                print(
+                    "Your nearest planet is not within range of your chosen "
+                    f"planet. Do you want to spend {qic_needed} {QIC} to "
+                    "increase your range? (Y/N)"
+                )
+
+                dont_increase_range = False
+                while True:
+                    increase_range = input("--> ").lower()
+
+                    if not increase_range in ['y', 'n']:
+                        print("Please type Y for yes or N for no.")
+                        continue
+                    elif increase_range == "n":
+                        dont_increase_range = True
+                        break
+                    else:
+                        break
+
+                if dont_increase_range:
+                    continue
+
+                # Player wants to pay QIC.
+                pay_range_qic = qic_needed
+            break
+
+        # Deduct the power and put it in the gaia_bowl
         for _ in range(self.gaia_project.active):
             # Prioritise taking from the lowest bowl as i don't see why
             # it would ever be better to not do that.
             if self.faction.bowl1 > 0:
                 self.faction.bowl1 -= 1
+                self.faction.gaia_bowl += 1
             elif self.faction.bowl2 > 0:
                 self.faction.bowl2 -= 1
+                self.faction.gaia_bowl += 1
             elif self.faction.bowl3 > 0:
                 self.faction.bowl3 -= 1
+                self.faction.gaia_bowl += 1
 
         print(
             f"You have started a gaia project in sector "
             f"{planet.sector[-1]} on the {planet.type} planet."
         )
+
+        # Apply paying for range if applicable.
+        if pay_range_qic:
+            self.faction.qic -= pay_range_qic
+
         planet.owner = self.faction.name
         planet.structure = "gaiaformer"
         self.gaia_forming.append(planet)
@@ -877,8 +983,30 @@ class Player:
     def special(self):
         pass
 
-    def pass_(self):
-        pass
+    def pass_(self, gp):
+        gp.passed += 1
+        self.passed = True
+
+        # TODO if it is the last round, you don't have to pick a booster
+        question = "You pass. Which booster would you like to pick?"
+        print(f"{question}")
+
+        while True:
+            for x, booster in enumerate(gp.scoring_board.boosters, start=1):
+                print(f"{x}. {booster}")
+
+            choice = input(f"--> ")
+
+            if choice in (
+                [str(num + 1) for num in range(len(gp.scoring_board.boosters))]
+            ):
+                self.booster = gp.scoring_board.boosters.pop(int(choice) - 1)
+                print(f"You chose {self.booster}.")
+                return
+            else:
+                print("Please only type one of the available numbers.")
+
+
 
     def free(self):
         pass
