@@ -556,13 +556,13 @@ class Player:
             )
             raise e.BackToActionSelection
 
+        print("\nOn what planet do you want to build a mine?")
         while True:
             # Payment flags
             pay_range_qic = False
             pay_gaia_qic = False
             pay_terraform_ore = False
 
-            print("On what planet do you want to build a mine?")
             planet = self.choose_planet(universe)
 
             # Check if there is a gaiaformer on the planet and if the planet
@@ -819,11 +819,11 @@ class Player:
         if not self.faction.count_powertokens() >= self.gaia_project.active:
             raise e.NotEnoughPowerTokensError
 
+        print("\nYou want to start a Gaia Project.")
         while True:
             # Payment flag
             pay_range_qic = False
 
-            print("\nYou want to start a Gaia Project.")
             planet = self.choose_planet(universe, "trans-dim")
 
             # Check if the player is within range of the target planet.
@@ -1009,8 +1009,61 @@ class Player:
                 print(research_board)
                 return
 
+    def enough_power(self, power):
+        if not self.faction.count_powertokens() >= power:
+            print(
+                "You don't have enough power to do this action."
+                "Please choose a different action."
+            )
+        return False
+
     def pq(self):
-        pass
+        intro = (
+            "\nYou want to take a power or qic action. Type the number of "
+            "your action.\n"
+        )
+        power = "Power:\n"
+        knowledge3 = "1. Gain 3 knowledge for 7 power.\n"
+        terraform2 = "2. Gain 2 terraforming steps for 5 power.\n"
+        ore2 = "3. Gain 2 ore for 4 power.\n"
+        credits7 = "4. Gain 7 credits for 4 power.\n"
+        knowledge2 = "5. Gain 2 knowledge for 4 power.\n"
+        terraform1 = "6. Gain 1 terraforming step for 3 power.\n"
+        powertoken2 = "7. Gain 2 powertokens for 3 power.\n"
+        qic = "Qic:\n"
+        tech_tile = "8. Gain a tech tile.\n"
+        score_fed_token = "9. Score one of your federation tokens again.\n"
+        vp_for_ptypes = (
+            "10. Gain 3 vp and 1 vp for every different planet type.\n"
+        )
+        cancel = "11. Pick a different action."
+
+        print("You want to do a power or QIC action.")
+
+        while True:
+            action = input(
+               f"{intro}{power}{knowledge3}{ore2}{credits7}{knowledge2}"
+               f"{terraform1}{powertoken2}{qic}{tech_tile}{score_fed_token}"
+               f"{vp_for_ptypes}{cancel}--> "
+            )
+
+            if action == "11":
+                raise e.BackToActionSelection
+            elif not action in [str(act) for act in range(1, 11)]:
+                print("Please type the action's corresponding number.")
+
+            if action == "1":
+                if not self.enough_power(7):
+                    continue
+
+                self.faction.knowledge += 3
+                print(
+                    "You have gained 3 knowledge. You now have "
+                   f"{self.faction.knowledge} knowledge."
+                )
+
+
+
 
     def special(self):
         pass
@@ -1020,6 +1073,9 @@ class Player:
         gp.passed += 1
         self.passed = True
         print("You Pass.")
+        return
+
+        # Wait with this for now
         if self.booster.vp:
             # TODO Make every booster it's own class to handle the vp gain when
             # passing? Do the same for researchh tiles??

@@ -240,8 +240,6 @@ class Research:
         # Power and QIC actions.
         self.pq_actions = {x: True for x in range(1, 11)}
 
-        self.basic_tech = {x: True for x in range(1, 10)}
-
     def randomise_tech_tiles(self):
         # TODO Instantiate even the unused tech tiles, boosters etc..???
         # So the ones that don't get used.
