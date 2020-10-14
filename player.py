@@ -24,6 +24,8 @@ class Player:
                 changing ones mind.
             Don't forget to look at boosters/technology for additional points
             for some actions.
+            Find consistency in QIC qic or Q.I.C. or whatever.
+            Boosters not completely finished yet.
         """
 
         self.faction = select_faction(faction.lower())()
@@ -125,6 +127,8 @@ class Player:
 
     def income_phase(self):
         # TODO print everything that is gained from income?
+        # TODO Never allow more than the maximium allowed of a resource.
+        # For example: max credits is 30, max ore is 15
         print(f"\nDoing income for {self.faction.name}.")
 
         # Income from faction board.
@@ -253,6 +257,9 @@ class Player:
             A list with all the power and power tokens gained where the order
             of gaining them still needs to be resolved if any power or
             powertokens were gained.
+
+        TODO:
+            Print everything gained like with power?
         """
 
         # If incomes is not a list and therefore a single income, put that
@@ -295,6 +302,13 @@ class Player:
             charged += 1
         print(f"{charged} Power has been charged.")
 
+    def use_power(self, amount):
+        for _ in amount:
+            self.faction.bowl3 -= 1
+            self.faction.bowl1 += 1
+
+        print(f"You have used {amount} power.")
+
     def resolve_direct(self, rewards):
         if not isinstance(rewards, list):
             rewards = [rewards]
@@ -328,7 +342,11 @@ class Player:
         """Functions for delegating to action functions.
 
         Args:
-            gp: GaiaProject class
+            gp: GaiaProject class.
+            rnd: Active Round object.
+
+        TODO:
+            Action that shows current resources??
         """
 
         faction_name = f"\n{self.faction.name}:"
@@ -351,7 +369,7 @@ class Player:
             "3": [self.upgrade],
             "4": [self.federation],
             "5": [self.research, gp.research_board],
-            "6": [self.pq],
+            "6": [self.pq, gp, rnd],
             "7": [self.special],
             "8": [self.pass_, gp],
             "9": [self.free]
@@ -540,18 +558,22 @@ class Player:
 
         return planet
 
-    def mine(self, universe, rnd):
+    def mine(self, universe, rnd, terraform_steps=False):
         # TODO how to deal with power charging??
         # TODO untested/unfinished funtion
         # TODO test if after gaia project in same turn if it is possible to
         # TODO Some tech tiles give some points on building a mine same with
         # round tiles.
+        # TODO CRITICAL after terraforming the mine action fails terribly if
+        # there are multiple gaia planets in the same sector that are not there
+        # from the start!!!! just make a list with all planets in the sector
+        # to avoid shit like this.
 
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
             print(
                f"You don't have enough credits ({self.faction.credits}) "
-               f"or ore ({self.faction.ore}) to built a mine. Building a mine "
+               f"or ore ({self.faction.ore}) to build a mine. Building a mine "
                 "costs 2 credits and 1 ore."
             )
             raise e.BackToActionSelection
@@ -564,6 +586,22 @@ class Player:
             pay_terraform_ore = False
 
             planet = self.choose_planet(universe)
+
+            # If this function was called from the pq action function, check
+            # if a planet that needs terraforming was actually chosen.
+            # I think you MUST place on a planet that can be terraformed, but
+            # i am not sure. For now it will be like this.
+            if (
+                terraform_steps
+                and planet.type == self.faction.home_type
+                and not planet.type in C.home_types
+            ):
+                print(
+                    "When you gain terraform steps, you MUST build a mine on "
+                    "a planet that has to be terraformed. Please choose a "
+                    "different planet type."
+                )
+                continue
 
             # Check if there is a gaiaformer on the planet and if the planet
             # is owned by the player.
@@ -728,6 +766,11 @@ class Player:
                         break
                     i += 1
 
+                if terraform_steps:
+                    difficulty -= terraform_steps
+                    if difficulty < 1:
+                        break
+
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
                 terraform_cost = self.terraforming.active * difficulty
@@ -779,10 +822,13 @@ class Player:
         if pay_gaia_qic:
             self.faction.qic -= 1
         if pay_terraform_ore:
-            self.faction.ore -= difficulty
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            self.faction.ore -= difficulty * self.terraforming.active
 
         # Check if the current round awards points for terraforming.
         # TODO test that the round bonuses are gained.
+        # TODO This now always just awards points. Probably broken maybe
         if rnd.goal == "terraforming":
             self.score += rnd.vp * difficulty
             print(
@@ -1009,18 +1055,38 @@ class Player:
                 print(research_board)
                 return
 
-    def enough_power(self, power):
-        if not self.faction.count_powertokens() >= power:
+    def enough_power(self, amount):
+        # Check if there is enough power in bowl 3.
+        if not self.faction.bowl3 >= amount:
             print(
-                "You don't have enough power to do this action."
+                "You don't have enough power to do this action. "
                 "Please choose a different action."
             )
-        return False
+            return False
+        return True
 
-    def pq(self):
+    def pq_availabe(self, research_board, num):
+        # Check if the action is still available.
+        if not research_board.pq_actions[num]:
+            print(
+                "This power action is already used this round. "
+                "Please choose a different action."
+            )
+            return False
+        return True
+
+
+    def pq(self, gp, rnd):
+        """Power and Qic action function.
+
+        Args:
+            gp: GaiaProject class.
+            rnd: Active Round object.
+        """
+
         intro = (
             "\nYou want to take a power or qic action. Type the number of "
-            "your action.\n"
+            "your action."
         )
         power = "Power:\n"
         knowledge3 = "1. Gain 3 knowledge for 7 power.\n"
@@ -1036,34 +1102,59 @@ class Player:
         vp_for_ptypes = (
             "10. Gain 3 vp and 1 vp for every different planet type.\n"
         )
-        cancel = "11. Pick a different action."
+        cancel = "11. Pick a different action.\n"
 
-        print("You want to do a power or QIC action.")
+        print(f"{intro}")
 
         while True:
             action = input(
-               f"{intro}{power}{knowledge3}{ore2}{credits7}{knowledge2}"
-               f"{terraform1}{powertoken2}{qic}{tech_tile}{score_fed_token}"
-               f"{vp_for_ptypes}{cancel}--> "
+               f"{power}{knowledge3}{terraform2}{ore2}{credits7}"
+               f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
+               f"{score_fed_token}{vp_for_ptypes}{cancel}--> "
             )
 
             if action == "11":
                 raise e.BackToActionSelection
             elif not action in [str(act) for act in range(1, 11)]:
                 print("Please type the action's corresponding number.")
+                continue
+
+            # Check if the action is available
+            if not self.pq_availabe(gp.research_board, int(action)):
+                continue
 
             if action == "1":
+                # Gain 3 knowledge for 7 power.
+
                 if not self.enough_power(7):
                     continue
 
+                gp.research_board.pq_actions[int(action)] = False
+                self.use_power(7)
                 self.faction.knowledge += 3
-                print(
-                    "You have gained 3 knowledge. You now have "
-                   f"{self.faction.knowledge} knowledge."
-                )
+                print("You have gained 3 knowledge.")
+            elif action == "2":
+                # Gain 2 free terraforming steps. Build a mine for 5 power.
 
+                if not self.enough_power(5):
+                    continue
 
+                # Check if the player has enough resources to pay for the mine.
+                if not self.faction.credits >= 2 and not self.faction.ore >= 1:
+                    print(
+                        "You don't have enough credits "
+                       f"({self.faction.credits}) or ore ({self.faction.ore}) "
+                        "to build a mine. Building a mine costs 2 credits and "
+                        "1 ore."
+                    )
+                    raise e.BackToActionSelection
 
+                # TODO Can't get from mine function back to pq selection when
+                # you have changed your mind. You will be sent back to action
+                # selection.
+                self.mine(gp.universe, rnd, 2)
+                gp.research_board.pq_actions[int(action)] = False
+                self.use_power(5)
 
     def special(self):
         pass
@@ -1075,7 +1166,7 @@ class Player:
         print("You Pass.")
         return
 
-        # Wait with this for now
+        # TODO FINAL Wait with this for now
         if self.booster.vp:
             # TODO Make every booster it's own class to handle the vp gain when
             # passing? Do the same for researchh tiles??

@@ -31,6 +31,8 @@ class Automa:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
+        self.passed = False  # Wether or not the automa has passed.
+
     def setup(self, research_board):
         # TODO Set yourself on the proper research level.
         pass
@@ -43,7 +45,7 @@ class Automa:
         # Automa doesn't have a gaia phase.
         pass
 
-    def action_phase(self, gp):
+    def action_phase(self, gp, rnd):
         """Functions for delegating to action functions.
 
         Args:
@@ -62,12 +64,12 @@ class Automa:
 
         # Value is a list with the function and the arguments it needs.
         options = {
-            "1": [self.mine, gp.universe, gp.scoring_board],
+            "1": [self.mine, gp.universe, gp.scoring_board, rnd],
             "2": [self.upgrade],
             "3": [self.research, gp.research_board],
             "4": [self.pq],
             "5": [self.faction.faction_action],
-            "6": [self.pass_],
+            "6": [self.pass_, gp],
         }
 
         prompt = (
@@ -191,7 +193,7 @@ class Automa:
             "begin the game.\n--> "
         )
 
-    def mine(self, universe, scoring_board):
+    def mine(self, universe, scoring_board, rnd):
         if not self.faction.mine_max:
             raise e.NotEnoughMinesError
 
@@ -386,8 +388,11 @@ class Automa:
     def special(self):
         pass
 
-    def pass_(self):
-        pass
+    def pass_(self, gp):
+        gp.passed += 1
+        self.passed = True
+        print("You Pass.")
+        return
 
     def points(self, action):
         print(

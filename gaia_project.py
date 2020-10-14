@@ -346,6 +346,7 @@ class GaiaProject:
         # board?
 
         # During 6 rounds, cycle through the 4 phases of the game.
+        # TODO Announce what bonus points can be gained in current round?
         for rnd in self.scoring_board.rounds:
             self.passed = 0
             # 1. Income phase followed by # 2. Gaia phase.
@@ -362,6 +363,8 @@ class GaiaProject:
                         player.action_phase(self, rnd)
 
             # 4. Clean up phase
+            for x in range(1, 11):
+                self.research_board.pq_actions[x] = True
 
             # Break to avoid infinite loops while testing
             # break
