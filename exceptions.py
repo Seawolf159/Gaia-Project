@@ -7,10 +7,6 @@ class PlanetAlreadyOwnedError(Exception):
         self.planet = planet
 
 
-class BothPlanetsAlreadyOwnedError(Exception):
-    pass
-
-
 class PlanetNotFoundError(Exception):
     pass
 

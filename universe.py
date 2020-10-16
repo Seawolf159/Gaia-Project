@@ -14,18 +14,17 @@ class Space:
 
     def __init__(self, sector, location):
         self.sector = sector  # Name of the sector this planet is in.
-        self.location = location  # (x, y)
+        self.location = location  # (x, y) on universe grid.
 
         # Home world of each player that has a sattelite here.
-        self.sattelites = set()
+        self.sattelites = []
 
     def __str__(self):
         return f"X: {self.location[0]} Y:{self.location[1]}: x"
 
 
 class Planet:
-    """Planet type on the sector tile.
-    """
+    """Planet inside a sector."""
 
     def __init__(self, sector, type_, location):
         self.sector = sector  # Name of the sector this planet is in.
@@ -37,12 +36,12 @@ class Planet:
 
     def __str__(self):
         return (
-            f"X: {self.location[0]} Y:{self.location[1]}\n"
-            f"Type: {self.type}\n"
-            f"Owner: {self.owner}\n"
-            f"Structure: {self.structure}\n"
-            f"Federation: {self.federation}"
+            f"Type: {self.type} | "
+            f"Owner: {self.owner} | "
+            f"Structure: {self.structure} | "
+            f"X: {self.location[0]} Y: {self.location[1]}"
         )
+        # f"Federation: {self.federation}"
 
 
 class Sector:
@@ -91,9 +90,11 @@ class Sector:
         self.hexes = [[hexes.get(10, Space(sector=self.name,
                                            location=universe_grid[0][0]))]]
 
+        self.planets = []  # List if all planets in the sector
+
         # TODO open image here or somewhere else?
-        # self.img = Image.open(f"{img}.png")
-        self.img = f"{img}.png"
+        # self.img = Image.open(img)
+        self.img = img
 
         self.universe_grid = universe_grid
         self.rotation = rotation
@@ -108,13 +109,13 @@ class Sector:
 
             location = universe_grid[1][i]
             if hexes.get(num, False):
-                self.inner.append(
-                    Planet(
-                        sector=self.name,
-                        type_=hexes[num],
-                        location=location
-                    )
+                new_planet = Planet(
+                    sector=self.name,
+                    type_=hexes[num],
+                    location=location
                 )
+                self.inner.append(new_planet)
+                self.planets.append(new_planet)
             else:
                 self.inner.append(Space(sector=self.name,
                                         location=location))
@@ -126,13 +127,13 @@ class Sector:
 
             location = universe_grid[2][i]
             if hexes.get(num, False):
-                self.outer.append(
-                    Planet(
-                        sector=self.name,
-                        type_=hexes[num],
-                        location=location
-                    )
+                new_planet = Planet(
+                    sector=self.name,
+                    type_=hexes[num],
+                    location=location
                 )
+                self.inner.append(new_planet)
+                self.planets.append(new_planet)
             else:
                 self.outer.append(Space(sector=self.name,
                                         location=location))
@@ -305,7 +306,7 @@ class Universe:
             18: "Volcanic"
         },
             name="sector1",
-            img=os.path.join(IMAGES, "sector1"),
+            img=os.path.join(IMAGES, "sector1.png"),
             universe_grid=eval(f"self.{sector1[0]}"),
             rotation = sector1[1]
         )
@@ -321,7 +322,7 @@ class Universe:
             18: "Trans-dim"
         },
             name="sector2",
-            img=os.path.join(IMAGES, "sector2"),
+            img=os.path.join(IMAGES, "sector2.png"),
             universe_grid=eval(f"self.{sector2[0]}"),
             rotation=sector2[1]
         )
@@ -336,7 +337,7 @@ class Universe:
             17: "Desert"
         },
             name="sector3",
-            img=os.path.join(IMAGES, "sector3"),
+            img=os.path.join(IMAGES, "sector3.png"),
             universe_grid=eval(f"self.{sector3[0]}"),
             rotation=sector3[1]
         )
@@ -351,7 +352,7 @@ class Universe:
             19: "Terra"
         },
             name="sector4",
-            img=os.path.join(IMAGES, "sector4"),
+            img=os.path.join(IMAGES, "sector4.png"),
             universe_grid=eval(f"self.{sector4[0]}"),
             rotation=sector4[1]
         )
@@ -368,7 +369,7 @@ class Universe:
             16: "Oxide"
         },
             name="sector5",
-            img=os.path.join(IMAGES, "sector5b"),
+            img=os.path.join(IMAGES, "sector5b.png"),
             universe_grid=eval(f"self.{sector5[0]}"),
             rotation=sector5[1]
         )
@@ -383,7 +384,7 @@ class Universe:
         #     16: "Oxide"
         # },
         # name="sector5",
-        # img=os.path.join(IMAGES, "sector5"),
+        # img=os.path.join(IMAGES, "sector5.png"),
         #     universe_grid=eval(f"self.{sector5[0]}"),
         #     rotation=sector5[1]
         # )
@@ -391,14 +392,14 @@ class Universe:
         # CAREFUL THESE ARE THE BACK SIDE!!
         self.sector6 = Sector(
             hexes={
-            7: "Trans-dimN",
+            7: "Trans-dim",
             11: "Terra",
             14: "Gaia",
-            18: "Trans-dimS",
+            18: "Trans-dim",
             19: "Desert"
         },
             name="sector6",
-            img=os.path.join(IMAGES, "sector6b"),
+            img=os.path.join(IMAGES, "sector6b.png"),
             universe_grid=eval(f"self.{sector6[0]}"),
             rotation=sector6[1]
         )
@@ -407,13 +408,13 @@ class Universe:
         self.sector7 = Sector(
             hexes={
             1: "Trans-dim",
-            6: "GaiaN",
-            9: "GaiaS",
+            6: "Gaia",
+            9: "Gaia",
             15: "Swamp",
             17: "Titanium"
         },
             name="sector7",
-            img=os.path.join(IMAGES, "sector7b"),
+            img=os.path.join(IMAGES, "sector7b.png"),
             universe_grid=eval(f"self.{sector7[0]}"),
             rotation=sector7[1]
         )
@@ -526,108 +527,41 @@ class Universe:
         else:
             return distance
 
-    def locate_planet(self, sector, ptype):
-        """Looking for a planet.
+    def locate_planet(self, sector, ptype, player):
+        """Show all planets in a sector.
 
         Args:
             sector (str): Number of the sector where you want to find a planet.
             ptype (str): Specific type of planet that your are looking for.
         """
 
-        # TODO Make this ridiculous way of doing this better.
-        if sector == "6" and ptype == "trans-dim":
-            choices = []
-            # Skip center as it's always empty.
-            for circle in self.sector6.hexes[1:]:
-                for hex_ in circle:
-                    if hasattr(hex_, "type"):
-                        if hex_.type.lower()[:-1] == ptype:
-                            if not hex_.owner:
-                                choices.append(hex_)
-                            elif hex_.owner and hex_.structure == "gaiaformer":
-                                choices.append(hex_)
-
-            if len(choices) == 2:
-                print(
-                    "There are two Trans-dimensional planets in this sector. "
-                    "Which one would you like to choose? North or South in "
-                    "relation to the sector arrow? (N/S)"
-                )
-
-                while True:
-                    answer = input("--> ").lower()
-
-                    if answer == "n":
-                        for planet in choices:
-                            if planet.type[-1] == "N":
-                                return planet
-                    elif answer == "s":
-                        for planet in choices:
-                            if planet.type[-1] == "S":
-                                return planet
-                    else:
-                        print("Please type N for North or S for South.")
-            elif len(choices) == 1:
-                return choices[0]
-            else:
-                raise e.BothPlanetsAlreadyOwnedError
-
-        # More players TODO this is not future proof as on
-        # the bigger board this sectors front side has the
-        # gaia planets to the west and east instead of
-        # north and south.
-        elif sector == "7" and ptype == "gaia":
-            choices = []
-            # Skip center as it's always empty.
-            for circle in self.sector7.hexes[1:]:
-                for hex_ in circle:
-                    if hasattr(hex_, "type"):
-                        if hex_.type.lower()[:-1] == ptype:
-                            if not hex_.owner:
-                                choices.append(hex_)
-                            elif hex_.owner and hex_.structure == "gaiaformer":
-                                choices.append(hex_)
-
-            if len(choices) == 2:
-                print(
-                    "There are two Gaia planets in this sector. "
-                    "On which one would you like to build? North or South in "
-                    "relation to the sector arrow? (N/S)"
-                )
-
-                while True:
-                    answer = input("--> ").lower()
-
-                    if answer == "n":
-                        for planet in choices:
-                            if planet.type[-1] == "N":
-                                return planet
-                    elif answer == "s":
-                        for planet in choices:
-                            if planet.type[-1] == "S":
-                                return planet
-                    else:
-                        print("Please type N for North or S for South.")
-            elif len(choices) == 1:
-                return choices[0]
-            else:
-                raise e.BothPlanetsAlreadyOwnedError
+        # Skip center as it's always empty.
+        for circle in eval(f"self.sector{sector}.hexes[1:]"):
+            for hex_ in circle:
+                if hasattr(hex_, "type"):
+                    if hex_.type.lower() == ptype:
+                        if not hex_.owner:
+                            return hex_
+                        elif hex_.owner == player.faction.home_type \
+                                and hex_.structure == "gaiaformer":
+                            return hex_
+                        else:
+                            raise e.PlanetAlreadyOwnedError(hex_)
         else:
-            # Skip center as it's always empty.
-            for circle in eval(f"self.sector{sector}.hexes[1:]"):
-                for hex_ in circle:
-                    if hasattr(hex_, "type"):
-                        if hex_.type.lower() == ptype:
-                            if not hex_.owner:
-                                return hex_
-                            elif hex_.owner and hex_.structure == "gaiaformer":
-                                choices.append(hex_)
-                            else:
-                                raise e.PlanetAlreadyOwnedError(hex_)
-            else:
-                raise e.PlanetNotFoundError
+            raise e.PlanetNotFoundError
+
+    def valid_planets(self, player, sector, action="mine"):
+        """Return a list of valid planets for a certain action."""
+
+        planets = []
+
+        for planet in eval(f"self.sector{sector}.planets"):
+            pass
+
+
 
 
 if __name__ == "__main__":
     test = Universe()
-    print(test.sector1)
+    for planet in test.sector6.planets:
+        print(planet)

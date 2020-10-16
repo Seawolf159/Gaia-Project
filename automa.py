@@ -131,6 +131,7 @@ class Automa:
                 planet = universe.locate_planet(
                     sector_choice,
                     self.faction.home_type.lower(),
+                    self
                 )
             except e.PlanetNotFoundError:
                 print(
@@ -236,6 +237,7 @@ class Automa:
                         planet = universe.locate_planet(
                             sector_choice,
                             C.PLANETS[int(chosen_type) - 1],
+                            self
                         )
                     except e.PlanetNotFoundError:
                         planet_type = C.PLANETS[int(chosen_type) - 1]
@@ -257,14 +259,6 @@ class Automa:
                             "Please choose a different planet."
                         )
                         continue
-                    except e.BothPlanetsAlreadyOwnedError:
-                        planet_type = C.PLANETS[int(chosen_type) - 1] \
-                            .capitalize()
-                        print(
-                           f"Both {planet_type} planets are already occupied. "
-                            "Please choose a different sector."
-                        )
-                        break
                     else:
                         type_chosen = True
                         break

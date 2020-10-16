@@ -78,7 +78,8 @@ class Player:
             try:
                 planet = universe.locate_planet(
                     sector_choice,
-                    self.faction.home_type.lower()
+                    self.faction.home_type.lower(),
+                    self
                 )
             except e.PlanetNotFoundError:
                 print(
@@ -441,6 +442,10 @@ class Player:
             universe: The universe object used in the main GaiaProject class.
             ptype (str): The planet type you already know will be chosen.
                 If not provided, this function will ask for a planet type.
+
+        TODO:
+            This function doesn't work with the lantids function when building
+            a mine since it won't show planets that are owned by opponents.
         """
 
         # more players TODO only for 2p right now
@@ -466,12 +471,12 @@ class Player:
             # the chosen sector.
             try:
                 if ptype:
-                    planet = universe.locate_planet(sector_choice, ptype)
+                    planet = universe.locate_planet(sector_choice, ptype, self)
                     return planet
             except e.PlanetNotFoundError:
                 print(
-                   f"The selected sector ({sector_choice}) doesn't have "
-                   f"the needed planet type ({ptype.capitalize()}) in it! "
+                    f"The selected sector ({sector_choice}) doesn't have "
+                    f"the needed planet type ({ptype.capitalize()}) in it! "
                     "Please choose a different sector."
                 )
                 continue
@@ -481,77 +486,61 @@ class Player:
                 else:
                     owner = error.planet.owner
                 print(
-                   f"The needed planet type ({ptype.capitalize()}) is already "
-                   f"occupied in this sector ({sector_choice}) by {owner}. "
-                   "Please choose a different sector."
-                )
-                continue
-            except e.BothPlanetsAlreadyOwnedError:
-                print(
-                    f"Both {ptype.capitalize()} planets are already occupied. "
+                    f"The needed planet type ({ptype.capitalize()}) is already"
+                    f" occupied in this sector ({sector_choice}) by {owner}. "
                     "Please choose a different sector."
                 )
-                break
+                continue
 
-            # TODO Automation, load a list of planets available in the
-            # sector.
-            # If the planet type isn't known beforehand, ask the user for the
-            # type.
+            # If the planet type isn't known beforehand, show all of the
+            # possible planets in the chosen sector and let the player choose.
             while True:
-                print(
-                    "What is the type of the planet you want to "
-                    "build on?"
+                print("Please your chosen planet's corresponding number.")
+
+                planets = universe.valid_planets(
+                    self, int(sector_choice), "mine"
                 )
-                for i, pt in enumerate(C.PLANETS, start=1):
-                    print(f"{i}. {pt.capitalize()}")
-                print("10. Go back to sector selection")
-                chosen_type = input("--> ")
-                if chosen_type in [
-                    str(n + 1) for n in range(len(C.PLANETS))
-                ]:
-                    try:
-                        planet = universe.locate_planet(
-                            sector_choice,
-                            C.PLANETS[int(chosen_type) - 1],
-                        )
-                    except e.PlanetNotFoundError:
-                        planet_type = C.PLANETS[int(chosen_type) - 1]
-                        print(
-                            "The selected planet type "
-                           f"({planet_type.capitalize()}) doesn't exist inside"
-                           f" this sector! ({sector_choice}). Please choose a "
-                            "different planet."
-                        )
-                        continue
-                    except e.PlanetAlreadyOwnedError as error:
-                        if error.planet.owner == self.faction.name:
-                            owner = "you"
-                        else:
-                            owner = error.planet.owner
-                        print(
-                           f"The selected planet type ({error.planet.type}) "
-                           f"is already occupied by {owner}. Please choose a "
-                            "different planet."
-                        )
-                        continue
-                    except e.BothPlanetsAlreadyOwnedError:
-                        planet_type = C.PLANETS[int(chosen_type) - 1] \
-                            .capitalize()
-                        print(
-                           f"Both {planet_type} planets are already occupied. "
-                            "Please choose a different sector."
-                        )
-                        break
-                    else:
-                        type_chosen = True
-                        break
-                elif chosen_type == "10":
+
+                for i, pt in enumerate(planets, start=1):
+                    print(f"{i}. {pt}")
+                print(f"{i + 1}. Go back to sector selection")
+
+                chosen_planet = input("--> ")
+                if chosen_planet in [str(n + 1) for n in range(i)]:
+                    planet = planets[int(chosen_planet) - 1]
+                    # try:
+                    #     planet = universe.locate_planet(
+                    #         sector_choice,
+                    #         C.PLANETS[int(chosen_planet) - 1],
+                    #         self
+                    #     )
+                    # except e.PlanetNotFoundError:
+                    #     planet_type = C.PLANETS[int(chosen_planet) - 1]
+                    #     print(
+                    #         "The selected planet type "
+                    #        f"({planet_type.capitalize()}) doesn't exist inside"
+                    #        f" this sector! ({sector_choice}). Please choose a "
+                    #         "different planet."
+                    #     )
+                    #     continue
+                    # except e.PlanetAlreadyOwnedError as error:
+                    #     if error.planet.owner == self.faction.name:
+                    #         owner = "you"
+                    #     else:
+                    #         owner = error.planet.owner
+                    #     print(
+                    #        f"The selected planet type ({error.planet.type}) "
+                    #        f"is already occupied by {owner}. Please choose a "
+                    #         "different planet."
+                    #     )
+                    #     continue
+                    # else:
+                    #     type_chosen = True
+                    #     break
+                elif chosen_planet == f"{i + 1}":
                     break
                 else:
-                    print(
-                        "Please only type one of the available "
-                        "numbers."
-                    )
+                    print("Please only type one of the available numbers.")
                     continue
             if type_chosen:
                 break
@@ -572,9 +561,9 @@ class Player:
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
             print(
-               f"You don't have enough credits ({self.faction.credits}) "
-               f"or ore ({self.faction.ore}) to build a mine. Building a mine "
-                "costs 2 credits and 1 ore."
+                f"You don't have enough credits ({self.faction.credits}) "
+                f"or ore ({self.faction.ore}) to build a mine. Building a mine"
+                " costs 2 credits and 1 ore."
             )
             raise e.BackToActionSelection
 
@@ -613,7 +602,7 @@ class Player:
                 if not planet.owner == self.faction.name:
                     print(
                         f"The selected gaiaformer belongs to {planet.owner}. "
-                         "Please choose a different planet."
+                        "Please choose a different planet."
                     )
                     continue
                 self.faction.gaiaformer += 1
@@ -700,7 +689,7 @@ class Player:
                 # Player wants to pay QIC.
                 pay_range_qic = qic_needed
 
-            if planet.type in ["Gaia","GaiaN", "GaiaS"]:
+            if planet.type in ["Gaia"]:
                 # TODO faction compatibility this function doesn't work for the
                 # gleens faction as they pay ore to build on gaia planets
                 qic_storage = self.faction.qic
@@ -743,7 +732,7 @@ class Player:
                 pay_gaia_qic = True
                 break
 
-            elif planet.type in ["Trans-dim", "Trans-dimN", "Trans-dimS"]:
+            elif planet.type in ["Trans-dim"]:
                 print(
                     "To build a mine on this planet, you first need turn this "
                     "planet into a Gaia planet with the Gaia Project action. "
@@ -1108,9 +1097,9 @@ class Player:
 
         while True:
             action = input(
-               f"{power}{knowledge3}{terraform2}{ore2}{credits7}"
-               f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
-               f"{score_fed_token}{vp_for_ptypes}{cancel}--> "
+                f"{power}{knowledge3}{terraform2}{ore2}{credits7}"
+                f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
+                f"{score_fed_token}{vp_for_ptypes}{cancel}--> "
             )
 
             if action == "11":
@@ -1191,7 +1180,6 @@ class Player:
 
     def free(self):
         pass
-
 
 
 if __name__ == "__main__":
