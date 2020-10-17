@@ -105,7 +105,7 @@ class Automa:
             else:
                 return
 
-    def start_mines(self, count, universe):
+    def start_mine(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the automa place its {count.upper()} mine?\n"
         rules = (
@@ -128,26 +128,11 @@ class Automa:
                 continue
 
             try:
-                planet = universe.locate_planet(
-                    sector_choice,
-                    self.faction.home_type.lower(),
-                    self
-                )
-            except e.PlanetNotFoundError:
-                print(
-                    f"The automa home world ({self.faction.home_type}) "
-                    "doesn't exist inside this sector. Please choose a "
-                    "different sector."
-                )
+                planet = universe.valid_planets(
+                    self, int(sector_choice), "start_mine")[0]
+            except e.NoValidMinePlanetsError:
                 continue
-            except e.PlanetAlreadyOwnedError:
-                print(
-                    "This planet is already occupied by the Automa. Please"
-                    " choose a different sector."
-                )
-                continue
-            else:
-                break
+            break
 
         print(
            f"The Automa has built a mine in sector {sector_choice} on the "
@@ -195,6 +180,13 @@ class Automa:
         )
 
     def mine(self, universe, scoring_board, rnd):
+        """Place a mine for the Automa.
+
+        Args:
+            universe: universe object.
+            scoring_board: scoring_board object.
+            rnd: Active Round object.
+        """
         if not self.faction.mine_max:
             raise e.NotEnoughMinesError
 
@@ -206,7 +198,7 @@ class Automa:
 
         print(f"{question}{rules}")
 
-        type_chosen = False
+        planet_chosen = False
         while True:
             sector = (
                 "Please type the number of the sector the chosen planet "
@@ -221,53 +213,38 @@ class Automa:
                 print("Please only type 1-7")
                 continue
 
-            # TODO Automation, load a list of planets available in the sector.
-            # Ask the user for the planet type.
             while True:
-                print(
-                    "What is the type of the planet the Automa wants to build "
-                    "on?"
-                )
-                for i, pt in enumerate(C.PLANETS, start=1):
-                    print(f"{i}. {pt.capitalize()}")
-                print("10. Go back to sector selection")
-                chosen_type = input("--> ")
-                if chosen_type in [str(n + 1) for n in range(len(C.PLANETS))]:
-                    try:
-                        planet = universe.locate_planet(
-                            sector_choice,
-                            C.PLANETS[int(chosen_type) - 1],
-                            self
-                        )
-                    except e.PlanetNotFoundError:
-                        planet_type = C.PLANETS[int(chosen_type) - 1]
-                        print(
-                            "The selected planet type "
-                           f"({planet_type.capitalize()}) doesn't exist inside"
-                           f" this sector! ({sector_choice}) Please choose a "
-                            "different planet."
-                        )
-                        continue
-                    except e.PlanetAlreadyOwnedError as error:
-                        if error.planet.owner == self.faction.name:
-                            owner = "you"
-                        else:
-                            owner = error.planet.owner
-                        print(
-                           f"The selected planet type ({error.planet.type}) is"
-                           f" already occupied by {owner}. "
-                            "Please choose a different planet."
-                        )
-                        continue
-                    else:
-                        type_chosen = True
-                        break
-                elif chosen_type == "10":
+                try:
+                    planets = universe.valid_planets(
+                        self, int(sector_choice), "automa_mine"
+                    )
+                except e.NoValidMinePlanetsError:
+                    break
+
+                # If there is only one valid planet, return that planet.
+                if len(planets) == 1:
+                    planet = planets[0]
+                    planet_chosen = True
+                    break
+
+                # If there are multiple valid planets, choose one.
+                print("Please type your chosen planet's corresponding number.")
+                for i, pt in enumerate(planets, start=1):
+                    print(f"{i}. {pt}")
+                print(f"{i + 1}. Go back to sector selection.")
+
+                chosen_planet = input("--> ")
+                if chosen_planet in [str(n + 1) for n in range(i)]:
+                    planet = planets[int(chosen_planet) - 1]
+                    planet_chosen = True
+                    break
+                elif chosen_planet == f"{i + 1}":
                     break
                 else:
                     print("Please only type one of the available numbers.")
                     continue
-            if type_chosen:
+
+            if planet_chosen:
                 break
 
         print(

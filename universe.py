@@ -2,6 +2,7 @@ import os
 
 from PIL import Image
 
+import constants as C
 import exceptions as e
 
 ROOT = os.path.dirname(__file__)
@@ -26,21 +27,22 @@ class Space:
 class Planet:
     """Planet inside a sector."""
 
-    def __init__(self, sector, type_, location):
+    def __init__(self, sector, type_, location, num):
         self.sector = sector  # Name of the sector this planet is in.
         self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
-        self.location = location  # (x, y)
+        self.location = location  # Universe grid (x, y).
+        self.num = num  # Number inside the sector (1-19).
         self.owner = False  # Faction name of owner
         self.structure = False  # Type of building built
         self.federation = False  # Part of federation? True or False
 
     def __str__(self):
-        return (
-            f"Type: {self.type} | "
-            f"Owner: {self.owner} | "
-            f"Structure: {self.structure} | "
-            f"X: {self.location[0]} Y: {self.location[1]}"
-        )
+        owner = ""
+        structure = ""
+        if self.owner:
+            owner = f"Owner: {self.owner} | "
+            structure = f"Structure: {self.structure} | "
+        return f"Type: {self.type} | {owner}{structure}Num: {self.num}"
         # f"Federation: {self.federation}"
 
 
@@ -60,7 +62,7 @@ class Sector:
              17    18    19
 
         Program representation:
-            hexes = [
+            hex_nums = [
                 [10],  # Center
                 [5, 6, 11, 15, 14, 9],  # Inner circle
                 [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
@@ -90,7 +92,7 @@ class Sector:
         self.hexes = [[hexes.get(10, Space(sector=self.name,
                                            location=universe_grid[0][0]))]]
 
-        self.planets = []  # List if all planets in the sector
+        self.planets = []  # List of all planets in the sector
 
         # TODO open image here or somewhere else?
         # self.img = Image.open(img)
@@ -112,7 +114,8 @@ class Sector:
                 new_planet = Planet(
                     sector=self.name,
                     type_=hexes[num],
-                    location=location
+                    location=location,
+                    num=num
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
@@ -130,7 +133,8 @@ class Sector:
                 new_planet = Planet(
                     sector=self.name,
                     type_=hexes[num],
-                    location=location
+                    location=location,
+                    num=num
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
@@ -143,7 +147,12 @@ class Sector:
         self.hexes.append(self.outer)
 
     def rotate_sector(self, x=1):
-        """Rotate a sector x times."""
+        """Rotate a sector x times.
+
+        TODO:
+            If i ever use rotation, rotate first before creating planet and
+            empty space instances.
+        """
 
         #      1     2     3
 
@@ -155,7 +164,7 @@ class Sector:
 
         #      17    18    19
 
-        # hexes = [
+        # hex_nums = [
         #     [10],  # Center
         #     [5, 6, 11, 15, 14, 9],  # Inner circle
         #     [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
@@ -172,7 +181,7 @@ class Sector:
         # moving the last 2 numbers of the outer circle to the beginning,
         # completes a rotation.
 
-        # hexes = [
+        # hex_nums = [
         #     [10],  # Center
         #     [9, 5, 6, 11, 15, 14],  # Inner circle
         #     [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
@@ -231,6 +240,7 @@ class Universe:
                  sector8=False,
                  sector9=False,
                  sector10=False):
+
         """Generate the universe.
 
         Args:
@@ -539,7 +549,7 @@ class Universe:
         for circle in eval(f"self.sector{sector}.hexes[1:]"):
             for hex_ in circle:
                 if hasattr(hex_, "type"):
-                    if hex_.type.lower() == ptype:
+                    if hex_.type == ptype:
                         if not hex_.owner:
                             return hex_
                         elif hex_.owner == player.faction.home_type \
@@ -550,15 +560,42 @@ class Universe:
         else:
             raise e.PlanetNotFoundError
 
-    def valid_planets(self, player, sector, action="mine"):
-        """Return a list of valid planets for a certain action."""
+    def valid_planets(self, player, sector, action):
+        """
+        Return a list of valid planets for a certain action inside a certain
+        sector.
 
+        Args:
+            player: Player object.
+            sector (int): Number of the sector to check for valid planets.
+            action (str): Name of the action to check valid planets for.
+        """
+
+        if action == "start_mine":
+            types = [player.faction.home_type]
+        elif action == "mine":
+            types = C.mine_types
+        elif action == "automa_mine":
+            types = C.PLANETS
+        elif action == "upgrade":
+            types = [player.faction.home_type]
+        elif action == "gaia":
+            types = ["Trans-dim"]
+
+        # Filtor out unnecessary planets.
         planets = []
-
         for planet in eval(f"self.sector{sector}.planets"):
-            pass
+            if planet.type in types:
+                if not planet.owner \
+                        or planet.owner == player.faction.name \
+                        and planet.structure == "gaiaformer" \
+                        or action == "upgrade":
+                    planets.append(planet)
 
+        if not planets:
+            raise e.NoValidMinePlanetsError
 
+        return planets
 
 
 if __name__ == "__main__":

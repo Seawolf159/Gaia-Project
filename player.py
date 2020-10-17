@@ -54,7 +54,7 @@ class Player:
 
         self.passed = False  # Wether or not the player has passed.
 
-    def start_mines(self, count, universe):
+    def start_mine(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
         question = (
             f"Where whould you like to place your {count.upper()} "
@@ -62,43 +62,11 @@ class Player:
         )
         print(f"{faction_name}{question}")
 
-        sector = (
-            "Please type the number of the sector your chosen planet is in.\n"
-            "--> "
-        )
-        while True:
-            sector_choice = input(sector)
-
-            if not sector_choice in C.SECTORS_2P:
-                # More players TODO make this message dynamic to the board.
-                # If playing with more players it would be 1-10 for example.
-                print("Please only type 1-7")
-                continue
-
-            try:
-                planet = universe.locate_planet(
-                    sector_choice,
-                    self.faction.home_type.lower(),
-                    self
-                )
-            except e.PlanetNotFoundError:
-                print(
-                    f"Your home world ({self.faction.home_type}) doesn't exist"
-                    " inside this sector! Please choose a different sector."
-                    )
-                continue
-            except e.PlanetAlreadyOwnedError:
-                print(
-                    f"This {self.faction.home_type} planet is already occupied"
-                    " by you. Please choose a different sector."
-                )
-                continue
-            else:
-                break
+        planet = self.choose_planet(universe, "start_mine")
 
         print(
-           f"You have built a mine in sector {sector_choice} on the "
-           f"{planet.type} planet."
+            f"You have built a mine in sector {planet.sector[-1]} on the "
+            f"{planet.type} planet."
         )
         planet.owner = self.faction.name
         planet.structure = "mine"
@@ -378,7 +346,8 @@ class Player:
 
         print(faction_name)
         # Summary of resources
-        print(f"Your resources are:")
+        print("Your resources are:")
+        print(f"Victory points: {self.score}")
         print(f"Credits: {self.faction.credits}")
         print(f"Ore: {self.faction.ore}")
         print(f"Knowledge: {self.faction.knowledge}")
@@ -435,13 +404,12 @@ class Player:
             else:
                 return
 
-    def choose_planet(self, universe, ptype=False):
+    def choose_planet(self, universe, action):
         """Function for choosing a planet on the board.
 
         Args:
             universe: The universe object used in the main GaiaProject class.
-            ptype (str): The planet type you already know will be chosen.
-                If not provided, this function will ask for a planet type.
+            action (str): The action that you are calling this function from.
 
         TODO:
             This function doesn't work with the lantids function when building
@@ -449,114 +417,60 @@ class Player:
         """
 
         # more players TODO only for 2p right now
-        type_chosen = False
+        back_to_action = "Type 8 if you want to choose a different action."
+        choose_range = "1-8"
+        if action == "start_mine":
+            back_to_action = ""
+            choose_range = "1-7"
         while True:
             sector = (
                 "Please type the number of the sector your chosen planet "
-                "is in. Type 8 if you want to choose a different action.\n--> "
+                f"is in. {back_to_action}\n--> "
             )
             sector_choice = input(sector)
 
-            if sector_choice == "8":
+            if sector_choice == "8" and not action == "start_mine":
                 raise e.BackToActionSelection
 
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
-                print("Please only type 1-8")
+                print(f"Please only type {choose_range}.")
                 continue
 
-            # If the function is called with a ptype, the planet type is
-            # already known and it just needs to be checked for availability in
-            # the chosen sector.
-            try:
-                if ptype:
-                    planet = universe.locate_planet(sector_choice, ptype, self)
-                    return planet
-            except e.PlanetNotFoundError:
-                print(
-                    f"The selected sector ({sector_choice}) doesn't have "
-                    f"the needed planet type ({ptype.capitalize()}) in it! "
-                    "Please choose a different sector."
-                )
-                continue
-            except e.PlanetAlreadyOwnedError as error:
-                if error.planet.owner == self.faction.name:
-                    owner = "you"
-                else:
-                    owner = error.planet.owner
-                print(
-                    f"The needed planet type ({ptype.capitalize()}) is already"
-                    f" occupied in this sector ({sector_choice}) by {owner}. "
-                    "Please choose a different sector."
-                )
-                continue
-
-            # If the planet type isn't known beforehand, show all of the
-            # possible planets in the chosen sector and let the player choose.
+            # Choose a planet.
             while True:
-                print("Please your chosen planet's corresponding number.")
+                try:
+                    planets = universe.valid_planets(
+                        self, int(sector_choice), action
+                    )
+                except e.NoValidMinePlanetsError:
+                    break
 
-                planets = universe.valid_planets(
-                    self, int(sector_choice), "mine"
-                )
+                # If there is only one valid planet, return that planet.
+                if len(planets) == 1:
+                    return planets[0]
 
+                # If there are multiple valid planets, choose one.
+                print("Please type your chosen planet's corresponding number.")
                 for i, pt in enumerate(planets, start=1):
                     print(f"{i}. {pt}")
-                print(f"{i + 1}. Go back to sector selection")
+                print(f"{i + 1}. Go back to sector selection.")
 
                 chosen_planet = input("--> ")
                 if chosen_planet in [str(n + 1) for n in range(i)]:
                     planet = planets[int(chosen_planet) - 1]
-                    # try:
-                    #     planet = universe.locate_planet(
-                    #         sector_choice,
-                    #         C.PLANETS[int(chosen_planet) - 1],
-                    #         self
-                    #     )
-                    # except e.PlanetNotFoundError:
-                    #     planet_type = C.PLANETS[int(chosen_planet) - 1]
-                    #     print(
-                    #         "The selected planet type "
-                    #        f"({planet_type.capitalize()}) doesn't exist inside"
-                    #        f" this sector! ({sector_choice}). Please choose a "
-                    #         "different planet."
-                    #     )
-                    #     continue
-                    # except e.PlanetAlreadyOwnedError as error:
-                    #     if error.planet.owner == self.faction.name:
-                    #         owner = "you"
-                    #     else:
-                    #         owner = error.planet.owner
-                    #     print(
-                    #        f"The selected planet type ({error.planet.type}) "
-                    #        f"is already occupied by {owner}. Please choose a "
-                    #         "different planet."
-                    #     )
-                    #     continue
-                    # else:
-                    #     type_chosen = True
-                    #     break
+                    return planet
                 elif chosen_planet == f"{i + 1}":
                     break
                 else:
                     print("Please only type one of the available numbers.")
                     continue
-            if type_chosen:
-                break
-
-        return planet
 
     def mine(self, universe, rnd, terraform_steps=False):
         # TODO how to deal with power charging??
-        # TODO untested/unfinished funtion
-        # TODO test if after gaia project in same turn if it is possible to
         # TODO Some tech tiles give some points on building a mine same with
         # round tiles.
-        # TODO CRITICAL after terraforming the mine action fails terribly if
-        # there are multiple gaia planets in the same sector that are not there
-        # from the start!!!! just make a list with all planets in the sector
-        # to avoid shit like this.
 
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
@@ -574,7 +488,7 @@ class Player:
             pay_gaia_qic = False
             pay_terraform_ore = False
 
-            planet = self.choose_planet(universe)
+            planet = self.choose_planet(universe, "mine")
 
             # If this function was called from the pq action function, check
             # if a planet that needs terraforming was actually chosen.
@@ -591,22 +505,6 @@ class Player:
                     "different planet type."
                 )
                 continue
-
-            # Check if there is a gaiaformer on the planet and if the planet
-            # is owned by the player.
-            # TODO test closely related to the untested gaia_phase function
-            # TODO choose planet function might say a planet with a gaiaformer
-            # is already occupied and won't reach this. TEST AND POTENTIALLY
-            # FIX THIS!!
-            if planet.structure == "gaiaformer":
-                if not planet.owner == self.faction.name:
-                    print(
-                        f"The selected gaiaformer belongs to {planet.owner}. "
-                        "Please choose a different planet."
-                    )
-                    continue
-                self.faction.gaiaformer += 1
-                break
 
             # Check if the player is within range of the target planet.
             not_enough_range = False
@@ -818,20 +716,20 @@ class Player:
         # Check if the current round awards points for terraforming.
         # TODO test that the round bonuses are gained.
         # TODO This now always just awards points. Probably broken maybe
-        if rnd.goal == "terraforming":
-            self.score += rnd.vp * difficulty
-            print(
-               f"Because of the round you have gained {rnd.vp * difficulty} "
-                "victory points."
-            )
+        # if rnd.goal == "terraforming":
+        #     self.score += rnd.vp * difficulty
+        #     print(
+        #        f"Because of the round you have gained {rnd.vp * difficulty} "
+        #         "victory points."
+        #     )
 
         # Check if the current round awards points for building a mine on a
         # Gaia planet.
-        if rnd.goal == "gaiamine":
-            self.score += rnd.vp
-            print(
-               f"Because of the round you have gained {rnd.vp} victory points."
-            )
+        # if rnd.goal == "gaiamine":
+        #     self.score += rnd.vp
+        #     print(
+        #        f"Because of the round you have gained {rnd.vp} victory points."
+        #     )
 
         planet.owner = self.faction.name
         planet.structure = "mine"
@@ -842,8 +740,6 @@ class Player:
         self.empire.append(planet)
 
     def gaia(self, universe):
-        # TODO Automation, load all the trans-dim planets within range and let
-        # player choose a number.
         # Check if the player has an available gaiaformer.
         if not self.faction.gaiaformer > 0:
             raise e.NoGaiaFormerError
@@ -859,7 +755,7 @@ class Player:
             # Payment flag
             pay_range_qic = False
 
-            planet = self.choose_planet(universe, "trans-dim")
+            planet = self.choose_planet(universe, "gaia")
 
             # Check if the player is within range of the target planet.
             not_enough_range = False

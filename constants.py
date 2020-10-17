@@ -1,14 +1,14 @@
 SECTORS_2P = ["1", "2", "3", "4", "5", "6", "7"]
 PLANETS = [
-    "desert",
-    "swamp",
-    "terra",
-    "volcanic",
-    "oxide",
-    "ice",
-    "titanium",
-    "gaia",
-    "trans-dim",
+    "Desert",
+    "Swamp",
+    "Terra",
+    "Volcanic",
+    "Oxide",
+    "Ice",
+    "Titanium",
+    "Gaia",
+    "Trans-dim",
 ]
 home_types = [
     "Terra",
@@ -18,4 +18,14 @@ home_types = [
     "Swamp",
     "Titanium",
     "Ice",
+]
+mine_types = [
+    "Terra",
+    "Oxide",
+    "Volcanic",
+    "Desert",
+    "Swamp",
+    "Titanium",
+    "Ice",
+    "Gaia"
 ]

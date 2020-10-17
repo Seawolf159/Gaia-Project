@@ -162,11 +162,11 @@ class GaiaProject:
         # Place first structures (start with first player and going clockwise):
         # TODO Final Commented for faster testing. Uncomment code block:
         for player in self.players:
-            player.start_mines("first", self.universe)
+            player.start_mine("first", self.universe)
 
         # TODO Final Commented for faster testing. Uncomment code block:
         for player in reversed(self.players):
-            player.start_mines("second", self.universe)
+            player.start_mine("second", self.universe)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
