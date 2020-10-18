@@ -537,29 +537,6 @@ class Universe:
         else:
             return distance
 
-    def locate_planet(self, sector, ptype, player):
-        """Show all planets in a sector.
-
-        Args:
-            sector (str): Number of the sector where you want to find a planet.
-            ptype (str): Specific type of planet that your are looking for.
-        """
-
-        # Skip center as it's always empty.
-        for circle in eval(f"self.sector{sector}.hexes[1:]"):
-            for hex_ in circle:
-                if hasattr(hex_, "type"):
-                    if hex_.type == ptype:
-                        if not hex_.owner:
-                            return hex_
-                        elif hex_.owner == player.faction.home_type \
-                                and hex_.structure == "gaiaformer":
-                            return hex_
-                        else:
-                            raise e.PlanetAlreadyOwnedError(hex_)
-        else:
-            raise e.PlanetNotFoundError
-
     def valid_planets(self, player, sector, action):
         """
         Return a list of valid planets for a certain action inside a certain

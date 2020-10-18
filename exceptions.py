@@ -1,16 +1,6 @@
 """Module for custom exceptions."""
 
 
-class PlanetAlreadyOwnedError(Exception):
-
-    def __init__(self, planet):
-        self.planet = planet
-
-
-class PlanetNotFoundError(Exception):
-    pass
-
-
 class NoGaiaFormerError(Exception):
     pass
 

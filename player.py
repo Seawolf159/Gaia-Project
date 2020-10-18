@@ -174,14 +174,16 @@ class Player:
                 # Order the list so that it is easier to read as a human.
                 power_order.sort()
                 while power_order:
-                    print("In what order do you want to gain these power "
-                        "resources? Please type one number at a time.")
+                    print(
+                        "In what order do you want to gain these power "
+                        "resources? Please type one number at a time."
+                    )
                     for i, to_resolve in enumerate(power_order, start=1):
                         print(f"{i}. {to_resolve[:-1]} x{to_resolve[-1]}")
 
                     selection = input("--> ")
                     if selection in [
-                        str(num + 1) for num in range(len(to_resolve))
+                        str(num + 1) for num in range(len(power_order))
                     ]:
                         if power_order[int(selection) - 1].startswith(
                             "powertoken"
@@ -313,9 +315,6 @@ class Player:
         Args:
             gp: GaiaProject class.
             rnd: Active Round object.
-
-        TODO:
-            Action that shows current resources??
         """
 
         faction_name = f"\n{self.faction.name}:"
@@ -628,7 +627,15 @@ class Player:
 
                 # Player wants to pay QIC.
                 pay_gaia_qic = True
-                break
+
+                # Check if the current round awards points for building a mine
+                # on a Gaia planet.
+                if rnd.goal == "gaiamine":
+                    self.score += rnd.vp
+                    print(
+                        f"Because of the round you have gained {rnd.vp} "
+                        "victory points."
+                    )
 
             elif planet.type in ["Trans-dim"]:
                 print(
@@ -653,50 +660,64 @@ class Player:
                         break
                     i += 1
 
+                # If the player got enough terraform_steps already
+                # without paying ore for them, he/she doesn't have to pay
+                # anything so go straight to building the mine.
+                free_terraform = False
                 if terraform_steps:
-                    difficulty -= terraform_steps
-                    if difficulty < 1:
-                        break
-
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                terraform_cost = self.terraforming.active * difficulty
-                if self.faction.ore < terraform_cost:
-                    print(
-                        "You don't have enough ore to pay the "
-                        "terraforming cost needed to terraform this planet "
-                       f"({terraform_cost} ore). "
-                        "Please choose a different type of planet."
-                    )
-                    continue
-
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                print(
-                    "To build a mine on this planet, you need to terraform it "
-                   f"first. Terraforming will cost {terraform_cost} ore. You "
-                   f"now have {self.faction.ore} ore. Do you want to pay "
-                   f"{terraform_cost} ore? (Y/N)"
-                )
+                    total = difficulty - terraform_steps
+                    if total < 1:
+                        free_terraform = True
 
                 choose_another_planet = False
-                while True:
-                    pay_terraform_cost = input("--> ").lower()
-
-                    if not pay_terraform_cost in ['y', 'n']:
-                        print("Please type Y for yes or N for no.")
+                if not free_terraform:
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    terraform_cost = self.terraforming.active * difficulty
+                    if self.faction.ore < terraform_cost:
+                        print(
+                            "You don't have enough ore to pay the "
+                            "terraforming cost needed to terraform this planet"
+                            f" ({terraform_cost} ore). "
+                            "Please choose a different type of planet."
+                        )
                         continue
-                    elif pay_terraform_cost == "n":
-                        choose_another_planet = True
-                        break
-                    else:
-                        break
+
+                    # Error is corrected at runtime so i can ignore this.
+                    # pylint: disable=no-member
+                    print(
+                        "To build a mine on this planet, you need to terraform"
+                        f" it first. Terraforming will cost {terraform_cost} "
+                        f"ore. You now have {self.faction.ore} ore. Do you "
+                        f"want to pay {terraform_cost} ore? (Y/N)"
+                    )
+
+                    while True:
+                        pay_terraform_cost = input("--> ").lower()
+
+                        if not pay_terraform_cost in ['y', 'n']:
+                            print("Please type Y for yes or N for no.")
+                            continue
+                        elif pay_terraform_cost == "n":
+                            choose_another_planet = True
+                            break
+                        else:
+                            break
 
                 if choose_another_planet:
                     continue
 
                 # Player wants to pay terraforming cost.
                 pay_terraform_ore = True
+
+                # Check if the current round awards points for terraforming.
+                # TODO test that the round bonuses are gained.
+                if rnd.goal == "terraforming":
+                    self.score += rnd.vp * difficulty
+                    print(
+                        "Because of the round you have gained "
+                        f"{rnd.vp * difficulty} victory points."
+                    )
             break
 
         print(
@@ -712,24 +733,6 @@ class Player:
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
             self.faction.ore -= difficulty * self.terraforming.active
-
-        # Check if the current round awards points for terraforming.
-        # TODO test that the round bonuses are gained.
-        # TODO This now always just awards points. Probably broken maybe
-        # if rnd.goal == "terraforming":
-        #     self.score += rnd.vp * difficulty
-        #     print(
-        #        f"Because of the round you have gained {rnd.vp * difficulty} "
-        #         "victory points."
-        #     )
-
-        # Check if the current round awards points for building a mine on a
-        # Gaia planet.
-        # if rnd.goal == "gaiamine":
-        #     self.score += rnd.vp
-        #     print(
-        #        f"Because of the round you have gained {rnd.vp} victory points."
-        #     )
 
         planet.owner = self.faction.name
         planet.structure = "mine"
@@ -798,6 +801,7 @@ class Player:
                     )
                     continue
 
+                # TODO Untested!!!!
                 # Check if the player is building on a gaia planet and if
                 # he/she has enough qic to increase the range AND pay a qic for
                 # building on a gaia planet type.
@@ -868,6 +872,8 @@ class Player:
         self.faction.gaiaformer -= 1
 
     def upgrade(self):
+        # TODO Check if the current round awards points for upgrading to
+        # trading center.
         pass
 
     def federation(self):

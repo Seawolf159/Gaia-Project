@@ -51,6 +51,7 @@ class GaiaProject:
                 playing.
         """
 
+
         # A list with all the player objects in turn order.
         self.players = []
         self.round = 1
@@ -73,6 +74,7 @@ class GaiaProject:
 
         self.research_board = Research()
         self.scoring_board = Scoring()
+        # TODO Temporary list of rounds for testing.
 
         # Order of setup according to rules:
         # 1. Choose first player (Against the automa, the human goes first).
@@ -94,6 +96,7 @@ class GaiaProject:
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
         self.scoring_board.randomise_scoring()
+        print(', '.join([str(x) for x in self.scoring_board.rounds]))
 
         # 6. Randomly select {amount of players} + 3 booster tiles.
         player_count = 0
@@ -374,6 +377,16 @@ class GaiaProject:
 
 
 if __name__ == "__main__":
+    # Open everything i need for testing the game.
+    def open_stuff():
+        # Rules
+        os.startfile("Gaia Project Rules - EN.pdf")
+        # 2p map
+        os.startfile("default_2p_map.png")
+
+    # Uncomment if files are opened.
+    # open_stuff()
+
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
     # print(new_game.universe.sector4)
     # print(new_game.universe.sector5)

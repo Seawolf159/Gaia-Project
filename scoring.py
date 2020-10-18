@@ -19,7 +19,7 @@ class RoundScoring:
 
     def __init__(self, img, vp, goal, first_half, second_half):
         self.img = img
-        self.vp = 0
+        self.vp = vp
         self.goal = goal
         self.first_half = first_half
         self.second_half = second_half

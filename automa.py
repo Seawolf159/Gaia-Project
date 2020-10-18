@@ -360,6 +360,7 @@ class Automa:
         pass
 
     def pass_(self, gp):
+        # TODO award points for the round when passing.
         gp.passed += 1
         self.passed = True
         print("You Pass.")
