@@ -11,9 +11,9 @@ class Automa:
 
         # TODO handle this in a difficulty setup function ??
         if difficulty.lower() == "automalein":
-            self.score = 0
+            self.vp = 0
         else:
-            self.score = 10
+            self.vp = 10
 
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
@@ -41,18 +41,50 @@ class Automa:
         # Automa doesn't have an income phase.
         pass
 
+    def resolve_direct(self, rewards):
+        if not isinstance(rewards, list):
+            rewards = [rewards]
+
+        for reward in rewards:
+            if reward.startswith("powertoken"):
+                self.faction.bowl1 += int(reward[-1])
+            else:
+                exec(f"self.faction.{reward[:-1]} += int({reward[-1]})")
+            print(f"You have gained {reward[-1]} {reward[:-1]}.")
+
     def gaia_phase(self):
         # Automa doesn't have a gaia phase.
         pass
+
+    def points(self, action):
+        # TODO pq action doesn't sound very user friendly.
+        # Find a way to name the functions better.
+        print(
+            f"How many points does the Automa score for doing the {action} "
+             "action? Please type the number of points."
+        )
+
+        while True:
+            points = input("--> ")
+
+            try:
+                points = int(points)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                self.vp += points
+                break
 
     def action_phase(self, gp, rnd):
         """Functions for delegating to action functions.
 
         Args:
             gp: GaiaProject class
+
+        TODO:
+            Automate drawing automa cards.
         """
 
-        # TODO automate drawing automa cards.
         faction_name = f"\n{self.faction.name}:\n"
         intro = "What action does the Automa choose?\n"
         mine = "1. Build a mine.\n"
@@ -72,8 +104,11 @@ class Automa:
             "6": [self.pass_, gp],
         }
 
+        print(faction_name)
+        print(f"Automa has {self.vp} victory points.")
+
         prompt = (
-            f"{faction_name}{intro}{mine}{upgrade}"
+            f"{intro}{mine}{upgrade}"
             f"{research}{pq}{faction_action}{pass_}--> "
         )
 
@@ -103,6 +138,7 @@ class Automa:
                 # User made a mistake and chose the wrong action for the automa
                 continue
             else:
+                self.points(action[0].__name__)
                 return
 
     def start_mine(self, count, universe):
@@ -349,8 +385,6 @@ class Automa:
         # property.
         exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
 
-        self.points("Research")
-
         print(research_board)
 
     def pq(self):
@@ -365,23 +399,6 @@ class Automa:
         self.passed = True
         print("You Pass.")
         return
-
-    def points(self, action):
-        print(
-            f"How many points does the Automa score for doing {action}? "
-             "Please type the number of points."
-        )
-
-        while True:
-            points = input("--> ")
-
-            try:
-                points = int(points)
-            except ValueError:
-                print("Please only type a number.")
-            else:
-                self.score += points
-                break
 
 
 class Faction:

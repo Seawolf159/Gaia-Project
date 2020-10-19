@@ -7,4 +7,5 @@ class FederationToken:
         self.state = state  # grey or green
 
     def __str__(self):
+        # TODO make printing this better.
         return f"{self.reward}"

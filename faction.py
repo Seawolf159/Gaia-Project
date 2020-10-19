@@ -60,7 +60,7 @@ class Faction:
         # power bowls
         self.bowl1 = 0
         self.bowl2 = 0
-        self.bowl3 = 0
+        self.bowl3 = 20
         self.gaia_bowl = 0
         self.gaia_to_power = "bowl1"
 

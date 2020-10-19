@@ -552,6 +552,8 @@ class Universe:
             types = [player.faction.home_type]
         elif action == "mine":
             types = C.mine_types
+        elif action == "pq":
+            types = C.home_types
         elif action == "automa_mine":
             types = C.PLANETS
         elif action == "upgrade":

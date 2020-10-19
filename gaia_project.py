@@ -96,6 +96,7 @@ class GaiaProject:
         # 5. Randomly place 6 round scoring and 2 final scoring tiles on the
         #    scoring board.
         self.scoring_board.randomise_scoring()
+        # TODO for testing only
         print(', '.join([str(x) for x in self.scoring_board.rounds]))
 
         # 6. Randomly select {amount of players} + 3 booster tiles.
@@ -351,6 +352,8 @@ class GaiaProject:
         # During 6 rounds, cycle through the 4 phases of the game.
         # TODO Announce what bonus points can be gained in current round?
         for rnd in self.scoring_board.rounds:
+            # TODO for testing only
+            print(f"Current round {rnd}.")
             self.passed = 0
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
@@ -379,10 +382,18 @@ class GaiaProject:
 if __name__ == "__main__":
     # Open everything i need for testing the game.
     def open_stuff():
+        # Gaia Project folder
+        os.startfile(
+            r"C:\Users\Gebruiker\Desktop\Programming\My Projects\Gaia "
+            r"Project"
+        )
         # Rules
         os.startfile("Gaia Project Rules - EN.pdf")
         # 2p map
         os.startfile("default_2p_map.png")
+        # Research board
+        os.startfile(r".\images\structures\research_board.png")
+
 
     # Uncomment if files are opened.
     # open_stuff()
