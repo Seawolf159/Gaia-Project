@@ -14,7 +14,7 @@ class Space:
     """
 
     def __init__(self, sector, location):
-        self.sector = sector  # Name of the sector this planet is in.
+        self.sector = sector  # Number of the sector this space is in.
         self.location = location  # (x, y) on universe grid.
 
         # Home world of each player that has a sattelite here.
@@ -28,7 +28,7 @@ class Planet:
     """Planet inside a sector."""
 
     def __init__(self, sector, type_, location, num):
-        self.sector = sector  # Name of the sector this planet is in.
+        self.sector = sector  # Number of the sector this planet is in.
         self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
         self.location = location  # Universe grid (x, y).
         self.num = num  # Number inside the sector (1-19).
@@ -75,7 +75,7 @@ class Sector:
             ]
     """
 
-    def __init__(self, name, hexes, img, universe_grid, rotation):
+    def __init__(self, number, hexes, img, universe_grid, rotation):
         """Initialising the sector object.
 
         Args:
@@ -88,8 +88,8 @@ class Sector:
             Right now the rotation does nothing really.
         """
 
-        self.name = name
-        self.hexes = [[hexes.get(10, Space(sector=self.name,
+        self.number = number
+        self.hexes = [[hexes.get(10, Space(sector=self.number,
                                            location=universe_grid[0][0]))]]
 
         self.planets = []  # List of all planets in the sector
@@ -112,7 +112,7 @@ class Sector:
             location = universe_grid[1][i]
             if hexes.get(num, False):
                 new_planet = Planet(
-                    sector=self.name,
+                    sector=self.number,
                     type_=hexes[num],
                     location=location,
                     num=num
@@ -120,7 +120,7 @@ class Sector:
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
             else:
-                self.inner.append(Space(sector=self.name,
+                self.inner.append(Space(sector=self.number,
                                         location=location))
 
         outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
@@ -131,7 +131,7 @@ class Sector:
             location = universe_grid[2][i]
             if hexes.get(num, False):
                 new_planet = Planet(
-                    sector=self.name,
+                    sector=self.number,
                     type_=hexes[num],
                     location=location,
                     num=num
@@ -139,7 +139,7 @@ class Sector:
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
             else:
-                self.outer.append(Space(sector=self.name,
+                self.outer.append(Space(sector=self.number,
                                         location=location))
 
         # Add the inner and outer circle to the list of hexes
@@ -315,7 +315,7 @@ class Universe:
             17: "Oxide",
             18: "Volcanic"
         },
-            name="sector1",
+            number=1,
             img=os.path.join(IMAGES, "sector1.png"),
             universe_grid=eval(f"self.{sector1[0]}"),
             rotation = sector1[1]
@@ -331,7 +331,7 @@ class Universe:
             16: "Desert",
             18: "Trans-dim"
         },
-            name="sector2",
+            number=2,
             img=os.path.join(IMAGES, "sector2.png"),
             universe_grid=eval(f"self.{sector2[0]}"),
             rotation=sector2[1]
@@ -346,7 +346,7 @@ class Universe:
             16: "Titanium",
             17: "Desert"
         },
-            name="sector3",
+            number=3,
             img=os.path.join(IMAGES, "sector3.png"),
             universe_grid=eval(f"self.{sector3[0]}"),
             rotation=sector3[1]
@@ -361,7 +361,7 @@ class Universe:
             15: "Swamp",
             19: "Terra"
         },
-            name="sector4",
+            number=4,
             img=os.path.join(IMAGES, "sector4.png"),
             universe_grid=eval(f"self.{sector4[0]}"),
             rotation=sector4[1]
@@ -378,7 +378,7 @@ class Universe:
             13: "Volcanic",
             16: "Oxide"
         },
-            name="sector5",
+            number=5,
             img=os.path.join(IMAGES, "sector5b.png"),
             universe_grid=eval(f"self.{sector5[0]}"),
             rotation=sector5[1]
@@ -393,7 +393,7 @@ class Universe:
         #     13: "Volcanic",
         #     16: "Oxide"
         # },
-        # name="sector5",
+        # number="sector5",
         # img=os.path.join(IMAGES, "sector5.png"),
         #     universe_grid=eval(f"self.{sector5[0]}"),
         #     rotation=sector5[1]
@@ -408,7 +408,7 @@ class Universe:
             18: "Trans-dim",
             19: "Desert"
         },
-            name="sector6",
+            number=6,
             img=os.path.join(IMAGES, "sector6b.png"),
             universe_grid=eval(f"self.{sector6[0]}"),
             rotation=sector6[1]
@@ -423,7 +423,7 @@ class Universe:
             15: "Swamp",
             17: "Titanium"
         },
-            name="sector7",
+            number=7,
             img=os.path.join(IMAGES, "sector7b.png"),
             universe_grid=eval(f"self.{sector7[0]}"),
             rotation=sector7[1]
