@@ -50,7 +50,7 @@ class Automa:
                 self.faction.bowl1 += int(reward[-1])
             else:
                 exec(f"self.faction.{reward[:-1]} += int({reward[-1]})")
-            print(f"You have gained {reward[-1]} {reward[:-1]}.")
+            print(f"The Automa has gained {reward[-1]} {reward[:-1]}.")
 
     def gaia_phase(self):
         # Automa doesn't have a gaia phase.
