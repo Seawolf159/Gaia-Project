@@ -12,8 +12,11 @@ class Faction:
 
         # resources
         self.credits = 0  # This property is set during setup
+        self.credits_max = 30  # Maximum credits possible.
         self.ore = 0  # This property is set during setup
+        self.ore_max = 15  # Maximum ore possible.
         self.knowledge = 0  # This property is set during setup
+        self.knowledge_max = 15  # Maximum knowledge possible.
         self.qic = 0  # This property is set during setup
         self.gaiaformer = 0  # This property is set during setup
 
@@ -42,8 +45,10 @@ class Faction:
         self.academy_built = 0
         # Total amount of academies available at the start.
         self.academy_max = 2
-        self.academy_income = [False, 2]  # True means that it is built
-        self.academy_special = [False, "qic1"]  # True means that it is built
+
+        # True means that it is built.
+        self.academy_income = [False, "knowledge2"]
+        self.academy_special = [False, "qic1"]
 
         self.planetary_institute_built = 0
         # Total amount of planetary institutes available at the start.

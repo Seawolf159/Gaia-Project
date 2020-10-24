@@ -331,18 +331,6 @@ class GaiaProject:
         # will update the map with new structures.
         pass
 
-    def income_phase(self):
-        pass
-
-    def gaia_phase(self):
-        pass
-
-    def action_phase(self):
-        pass
-
-    def change_phase(self):
-        pass
-
     def play(self):
         """This function will setup and allow you to start playing a game."""
 

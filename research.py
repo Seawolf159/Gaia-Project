@@ -104,7 +104,7 @@ class TechTrack:
         # Check if anything is gained directly after researching.
         level = eval(f"player.{player_level_pos[choice]}")
         if level.when == "direct":
-            player.resolve_direct(level.reward)
+            player.resolve_gain(level.reward)
 
     def str_ (self, title):
         # From high to low for similarity with the physical game.

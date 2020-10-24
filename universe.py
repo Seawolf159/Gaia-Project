@@ -474,7 +474,6 @@ class Universe:
 
         map_.save("2p Default.png", "png")
 
-    @ classmethod
     def distance(self, startx, starty, targetx, targety):
         """Using the universe grid to calculate distance between two planets.
 
@@ -575,6 +574,45 @@ class Universe:
             raise e.NoValidMinePlanetsError
 
         return planets
+
+    def planet_has_neighbours(self, planet_to_check, active_player, players):
+        """Determine if a planet is neighbouring opponents.
+
+        An opponent is a neighbour if he is within a range of 2 of the planet
+        in question.
+
+        Args:
+            planet_to_check: Planet object of the planet you want to check for
+                neighbours.
+            active_player: Player object for the player that wants to check
+                for neighbours.
+            players (list): Player objects of all players in the game.
+
+        Returns:
+            True: if a planet is found owned by an opponent within range 2.
+            False: if no neighbours are found.
+
+        TODO:
+            Ask for power charging here?
+        """
+
+        for player in players:
+            if player is active_player:
+                continue
+
+            for planet in player.empire:
+                startx = planet_to_check.location[0]
+                starty = planet_to_check.location[1]
+
+                targetx = planet.location[0]
+                targety = planet.location[1]
+
+                distance = self.distance(startx, starty, targetx, targety)
+                if distance <= 2:
+                    return True
+        else:
+            return False
+
 
 
 if __name__ == "__main__":

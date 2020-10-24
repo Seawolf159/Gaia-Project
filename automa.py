@@ -41,7 +41,7 @@ class Automa:
         # Automa doesn't have an income phase.
         pass
 
-    def resolve_direct(self, rewards):
+    def resolve_gain(self, rewards):
         if not isinstance(rewards, list):
             rewards = [rewards]
 
@@ -176,7 +176,7 @@ class Automa:
         )
         planet.owner = self.faction.name
         planet.structure = "mine"
-        self.faction.mine_max -= 1
+        self.faction.mine_available -= 1
         self.empire.append(planet)
 
     def choose_booster(self, scoring_board):
@@ -223,7 +223,7 @@ class Automa:
             scoring_board: scoring_board object.
             rnd: Active Round object.
         """
-        if not self.faction.mine_max:
+        if not self.faction.mine_available:
             raise e.NotEnoughMinesError
 
         question = f"\nWhere does the automa place its mine?\n"
@@ -289,7 +289,7 @@ class Automa:
         )
         planet.owner = self.faction.name
         planet.structere = "mine"
-        self.faction.mine_max -= 1
+        self.faction.mine_available -= 1
         self.empire.append(planet)
 
         # Check if the end tile with goal "Most Satellites" is active.
@@ -409,15 +409,15 @@ class Faction:
 
         # Structures
         # Total amount of mines available at the start.
-        self.mine_max = 8
+        self.mine_available = 8
         # Total amount of trading stations available at the start.
-        self.trading_station_max = 4
+        self.trading_station_available = 4
         # Total amount of research labs available at the start.
-        self.research_lab_max = 3
+        self.research_lab_available = 3
         # Total amount of academies available at the start.
-        self.academy_max = 2
+        self.academy_available = 2
         # Total amount of planetary institutes available at the start.
-        self.planetary_institute_max = 1
+        self.planetary_institute_available = 1
 
         # research jump start
         # Options are:

@@ -71,7 +71,6 @@ class Player:
         planet.owner = self.faction.name
         planet.structure = "mine"
         self.faction.mine_built += 1
-        self.faction.mine_max -= 1
         self.empire.append(planet)
 
     def choose_booster(self, scoring_board):
@@ -94,72 +93,47 @@ class Player:
             else:
                 print("Please only type one of the available numbers.")
 
-    def income_phase(self):
-        # TODO print everything that is gained from income?
-        # TODO Never allow more than the maximium allowed of a resource.
-        # For example: max credits is 30, max ore is 15
-        print(f"\nDoing income for {self.faction.name}.")
+    def resolve_gain(self, gains, reason=""):
+        """Function for resolving all resources that are gained.
 
-        # Income from faction board.
-        # Store income of type "power" and "powertoken" here to resolve the
-        # order later.
+        Args:
+            rewards (list): List of resources that are directly gained. Format:
+                ["credits3", "vp2", "knowledge1"]
+            reason (str): String specifying why something was gained.
+                f"{reason} you have gained...."
+
+        Returns:
+            A list with all the power and power tokens gained where the order
+            of gaining them still needs to be resolved if any power or
+            powertokens were gained.
+        """
+
+        # If incomes is not a list and therefore a single income, put that
+        # single income in a list to not iterate over a string instead. For
+        # example if incomes == "ore2" the iteration below would fail so
+        # correct it like so: incomes = ["ore2"]
+        if not isinstance(gains, list):
+            gains = [gains]
+
         power_order = []
 
-        # First look at the standard income that you are always going to get.
-        self.resolve_income(self.faction.standard_income)
+        text = " you have gained "
+        if not reason:
+            text = "You have gained "
 
-        # Second look at income from structures.
-        # Ore from mines.
-        for i, _ in enumerate(range(self.faction.mine_built)):
-            self.faction.ore += self.faction.mine_income[i]
+        for gain in gains:
+            if gain.startswith("power"):
+                power_order.append(gain)
+            elif "vp" in gain:
+                exec(f"self.{gain[:-1]} += int({gain[-1]})")
+            else:
+                exec(f"self.faction.{gain[:-1]} += int({gain[-1]})")
+            print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
 
-        # Credits from trading stations.
-        for i, _ in enumerate(range(self.faction.trading_station_built)):
-            self.faction.credits += self.faction.trading_station_income[i]
+        if power_order:
+            self.resolve_power_order(power_order)
 
-        # Knowledge from research labs.
-        for i, _ in enumerate(range(self.faction.research_lab_built)):
-            self.faction.credits += self.faction.research_lab_income[i]
-
-        # Knowledge from academy.
-        if self.faction.academy_income[0]:
-            self.faction.knowledge += self.faction.academy_income[1]
-
-        # Income from planetary_institute.
-        if self.faction.planetary_institute_built == 1:
-            power_order.extend(
-                self.resolve_income(self.faction.planetary_institute_income)
-            )
-
-        # Third look at income from booster.
-        if self.booster.income1:
-            power_order.extend(self.resolve_income(self.booster.income1))
-        if self.booster.income2:
-            power_order.extend(self.resolve_income(self.booster.income2))
-
-        # Fourth look at income from standard technology
-        for technology in self.standard_technology:
-            if technology.when == "income":
-                power_order.extend(self.resolve_income(technology.reward))
-
-        # Fifth look at income from research tracks
-        levels = [
-            self.terraforming,
-            self.navigation,
-            self.a_i,
-            self.gaia_project,
-            self.economy,
-            self.science,
-        ]
-
-        for level in levels:
-            # Error is corrected at runtime so i can ignore this.
-            # pylint: disable=no-member
-            if level.when == "income":
-                power_order.extend(self.resolve_income(level.reward))
-
-        # Sixth look if there is any power/powertoken gain order that needs to
-        # be resolved.
+    def resolve_power_order(self, power_order):
         if len(power_order) > 1:
             power = 0
             token = 0
@@ -196,10 +170,29 @@ class Player:
                                 int(power_order[int(selection) - 1][-1])
                             )
                         power_order.pop(int(selection) - 1)
+
+                        # Check if there is only one type of power left. If
+                        # there is, just resolve the rest automatically.
+                        power = 0
+                        token = 0
+                        for gain in power_order:
+                            if gain.startswith("powertoken"):
+                                token += 1
+                            else:
+                                power += 1
+                        if not power >= 1 and not token >= 1:
+                            power_to_cycle = 0
+                            for resolved in power_order:
+                                if resolved.startswith("powertoken"):
+                                    self.faction.bowl1 += int(resolved[-1])
+                                else:
+                                    power_to_cycle += int(resolved[-1])
+
+                            if power_to_cycle:
+                                self.charge_power(power_to_cycle)
                     else:
                         print("Please only type one of the available numbers.")
-                    # TODO If at some point only one kind of power is
-                    # remaining, do the remaining income automatically.
+                        continue
             else:
                 power_to_cycle = 0
                 for resolved in power_order:
@@ -216,41 +209,6 @@ class Player:
                 self.faction.bowl1 += int(power_order[0][-1])
             else:
                 self.charge_power(int(power_order[0][-1]))
-
-    def resolve_income(self, incomes):
-        """Give a player the resources gained from income.
-
-        Args:
-            incomes (list): A list with the income to be resolved. Format:
-                ["credits3", "ore1", "knowledge1"].
-
-        Returns:
-            A list with all the power and power tokens gained where the order
-            of gaining them still needs to be resolved if any power or
-            powertokens were gained.
-
-        TODO:
-            Print everything gained like with power?
-        """
-
-        # If incomes is not a list and therefore a single income, put that
-        # single income in a list to not iterate over a string instead. For
-        # example if incomes == "ore2" the iteration below would fail so
-        # correct it like so incomes = ["ore2"]
-        if not isinstance(incomes, list):
-            incomes = [incomes]
-
-        power_order = []
-        for income in incomes:
-            if (
-                income.startswith("powertoken")
-                or income.startswith("power")
-            ):
-                power_order.append(income)
-            else:
-                exec(f"self.faction.{income[:-1]} += int({income[-1]})")
-
-        return power_order
 
     def charge_power(self, amount):
         """Amount of total power that will be cycled.
@@ -280,30 +238,82 @@ class Player:
 
         print(f"You have used {amount} power.")
 
-    def resolve_direct(self, rewards, reason=""):
-        """Function for resolving resources that are gained directly.
+    def income_phase(self):
+        # TODO Never allow more than the maximium allowed of a resource.
+        # TODO get all income into one list and than call the self.resolve_gain
+        # function.
+        # For example: max credits is 30, max ore is 15
+        print(f"\nDoing income for {self.faction.name}.")
 
-        Args:
-            rewards (list): List of resources that are directly gained. Format:
-                ["credits3", "vp2", "knowledge1"]
-            reason (str): String specifying why something was gained.
-        """
+        # Income from faction board.
+        # Store income of type "power" and "powertoken" here to resolve the
+        # order later.
 
-        if not isinstance(rewards, list):
-            rewards = [rewards]
+        reason = "In the income phase"
+        # First look at the standard income that you are always going to get.
+        self.resolve_gain(self.faction.standard_income, reason)
 
-        text = " you have gained "
-        if not reason:
-            text = "You have gained "
+        # Second look at income from structures.
+        # Ore from mines.
+        ore = 0
+        for i, _ in enumerate(range(self.faction.mine_built)):
+            ore += self.faction.mine_income[i]
 
-        for reward in rewards:
-            if reward.startswith("powertoken"):
-                self.faction.bowl1 += int(reward[-1])
-            elif "vp" in reward:
-                exec(f"self.{reward[:-1]} += int({reward[-1]})")
-            else:
-                exec(f"self.faction.{reward[:-1]} += int({reward[-1]})")
-            print(f"{reason}{text}{reward[-1]} {reward[:-1]}.")
+        # Credits from trading stations.
+        credits_ = 0
+        for i, _ in enumerate(range(self.faction.trading_station_built)):
+            credits_ += self.faction.trading_station_income[i]
+
+        # Knowledge from research labs.
+        knowledge_rl = 0
+        for i, _ in enumerate(range(self.faction.research_lab_built)):
+            knowledge_rl += self.faction.research_lab_income[i]
+
+        # Knowledge from academy.
+        knowledge_a = 0
+        if self.faction.academy_income[0]:
+            knowledge_a += self.faction.academy_income[1]
+
+        self.resolve_gain(
+            [
+                f"ore{ore}",
+                f"credits{credits_}",
+                f"knowledge{knowledge_rl}",
+                f"knowledge{knowledge_a}"
+            ],
+            reason=reason
+        )
+
+        # Income from planetary_institute.
+        if self.faction.planetary_institute_built == 1:
+            self.resolve_gain(self.faction.planetary_institute_income, reason)
+
+        # Third look at income from booster.
+        if self.booster.income1:
+            self.resolve_gain(self.booster.income1, reason)
+        if self.booster.income2:
+            self.resolve_gain(self.booster.income2, reason)
+
+        # Fourth look at income from standard technology
+        for technology in self.standard_technology:
+            if technology.when == "income":
+                self.resolve_gain(technology.reward, reason)
+
+        # Fifth look at income from research tracks
+        levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        for level in levels:
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            if level.when == "income":
+                self.resolve_gain(level.reward, reason)
 
     def gaia_phase(self):
         # TODO untested function
@@ -323,7 +333,7 @@ class Player:
             print(f"Power in bowl 2: {self.faction.bowl2}")
             print(f"Power in bowl 3: {self.faction.bowl3}")
 
-    def action_phase(self, gp, rnd):
+    def action_phase(self, gp, rnd, choice=False):
         """Functions for delegating to action functions.
 
         Args:
@@ -352,7 +362,7 @@ class Player:
         options = {
             "1": [self.mine, gp.universe, rnd],
             "2": [self.gaia, gp.universe],
-            "3": [self.upgrade, rnd],
+            "3": [self.upgrade, gp, rnd],
             "4": [self.federation],
             "5": [self.research, gp.research_board, rnd],
             "6": [self.pq, gp, rnd],
@@ -376,11 +386,13 @@ class Player:
 
         prompt = (
             f"{intro}{mine}{gaia}{upgrade}"
-            f"{federation}{research}{pq}{special}{pass_}{free}--> "
+            f"{federation}{research}{pq}{special}{pass_}{free}"
         )
+        print(prompt)
 
         while True:
-            choice = input(prompt)
+            if not choice:
+                choice = input("--> ")
 
             if not choice in options.keys():
                 print("Please type the action's corresponding number.")
@@ -407,9 +419,10 @@ class Player:
                     "action. Please pick a different action."
                 )
                 continue
-            except e.BackToActionSelection:
+            except e.BackToActionSelection as back:
                 # User chose to pick another action or wasn't able to pay for
                 # some costs.
+                choice = back.choice
                 continue
             except e.InsufficientKnowledgeError:
                 print(
@@ -456,24 +469,24 @@ class Player:
                 continue
 
             # Choose a planet.
+            try:
+                planets = universe.valid_planets(
+                    self, int(sector_choice), action
+                )
+            except e.NoValidMinePlanetsError:
+                break
+
+            # If there is only one valid planet, return that planet.
+            if len(planets) == 1:
+                return planets[0]
+
+            # If there are multiple valid planets, choose one.
+            print("Please type your chosen planet's corresponding number.")
+            for i, pt in enumerate(planets, start=1):
+                print(f"{i}. {pt}")
+            print(f"{i + 1}. Go back to sector selection.")
+
             while True:
-                try:
-                    planets = universe.valid_planets(
-                        self, int(sector_choice), action
-                    )
-                except e.NoValidMinePlanetsError:
-                    break
-
-                # If there is only one valid planet, return that planet.
-                if len(planets) == 1:
-                    return planets[0]
-
-                # If there are multiple valid planets, choose one.
-                print("Please type your chosen planet's corresponding number.")
-                for i, pt in enumerate(planets, start=1):
-                    print(f"{i}. {pt}")
-                print(f"{i + 1}. Go back to sector selection.")
-
                 chosen_planet = input("--> ")
                 if chosen_planet in [str(n + 1) for n in range(i)]:
                     planet = planets[int(chosen_planet) - 1]
@@ -488,6 +501,14 @@ class Player:
         # TODO how to deal with power charging??
         # TODO Some tech tiles give some points on building a mine same with
         # round tiles.
+
+        # Check if the player has any mines left.
+        if self.faction.mine_built == self.faction.mine_max:
+            print(
+                "You don't have any more mines left to build. Please choose a "
+                "different action."
+            )
+            raise e.BackToActionSelection
 
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
@@ -650,7 +671,7 @@ class Player:
                 # on a Gaia planet.
                 if rnd.goal == "gaiamine":
                     reason = "Because of the round"
-                    self.resolve_direct(f"vp{rnd.vp}", reason)
+                    self.resolve_gain(f"vp{rnd.vp}", reason)
 
                 # Check if the player has the standard tech tile that grants
                 # points for building a mine on a gaia planet type.
@@ -658,7 +679,7 @@ class Player:
                     for tile in self.standard_technology:
                         if tile.when == "action mine on gaia":
                             reason = "Because of a standard technology tile"
-                            self.resolve_direct(tile.reward, reason)
+                            self.resolve_gain(tile.reward, reason)
 
             elif planet.type == "Trans-dim":
                 print(
@@ -742,13 +763,18 @@ class Player:
                 # Check if the current round awards points for terraforming.
                 if rnd.goal == "terraforming":
                     reason = "Because of the round"
-                    self.resolve_direct(f"vp{rnd.vp * difficulty}", reason)
+                    self.resolve_gain(f"vp{rnd.vp * difficulty}", reason)
             break
+
+        print(
+            f"You have built a mine in sector {planet.sector} on the "
+            f"{planet.type} planet."
+        )
 
         # Check if the current round awards points for building a mine.
         if rnd.goal == "mine":
             reason = "Because of the round"
-            self.resolve_direct(f"vp{rnd.vp}", reason)
+            self.resolve_gain(f"vp{rnd.vp}", reason)
 
         # Check if the player has the advanced tech tile that grants points for
         # building a mine.
@@ -756,12 +782,8 @@ class Player:
             for tile in self.advanced_technology:
                 if tile.when == "live" and tile.effect == "mine":
                     reason = "Because of an advanced technology tile"
-                    self.resolve_direct(tile.reward, reason)
+                    self.resolve_gain(tile.reward, reason)
 
-        print(
-            f"You have built a mine in sector {planet.sector} on the "
-            f"{planet.type} planet."
-        )
         # Apply the various payment options.
         if pay_range_qic:
             self.faction.qic -= pay_range_qic
@@ -778,7 +800,6 @@ class Player:
         self.faction.credits -= 2
         self.faction.ore -= 1
         self.faction.mine_built += 1
-        self.faction.mine_max -= 1
         self.empire.append(planet)
 
     def gaia(self, universe):
@@ -910,17 +931,8 @@ class Player:
         self.gaia_forming.append(planet)
         self.faction.gaiaformer -= 1
 
-    def upgrade(self, rnd):
+    def upgrade(self, gp, rnd):
         print("You want to upgrade a structure.")
-
-        # Check if the player has enough resources to upgrade to the cheapest
-        # thing to upgrade to. (trading stations).
-        if self.faction.ore < 2 or self.faction.credits < 3:
-            print(
-                "You don't have enough ore or credits to do an upgrade action."
-                " Please choose a different action."
-            )
-            raise e.BackToActionSelection
 
         # TODO Lost Planet check if this still works once it has been
         # implemented. (filter out the lost planet since it can't be upgraded).
@@ -934,13 +946,13 @@ class Player:
             )
         print(f"{i + 1}. Go back to action selection.")
 
-        prompt = (
+        print(
             "Please select the planet with the structure you want to "
             "upgrade."
         )
         # Choose a planet
         while True:
-            chosen_planet = input(f"{prompt}\n--> ")
+            chosen_planet = input(f"--> ")
             if chosen_planet in [str(n + 1) for n in range(i)]:
                 planet_to_upgrade = self.empire[int(chosen_planet) - 1]
                 break
@@ -950,28 +962,222 @@ class Player:
                 print("Please only type one of the available numbers.")
                 continue
 
+        upgrade_options = {
+            "Mine": "Trading Station",
+            "Trading Station": ["Planetary Institute", "Research Lab"],
+            "Research Lab": "Academy"
+        }
 
-        # If the chosen planet has a trading station, let the player choose
-        # what to upgrade to.
+        if planet_to_upgrade.structure == "Mine":
+            old = "Mine"
+
+            # Check if the player has any Trading Stations left.
+            if (
+                self.faction.trading_station_built
+                    == self.faction.trading_station_max
+            ):
+                print(
+                    "You have already built all your trading stations. "
+                    "Please choose a different structure to upgrade."
+                )
+                raise e.BackToActionSelection("3")
+
+            # TODO faction compatibility, does this work with lantids??
+            # Check if the player is a neighbour with another player. A
+            # neighbour is within range 2 of the player.
+            if gp.universe.planet_has_neighbours(
+                planet_to_upgrade, self, gp.Players
+            ):
+                credit_cost = 3
+            else:
+                credit_cost = 6
+
+            # Check if the player has enough credits or ore to upgrade this
+            # structure.
+            if self.faction.credits < credit_cost or self.faction.ore < 2:
+                print(
+                    "You don't have enough credits or ore to upgrade this "
+                    "Mine. Please choose a different structure."
+                )
+                raise e.BackToActionSelection("3")
+
+            self.faction.credits -= credit_cost
+            self.faction.ore -= 2
+            planet_to_upgrade.structure = upgrade_options["Mine"]
+            self.faction.mine_built -= 1
+            self.faction.trading_station_built += 1
+            new = "Trading Station"
+
+            # Check if the player has the advanced tech tile that grants
+            # points for upgrading to a trading station.
+            if self.advanced_technology:
+                for tile in self.advanced_technology:
+                    if tile.when == "live" and tile.effect == "trade":
+                        reason = "Because of an advanced technology tile"
+                        self.resolve_gain(tile.reward, reason)
+
+            # Check if the current round awards points for upgrading to a
+            # Trading Station.
+            if rnd.goal == "trade":
+                reason = "Because of the round"
+                self.resolve_gain(f"vp{rnd.vp}", reason)
+
         # TODO faction compatibility this fails with the Bescods faction which
         # has the academy and planetary institure swapped.
-        if planet_to_upgrade.structure == "trade":
+        # If the chosen planet has a trading station, let the player choose
+        # what to upgrade to.
+        elif planet_to_upgrade.structure == "Trading Station":
+            old = "Trading Station"
+            # Ask the player to upgrade to a Planetary Institute or a Research
+            # Lab.
+            print("Please select an available structure to upgrade to.")
+            for i, structure in enumerate(upgrade_options):
+                print(f"{i}. {structure}")
+            print(f"{i + 1}. Go back to action selection.")
 
-            pass
+            while True:
+                chosen_structure = input("--> ")
+                if chosen_structure in [str(n + 1) for n in range(i)]:
+                    new_structure = upgrade_options["Trading Station"] \
+                        [int(chosen_structure) - 1]
+                    break
+                elif chosen_planet == f"{i + 1}":
+                    raise e.BackToActionSelection
+                else:
+                    print("Please only type one of the available numbers.")
+                    continue
 
-        # Check if the current round awards points for upgrading to a trading
-        # station.
-        if rnd.goal == "trade":
-            reason = "Because of the round"
-            self.resolve_direct(f"vp{rnd.vp}", reason)
+            if new_structure == "Planetary Institute":
+                # Check if the planetary institute is not placed yet.
+                if (
+                    self.faction.planetary_institute_built
+                        == self.faction.planetary_institute_max
+                ):
+                    print(
+                        "You have already built your Planetary Institute. "
+                        "Please choose a different structure to upgrade to."
+                    )
+                    raise e.BackToActionSelection("3")
 
-        # Check if the player has the advanced tech tile that grants points for
-        # upgrading to a trading station.
-        if self.advanced_technology:
-            for tile in self.advanced_technology:
-                if tile.when == "live" and tile.effect == "trade":
-                    reason = "Because of an advanced technology tile"
-                    self.resolve_direct(tile.reward, reason)
+                # Check if the player has enough credits or ore to upgrade this
+                # structure into a Planetary Institute.
+                if self.faction.credits < 6 or self.faction.ore < 4:
+                    print(
+                        "You don't have enough credits or ore to upgrade this "
+                        "Trading Station into a Planetary Institute. "
+                        "Please choose a different structure."
+                    )
+                    raise e.BackToActionSelection("3")
+
+                self.faction.credits -= 6
+                self.faction.ore -= 4
+                planet_to_upgrade.structure = (
+                    upgrade_options["Trading Station"][0]
+                )
+                self.faction.trading_station_built -= 1
+                self.faction.planetary_institute_built += 1
+                new = "Planetary Institute"
+
+                # TODO make sure this works with all the implemented factions.            # The planetary institute bonus now becomes available:
+                self.faction.planetary_institute_bonus_func()
+
+            elif new_structure == "Research Lab":
+                # Check if there are research labs left.
+                if (
+                    self.faction.research_lab_built
+                        == self.faction.research_lab_max
+                ):
+                    print(
+                        "You have already built all of your Research labs. "
+                        "Please choose a different structure to upgrade to."
+                    )
+                    raise e.BackToActionSelection("3")
+
+                # Check if the player has enough credits or ore to upgrade this
+                # structure into a Research Lab.
+                if self.faction.credits < 5 or self.faction.ore < 3:
+                    print(
+                        "You don't have enough credits or ore to upgrade this "
+                        "Trading Station into a Research Lab. "
+                        "Please choose a different structure."
+                    )
+                    raise e.BackToActionSelection("3")
+
+                self.faction.credits -= 5
+                self.faction.ore -= 3
+                planet_to_upgrade.structure = (
+                    upgrade_options["Trading Station"][1]
+                )
+                self.faction.trading_station_built -= 1
+                self.faction.research_lab_built += 1
+                new = "Research Lab"
+
+                # TODO gain a technology tile!!
+
+        elif planet_to_upgrade.structure == "Research Lab":
+            old = "Research Lab"
+
+            # Check if the player has any academy's left.
+            if (
+                self.faction.academy_built
+                    == self.faction.academy_max
+            ):
+                print(
+                    "You have already built all of your Academy's. "
+                    "Please choose a different structure to upgrade to."
+                )
+                raise e.BackToActionSelection("3")
+
+            # Check if the player has enough credits or ore to upgrade this
+            # structure.
+            if self.faction.credits < 6 or self.faction.ore < 6:
+                print(
+                    "You don't have enough credits or ore to upgrade this "
+                    "Research Lab. Please choose a different structure."
+                )
+                raise e.BackToActionSelection("3")
+
+            # If more than one Academy is available, let the player choose
+            # which one to build.
+            if not self.faction.academy_built:
+                for i, side in enumerate(["Left", "Right"], start=1):
+                    print(f"{i}. {side}")
+                print(f"{i + 1}. Choose a different structure to upgrade.")
+
+                while True:
+                    chosen_side = input("--> ")
+                    if chosen_side in [str(n + 1) for n in range(i)]:
+                        if chosen_side == "1":
+                            chosen_academy = self.faction.academy_income
+                        elif chosen_side == "2":
+                            chosen_academy = self.faction.academy_special
+                        chosen_academy[0] = True
+                        break
+
+                    elif chosen_side == f"{i + 1}":
+                        raise e.BackToActionSelection("3")
+                    else:
+                        print("Please only type one of the available numbers.")
+                        continue
+
+            elif not self.faction.academy_income[0]:
+                self.faction.academy_income[0] = True
+            elif not self.faction.academy_special[0]:
+                self.faction.academy_special[0] = True
+
+            self.faction.credits -= 6
+            self.faction.ore -= 6
+            planet_to_upgrade.structure = upgrade_options["Research Lab"]
+            self.faction.research_lab_built -= 1
+            self.faction.academy_built += 1
+            new = "Academy"
+
+            # TODO gain a technology tile!!
+
+        print(
+            f"You have upgraded your {old} on the {planet_to_upgrade.type} "
+            f"planet in sector {planet_to_upgrade.sector} to a {new}"
+        )
 
     def federation(self):
         pass
@@ -1041,7 +1247,7 @@ class Player:
         # Check if the current round awards points for researching.
         if rnd.goal == "research":
             reason = "Because of the round"
-            self.resolve_direct(f"vp{rnd.vp}", reason)
+            self.resolve_gain(f"vp{rnd.vp}", reason)
 
         # Check if the player has the advanced tech tile that grants points for
         # doing research.
@@ -1049,7 +1255,7 @@ class Player:
             for tile in self.advanced_technology:
                 if tile.when == "live" and tile.effect == "research":
                     reason = "Because of an advanced technology tile"
-                    self.resolve_direct(tile.reward, reason)
+                    self.resolve_gain(tile.reward, reason)
 
         print(
             f"You have researched "
@@ -1148,7 +1354,7 @@ class Player:
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.use_power(7)
-                self.resolve_direct("knowledge3")
+                self.resolve_gain("knowledge3")
 
             elif action == "2":
                 # Gain 2 terraforming steps for 5 power and build a mine.
@@ -1173,7 +1379,7 @@ class Player:
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.use_power(4)
-                self.resolve_direct("ore2")
+                self.resolve_gain("ore2")
 
             elif action == "4":
                 # Gain 7 credits for 4 ore.
@@ -1183,7 +1389,7 @@ class Player:
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.use_power(4)
-                self.resolve_direct("credits7")
+                self.resolve_gain("credits7")
 
             elif action == "5":
                 if not self.enough_power(4):
@@ -1191,7 +1397,7 @@ class Player:
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.use_power(4)
-                self.resolve_direct("knowledge2")
+                self.resolve_gain("knowledge2")
 
             elif action == "6":
                 # Gain 1 terraforming step for 3 power and build a mine.
@@ -1216,7 +1422,7 @@ class Player:
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.use_power(3)
-                self.resolve_direct("powertokens2")
+                self.resolve_gain("powertokens2")
 
             elif action == "8":
                 # TODO need to implement technology tile gain.
@@ -1258,25 +1464,27 @@ class Player:
                         break
 
                 # TODO test that this resolves federation tokens correctly.
-                self.resolve_direct(self.federations[int(chosen_token) - 1])
+                self.resolve_gain(self.federations[int(chosen_token) - 1])
                 # TODO pay qic
 
             elif action == "10":
-                # TODO need to implement
-                # Gain 3 vp and 1 point for every unique planet type that you
-                # own.
+                # Gain 3 vp immediately and 1 point for every unique planet
+                # type that you own.
 
                 if not self.enough_qic(2):
                     continue
 
                 types = len({planet.type for planet in self.empire})
 
-                self.resolve_direct(f"vp{3 + types}")
-                # TODO pay qic
+                self.resolve_gain(f"vp{3 + types}")
+                self.faction.qic -= 2
 
             return
 
     def special(self):
+        # TODO academy special
+        # TODO booster special
+        # TODO technology special
         pass
 
     def pass_(self, gp):

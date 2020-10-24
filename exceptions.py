@@ -10,7 +10,8 @@ class NotEnoughPowerTokensError(Exception):
 
 
 class BackToActionSelection(Exception):
-    pass
+    def __init__(self, choice=False):
+        self.choice = choice
 
 
 class NoFederationTokensError(Exception):
