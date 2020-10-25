@@ -65,7 +65,7 @@ class Faction:
         # power bowls
         self.bowl1 = 0
         self.bowl2 = 0
-        self.bowl3 = 20
+        self.bowl3 = 0
         self.gaia_bowl = 0
         self.gaia_to_power = "bowl1"
 
@@ -79,6 +79,17 @@ class Faction:
             "ore1": ["credits1", "powertoken1"],
             "bowl2tobowl3": self.move_from_bowl2_to_bowl3
         }
+
+    def _testing(self):
+        """Function for testing the game.
+
+        Add any resources or other things here.
+        """
+
+        self.bowl3 = 20
+        self.knowledge = 15
+        self.ore = 15
+        self.qic = 10
 
     def move_from_gaia_to_bowl(self):
         """Move power from the gaia project bowl to bowl 1."""

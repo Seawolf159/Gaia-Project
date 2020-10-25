@@ -1,9 +1,9 @@
-import random
 from math import ceil
 
 import constants as C
 import exceptions as e
 from faction import select_faction
+from technology import AdvancedTechnology, StandardTechnology
 
 
 class Player:
@@ -31,6 +31,7 @@ class Player:
         self.faction = select_faction(faction.lower())()
         self.vp = 10
         self.standard_technology = []
+        self.covered_standard_technology = []
         self.advanced_technology = []
 
         # This property is set during setup and when passing.
@@ -54,6 +55,10 @@ class Player:
 
         self.passed = False  # Wether or not the player has passed.
 
+        # Initiate testing parameters
+        # TODO CRITICAL remove when game is done.
+        self.faction._testing()
+
     def start_mine(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
         question = (
@@ -69,7 +74,7 @@ class Player:
             f"{planet.type} planet."
         )
         planet.owner = self.faction.name
-        planet.structure = "mine"
+        planet.structure = "Mine"
         self.faction.mine_built += 1
         self.empire.append(planet)
 
@@ -78,10 +83,9 @@ class Player:
         question = "Which booster would you like to pick?"
         print(f"{faction_name}{question}")
 
+        for x, booster in enumerate(scoring_board.boosters, start=1):
+            print(f"{x}. {booster}")
         while True:
-            for x, booster in enumerate(scoring_board.boosters, start=1):
-                print(f"{x}. {booster}")
-
             choice = input(f"--> ")
 
             if choice in (
@@ -122,8 +126,7 @@ class Player:
         for gain in gains:
             if gain.startswith("power"):
                 power_order.append(gain)
-                if gain.startswith("powertoken"):
-                    print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
+                print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
             elif not gain[:-1] in types_of_gain:
                 types_of_gain[gain[:-1]] = int(gain[-1])
             else:
@@ -133,8 +136,27 @@ class Player:
             if added_up_gain == "vp":
                 exec(f"self.{added_up_gain} += {amount}")
             else:
+                # Check if adding the Credits, Ore or Knowledge, doesn't make
+                # the player go over the limit.
+                if added_up_gain == "credits":
+                    if self.faction.credits + amount > self.faction.credits_max:
+                        if self.faction.credits > self.faction.credits_max:
+                            continue
+                        amount = 0
+                elif added_up_gain == "ore":
+                    if self.faction.ore + amount > self.faction.ore_max:
+                        if self.faction.ore > self.faction.ore_max:
+                            continue
+                        amount = 0
+                elif added_up_gain == "knowledge":
+                    if self.faction.knowledge + amount \
+                            > self.faction.knowledge_max:
+                        if self.faction.knowledge > self.faction.knowledge_max:
+                            continue
+                        amount = 0
                 exec(f"self.faction.{added_up_gain} += {amount}")
-            print(f"{reason}{text}{amount} {added_up_gain}.")
+            if not amount == 0:
+                print(f"{reason}{text}{amount} {added_up_gain}.")
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -187,16 +209,17 @@ class Player:
                             else:
                                 power += 1
                         if power == 0 or token == 0:
-                            power_to_cycle = 0
-                            for resolved in power_order:
-                                if resolved.startswith("powertoken"):
-                                    self.faction.bowl1 += int(resolved[-1])
-                                else:
-                                    power_to_cycle += int(resolved[-1])
+                            while power_order:
+                                power_to_cycle = 0
+                                for resolved in power_order:
+                                    if resolved.startswith("powertoken"):
+                                        self.faction.bowl1 += int(resolved[-1])
+                                    else:
+                                        power_to_cycle += int(resolved[-1])
 
-                            if power_to_cycle:
-                                self.charge_power(power_to_cycle)
-                            power_order.pop()
+                                if power_to_cycle:
+                                    self.charge_power(power_to_cycle)
+                                power_order.pop()
                     else:
                         print("Please only type one of the available numbers.")
                         continue
@@ -243,7 +266,7 @@ class Player:
             self.faction.bowl3 -= 1
             self.faction.bowl1 += 1
 
-        print(f"You have used {amount} power.")
+        print(f"You have spent {amount} power.")
 
     def income_phase(self):
         # TODO Never allow more than the maximium allowed of a resource.
@@ -403,7 +426,7 @@ class Player:
         print(prompt)
 
         while True:
-            if prompt_repeat:
+            if prompt_repeat and choice == "0":
                 print(prompt)
 
             if not choice or choice == "0":
@@ -411,6 +434,7 @@ class Player:
 
             if not choice in options.keys():
                 print("Please type the action's corresponding number.")
+                choice = "0"
                 continue
 
             try:
@@ -953,9 +977,126 @@ class Player:
         self.gaia_forming.append(planet)
         self.faction.gaiaformer -= 1
 
-    def upgrade(self, gp, rnd):
-        print("You want to upgrade a structure.")
+    def resolve_technology_tile(self, research_board):
 
+        # TODO CRITICAL test that appending technology tiles to available
+        # doesn't duplicate them or check if that even matters.
+        available = []
+        for track in research_board.tech_tracks:
+            # Check for available standard technology tiles connected to a
+            # technology track.
+            if track.standard not in (
+                self.standard_technology
+                or self.covered_standard_technology
+            ):
+                available.append(track.standard)
+
+            # Check if the player is able to go for any advanced technology
+            # tiles.
+            if (
+                self.faction.name in track.level4.players
+                or self.faction.name in track.level5.players
+            ):
+                available.append(track.advanced)
+
+        # Check for available standard technology tiles unconnected to a
+        # technology track.
+        for tile in research_board.free_standard_technology:
+            if tile not in (
+                self.standard_technology
+                or self.covered_standard_technology
+            ):
+                available.append(tile)
+
+        # Ask the player which of the available tiles they want to pick.
+        print(
+            "You may now select a technology tile. Please type one of the "
+            "numbers."
+        )
+        while True:
+            for i, tile in enumerate(available, start=1):
+                print(f"{i}. {tile}")
+            print(f"{i + 1}. Choose a different structure.")
+
+            chosen_tile = input("--> ")
+            if chosen_tile in [str(n + 1) for n in range(i)]:
+                selected_tile = available[int(chosen_tile) - 1]
+            elif chosen_tile == f"{i + 1}":
+                raise e.BackToActionSelection("3")
+            else:
+                print("Please only type one of the available numbers.")
+                continue
+
+            if isinstance(selected_tile, StandardTechnology):
+                self.standard_technology.append(
+                    available[int(chosen_tile) - 1]
+                )
+                print(f"You have chosen: {selected_tile}.")
+                # TODO go up 1 step on a tech track!!!!!
+                return
+            else:
+                # Check that the player has any standard technology available.
+                if not self.standard_technology:
+                    print(
+                        "To take an advanced technology, you need to have a "
+                        "standard technology available to place your advanced "
+                        "technology tile on. Please choose a different tile."
+                    )
+                    continue
+
+            # Player must choose which standard technology tile to cover up
+            # with the advanced technology tile.
+            print(
+                "Which standard technology do you wish to upgrade? "
+                "It will no longer be available."
+            )
+            for i, tile in enumerate(self.standard_technology, start=1):
+                print(f"{i}. {tile}")
+            print(f"{i + 1}. Choose a different technology.")
+
+            while True:
+                chosen_std_tile = input("--> ")
+                if chosen_std_tile in [str(n + 1) for n in range(i)]:
+                    selected_std_tile = (
+                        self.standard_technology[int(chosen_std_tile) - 1]
+                    )
+                    self.advanced_technology.append(selected_tile)
+                    self.covered_standard_technology.append(
+                        self.standard_technology.pop(selected_std_tile)
+                    )
+                    print(
+                        f"You have chosen {selected_std_tile} and covered "
+                        f"it with {selected_tile}."
+                    )
+                    # TODO go up 1 step on a tech track!!!!!
+                    return
+                elif chosen_std_tile == f"{i + 1}":
+                    # Return to the main while loop to choose a technology tile
+                    break
+                else:
+                    print("Please only type one of the available numbers.")
+                    continue
+
+    def upgrade(self, gp, rnd):
+        """Upgrade a built structure to another structure.
+
+        Args:
+            gp: GaiaProject main game object.
+            rnd: Active Round object.
+
+        TODO:
+            Show how much money was spent?? Do this with a function ?? Consider
+            this for all actions.
+        """
+
+        # TODO CRITICAL test function
+
+        print("\nYou want to upgrade a structure.")
+
+        print(
+            "Please select the planet with the structure you want to "
+            "upgrade."
+        )
         # TODO Lost Planet check if this still works once it has been
         # implemented. (filter out the lost planet since it can't be upgraded).
         # TODO sort per sector for better readability.
@@ -968,10 +1109,6 @@ class Player:
             )
         print(f"{i + 1}. Go back to action selection.")
 
-        print(
-            "Please select the planet with the structure you want to "
-            "upgrade."
-        )
         # Choose a planet
         while True:
             chosen_planet = input(f"--> ")
@@ -1008,7 +1145,7 @@ class Player:
             # Check if the player is a neighbour with another player. A
             # neighbour is within range 2 of the player.
             if gp.universe.planet_has_neighbours(
-                planet_to_upgrade, self, gp.Players
+                planet_to_upgrade, self, gp.players
             ):
                 credit_cost = 3
             else:
@@ -1053,9 +1190,11 @@ class Player:
             # Ask the player to upgrade to a Planetary Institute or a Research
             # Lab.
             print("Please select an available structure to upgrade to.")
-            for i, structure in enumerate(upgrade_options):
+            for i, structure in enumerate(
+                upgrade_options["Trading Station"], start=1
+            ):
                 print(f"{i}. {structure}")
-            print(f"{i + 1}. Go back to action selection.")
+            print(f"{i + 1}. Choose a different structure.")
 
             while True:
                 chosen_structure = input("--> ")
@@ -1063,8 +1202,8 @@ class Player:
                     new_structure = upgrade_options["Trading Station"] \
                         [int(chosen_structure) - 1]
                     break
-                elif chosen_planet == f"{i + 1}":
-                    raise e.BackToActionSelection
+                elif chosen_structure == f"{i + 1}":
+                    raise e.BackToActionSelection("3")
                 else:
                     print("Please only type one of the available numbers.")
                     continue
@@ -1125,6 +1264,10 @@ class Player:
                     )
                     raise e.BackToActionSelection("3")
 
+                # Only if below doesn't raise any exceptions will the player
+                # pay for the structure.
+                self.resolve_technology_tile(gp.research_board)
+
                 self.faction.credits -= 5
                 self.faction.ore -= 3
                 planet_to_upgrade.structure = (
@@ -1134,7 +1277,6 @@ class Player:
                 self.faction.research_lab_built += 1
                 new = "Research Lab"
 
-                # TODO gain a technology tile!!
 
         elif planet_to_upgrade.structure == "Research Lab":
             old = "Research Lab"
@@ -1162,6 +1304,7 @@ class Player:
             # If more than one Academy is available, let the player choose
             # which one to build.
             if not self.faction.academy_built:
+                print("Please choose which Academy you would like to build.")
                 for i, side in enumerate(["Left", "Right"], start=1):
                     print(f"{i}. {side}")
                 print(f"{i + 1}. Choose a different structure to upgrade.")
@@ -1173,7 +1316,6 @@ class Player:
                             chosen_academy = self.faction.academy_income
                         elif chosen_side == "2":
                             chosen_academy = self.faction.academy_special
-                        chosen_academy[0] = True
                         break
 
                     elif chosen_side == f"{i + 1}":
@@ -1183,10 +1325,16 @@ class Player:
                         continue
 
             elif not self.faction.academy_income[0]:
-                self.faction.academy_income[0] = True
+                chosen_academy = self.faction.academy_income
             elif not self.faction.academy_special[0]:
-                self.faction.academy_special[0] = True
+                chosen_academy = self.faction.academy_special
 
+            # Only if below doesn't raise any exceptions will the player pay
+            # for the structure.
+            self.resolve_technology_tile(gp.research_board)
+
+            # Set the built property of the chosen academy to true.
+            chosen_academy[0] = True
             self.faction.credits -= 6
             self.faction.ore -= 6
             planet_to_upgrade.structure = upgrade_options["Research Lab"]
@@ -1194,11 +1342,20 @@ class Player:
             self.faction.academy_built += 1
             new = "Academy"
 
-            # TODO gain a technology tile!!
-
+        else:
+            # A Planetary Institute and an Academy can't be upgraded
+            a_an = "an"
+            structure = planet_to_upgrade.structure
+            if structure == "Planetary Institute":
+                a_an = "a"
+            print(
+                f"You can't upgrade {a_an} {structure}. "
+                "Please choose a different structure."
+            )
+            raise e.BackToActionSelection("3")
         print(
             f"You have upgraded your {old} on the {planet_to_upgrade.type} "
-            f"planet in sector {planet_to_upgrade.sector} to a {new}"
+            f"planet in sector {planet_to_upgrade.sector} to a {new}."
         )
 
     def federation(self):

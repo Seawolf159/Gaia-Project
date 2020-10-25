@@ -10,7 +10,7 @@ class NotEnoughPowerTokensError(Exception):
 
 
 class BackToActionSelection(Exception):
-    def __init__(self, choice=False):
+    def __init__(self, choice="0"):
         self.choice = choice
 
 

@@ -51,7 +51,6 @@ class GaiaProject:
                 playing.
         """
 
-
         # A list with all the player objects in turn order.
         self.players = []
         self.round = 1
@@ -74,7 +73,6 @@ class GaiaProject:
 
         self.research_board = Research()
         self.scoring_board = Scoring()
-        # TODO Temporary list of rounds for testing.
 
         # Order of setup according to rules:
         # 1. Choose first player (Against the automa, the human goes first).

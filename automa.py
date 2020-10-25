@@ -83,6 +83,7 @@ class Automa:
 
         TODO:
             Automate drawing automa cards.
+            Print summary of available strucures?
         """
 
         faction_name = f"\n{self.faction.name}:"
@@ -187,9 +188,9 @@ class Automa:
         )
         print(f"{faction_name}{question}")
 
+        for x, booster in enumerate(scoring_board.boosters, start=1):
+            print(f"{x}. {booster}")
         while True:
-            for x, booster in enumerate(scoring_board.boosters, start=1):
-                print(f"{x}. {booster}")
 
             choice = input(f"--> ")
 

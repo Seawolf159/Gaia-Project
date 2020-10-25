@@ -6,7 +6,8 @@ class StandardTechnology:
         self.reward = reward
 
     def __str__(self):
-        return f"when: {self.when} | reward: {self.reward}"
+        # TODO Print this prettier!
+        return f"Standard: when: {self.when} | reward: {self.reward}"
 
 
 class AdvancedTechnology:
@@ -18,9 +19,10 @@ class AdvancedTechnology:
         self.reward = reward
 
     def __str__(self):
+        # TODO Print this prettier!
         if self.effect:
             effect = f"effect: {self.effect} | "
         else:
             effect = ""
 
-        return f"when: {self.when} | {effect}reward: {self.reward}"
+        return f"Advanced: when: {self.when} | {effect}reward: {self.reward}"
