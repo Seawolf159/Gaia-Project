@@ -97,21 +97,16 @@ class Player:
         """Function for resolving all resources that are gained.
 
         Args:
-            rewards (list): List of resources that are directly gained. Format:
+            gains (list): List of resources that are directly gained. Format:
                 ["credits3", "vp2", "knowledge1"]
             reason (str): String specifying why something was gained.
                 f"{reason} you have gained...."
-
-        Returns:
-            A list with all the power and power tokens gained where the order
-            of gaining them still needs to be resolved if any power or
-            powertokens were gained.
         """
 
-        # If incomes is not a list and therefore a single income, put that
+        # If gains is not a list and therefore a single income, put that
         # single income in a list to not iterate over a string instead. For
-        # example if incomes == "ore2" the iteration below would fail so
-        # correct it like so: incomes = ["ore2"]
+        # example if gains == "ore2" the iteration below would fail so
+        # correct it like so: gains = ["ore2"]
         if not isinstance(gains, list):
             gains = [gains]
 
@@ -121,14 +116,25 @@ class Player:
         if not reason:
             text = "You have gained "
 
+        # Add up all of the types of income. "knowledge, vp, powertoken" etc.
+        # and add them at the same time.
+        types_of_gain = {}
         for gain in gains:
             if gain.startswith("power"):
                 power_order.append(gain)
-            elif "vp" in gain:
-                exec(f"self.{gain[:-1]} += int({gain[-1]})")
+                if gain.startswith("powertoken"):
+                    print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
+            elif not gain[:-1] in types_of_gain:
+                types_of_gain[gain[:-1]] = int(gain[-1])
             else:
-                exec(f"self.faction.{gain[:-1]} += int({gain[-1]})")
-            print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
+                types_of_gain[gain[:-1]] += int(gain[-1])
+
+        for added_up_gain, amount in types_of_gain.items():
+            if added_up_gain == "vp":
+                exec(f"self.{added_up_gain} += {amount}")
+            else:
+                exec(f"self.faction.{added_up_gain} += {amount}")
+            print(f"{reason}{text}{amount} {added_up_gain}.")
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -180,7 +186,7 @@ class Player:
                                 token += 1
                             else:
                                 power += 1
-                        if not power >= 1 and not token >= 1:
+                        if power == 0 or token == 0:
                             power_to_cycle = 0
                             for resolved in power_order:
                                 if resolved.startswith("powertoken"):
@@ -190,6 +196,7 @@ class Player:
 
                             if power_to_cycle:
                                 self.charge_power(power_to_cycle)
+                            power_order.pop()
                     else:
                         print("Please only type one of the available numbers.")
                         continue
@@ -249,55 +256,51 @@ class Player:
         # Store income of type "power" and "powertoken" here to resolve the
         # order later.
 
-        reason = "In the income phase"
+        total_income = []
         # First look at the standard income that you are always going to get.
-        self.resolve_gain(self.faction.standard_income, reason)
-
+        total_income.extend(self.faction.standard_income)
         # Second look at income from structures.
         # Ore from mines.
         ore = 0
         for i, _ in enumerate(range(self.faction.mine_built)):
             ore += self.faction.mine_income[i]
+        total_income.append(f"ore{ore}")
 
         # Credits from trading stations.
         credits_ = 0
         for i, _ in enumerate(range(self.faction.trading_station_built)):
             credits_ += self.faction.trading_station_income[i]
+        total_income.append(f"credits{credits_}")
 
         # Knowledge from research labs.
         knowledge_rl = 0
         for i, _ in enumerate(range(self.faction.research_lab_built)):
             knowledge_rl += self.faction.research_lab_income[i]
+        total_income.append(f"knowledge{knowledge_rl}")
 
         # Knowledge from academy.
         knowledge_a = 0
         if self.faction.academy_income[0]:
             knowledge_a += self.faction.academy_income[1]
-
-        self.resolve_gain(
-            [
-                f"ore{ore}",
-                f"credits{credits_}",
-                f"knowledge{knowledge_rl}",
-                f"knowledge{knowledge_a}"
-            ],
-            reason=reason
-        )
+        total_income.append(f"knowledge{knowledge_a}")
 
         # Income from planetary_institute.
         if self.faction.planetary_institute_built == 1:
-            self.resolve_gain(self.faction.planetary_institute_income, reason)
+            total_income.extend(self.faction.planetary_institute_income)
 
         # Third look at income from booster.
         if self.booster.income1:
-            self.resolve_gain(self.booster.income1, reason)
+            total_income.append(self.booster.income1)
         if self.booster.income2:
-            self.resolve_gain(self.booster.income2, reason)
+            total_income.append(self.booster.income2)
 
         # Fourth look at income from standard technology
         for technology in self.standard_technology:
             if technology.when == "income":
-                self.resolve_gain(technology.reward, reason)
+                if isinstance(technology.reward, list):
+                    total_income.extend(technology.reward)
+                else:
+                    total_income.append(technology.reward)
 
         # Fifth look at income from research tracks
         levels = [
@@ -313,7 +316,12 @@ class Player:
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
             if level.when == "income":
-                self.resolve_gain(level.reward, reason)
+                if isinstance(level.reward, list):
+                    total_income.extend(level.reward)
+                else:
+                    total_income.append(level.reward)
+
+        self.resolve_gain(total_income)
 
     def gaia_phase(self):
         # TODO untested function
@@ -356,7 +364,7 @@ class Player:
         pq = "6. Power or Q.I.C (Purple/Green) action.\n"
         special = "7. Do a special (Orange) action.\n"
         pass_ = "8. Pass.\n"
-        free = "9. Exchange power for resources. (Free action)\n"
+        free = "9. Exchange power for resources. (Free action)"
 
         # Value is a list with the function and the arguments it needs.
         options = {
@@ -388,10 +396,17 @@ class Player:
             f"{intro}{mine}{gaia}{upgrade}"
             f"{federation}{research}{pq}{special}{pass_}{free}"
         )
+
+        # Prompt repeat is set when an exception was raised somewhere and the
+        # user got back to action selection.
+        prompt_repeat = False
         print(prompt)
 
         while True:
-            if not choice:
+            if prompt_repeat:
+                print(prompt)
+
+            if not choice or choice == "0":
                 choice = input("--> ")
 
             if not choice in options.keys():
@@ -412,24 +427,31 @@ class Player:
                     "You have no available Gaiaformers. Please pick a "
                     "different action."
                 )
+                prompt_repeat = True
+                choice = "0"
                 continue
             except e.NotEnoughPowerTokensError:
                 print(
                     "You don't have enough power tokens to do this "
                     "action. Please pick a different action."
                 )
+                prompt_repeat = True
+                choice = "0"
                 continue
             except e.BackToActionSelection as back:
                 # User chose to pick another action or wasn't able to pay for
                 # some costs.
                 choice = back.choice
+                prompt_repeat = True
                 continue
             except e.InsufficientKnowledgeError:
                 print(
                     "You don't have enough knowledge to research. You "
-                   f"currently have {self.faction.knowledge} knowledge. "
+                    f"currently have {self.faction.knowledge} knowledge. "
                     "Please choose a different action."
                 )
+                prompt_repeat = True
+                choice = "0"
                 continue
             else:
                 return
@@ -1311,7 +1333,7 @@ class Player:
             "\nYou want to take a power or qic action. Type the number of "
             "your action."
         )
-        power = "Power:\n"
+        power = "Power actions:\n"
         knowledge3 = "1. Gain 3 knowledge for 7 power.\n"
         terraform2 = "2. Gain 2 terraforming steps for 5 power.\n"
         ore2 = "3. Gain 2 ore for 4 power.\n"
@@ -1319,22 +1341,22 @@ class Player:
         knowledge2 = "5. Gain 2 knowledge for 4 power.\n"
         terraform1 = "6. Gain 1 terraforming step for 3 power.\n"
         powertoken2 = "7. Gain 2 powertokens for 3 power.\n"
-        qic = "Qic:\n"
+        qic = "Qic actions:\n"
         tech_tile = "8. Gain a tech tile.\n"
         score_fed_token = "9. Score one of your federation tokens again.\n"
         vp_for_ptypes = (
             "10. Gain 3 vp and 1 vp for every different planet type.\n"
         )
-        cancel = "11. Pick a different action.\n"
+        cancel = "11. Pick a different action."
 
-        print(f"{intro}")
+        print(
+            f"{intro}{power}{knowledge3}{terraform2}{ore2}{credits7}"
+            f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
+            f"{score_fed_token}{vp_for_ptypes}{cancel}"
+        )
 
         while True:
-            action = input(
-                f"{power}{knowledge3}{terraform2}{ore2}{credits7}"
-                f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
-                f"{score_fed_token}{vp_for_ptypes}{cancel}--> "
-            )
+            action = input("--> ")
 
             if action == "11":
                 raise e.BackToActionSelection

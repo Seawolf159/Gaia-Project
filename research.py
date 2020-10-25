@@ -260,7 +260,7 @@ class Research:
             AdvancedTechnology(
                 "ADVfedP.png", "pass", "federationtokens", "vp3"
             ),
-            AdvancedTechnology("ADVstp.png", "live", "research", ["vp2"]),
+            AdvancedTechnology("ADVstp.png", "live", "research", "vp2"),
             AdvancedTechnology(
                 "ADVqic.png", "special", reward=["qic1", "credits5"]
             ),

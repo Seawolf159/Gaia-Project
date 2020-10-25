@@ -85,7 +85,7 @@ class Automa:
             Automate drawing automa cards.
         """
 
-        faction_name = f"\n{self.faction.name}:\n"
+        faction_name = f"\n{self.faction.name}:"
         intro = "What action does the Automa choose?\n"
         mine = "1. Build a mine.\n"
         upgrade = "2. Upgrade an existing structure.\n"
@@ -105,7 +105,7 @@ class Automa:
         }
 
         print(faction_name)
-        print(f"Automa has {self.vp} victory points.")
+        print(f"Automa has {self.vp} victory points.\n")
 
         prompt = (
             f"{intro}{mine}{upgrade}"

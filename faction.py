@@ -86,7 +86,10 @@ class Faction:
         # Raise an exception if this function hasn't been overwritten in the
         # Terrans subclass.
         if self.name == "Terrans":
-            raise NotImplementedError
+            raise NotImplementedError(
+                "Terran faction needs to override the"
+                "Faction.move_from_gaia_to_bowl function."
+            )
 
         while self.gaia_bowl > 0:
             self.gaia_bowl -= 1
@@ -103,7 +106,10 @@ class Faction:
 
     def planetary_institute_bonus_func(self):
         # For subclasses to override
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"The faction {self.name} needs to override the"
+            "Faction.planetary_institute_bonus_func function."
+        )
 
 
 class HadschHalla(Faction):
