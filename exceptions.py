@@ -15,19 +15,23 @@ class BackToActionSelection(Exception):
 
 
 class NoFederationTokensError(Exception):
-    pass
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
 
 class NoFederationGreenError(Exception):
-    pass
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
 
 class NoResearchPossibleError(Exception):
-    pass
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
 
 class Level5IsFullError(Exception):
-    pass
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
 
 
 class InsufficientKnowledgeError(Exception):

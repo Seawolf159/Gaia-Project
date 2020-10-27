@@ -977,10 +977,7 @@ class Player:
         self.gaia_forming.append(planet)
         self.faction.gaiaformer -= 1
 
-    def resolve_technology_tile(self, research_board):
-
-        # TODO CRITICAL test that appending technology tiles to available
-        # doesn't duplicate them or check if that even matters.
+    def resolve_technology_tile(self, research_board, rnd):
         available = []
         for track in research_board.tech_tracks:
             # Check for available standard technology tiles connected to a
@@ -1032,8 +1029,7 @@ class Player:
                     available[int(chosen_tile) - 1]
                 )
                 print(f"You have chosen: {selected_tile}.")
-                # TODO go up 1 step on a tech track!!!!!
-                return
+                break
             else:
                 # Check that the player has any standard technology available.
                 if not self.standard_technology:
@@ -1052,8 +1048,9 @@ class Player:
             )
             for i, tile in enumerate(self.standard_technology, start=1):
                 print(f"{i}. {tile}")
-            print(f"{i + 1}. Choose a different technology.")
+            print(f"{i + 1}. Choose a different technology tile.")
 
+            choose_another = False
             while True:
                 chosen_std_tile = input("--> ")
                 if chosen_std_tile in [str(n + 1) for n in range(i)]:
@@ -1068,14 +1065,26 @@ class Player:
                         f"You have chosen {selected_std_tile} and covered "
                         f"it with {selected_tile}."
                     )
-                    # TODO go up 1 step on a tech track!!!!!
-                    return
+                    break
                 elif chosen_std_tile == f"{i + 1}":
                     # Return to the main while loop to choose a technology tile
+                    choose_another = True
                     break
                 else:
                     print("Please only type one of the available numbers.")
                     continue
+                break
+            # Player is satisfied with the tile choice.
+            if not choose_another:
+                # TODO go up 1 step on a tech track!!!!!
+                # Go up a research track after having chosen a tile.
+                if isinstance(selected_tile, AdvancedTechnology):
+                    try:
+                        self.research(research_board, rnd)
+                    except e.BackToActionSelection:
+                        # Player chose not to choose a tech track. Go back up
+                        # to pick another tile.
+                        continue
 
     def upgrade(self, gp, rnd):
         """Upgrade a built structure to another structure.
@@ -1266,7 +1275,7 @@ class Player:
 
                 # Only if below doesn't raise any exceptions will the player
                 # pay for the structure.
-                self.resolve_technology_tile(gp.research_board)
+                self.resolve_technology_tile(gp.research_board, rnd)
 
                 self.faction.credits -= 5
                 self.faction.ore -= 3
@@ -1331,7 +1340,7 @@ class Player:
 
             # Only if below doesn't raise any exceptions will the player pay
             # for the structure.
-            self.resolve_technology_tile(gp.research_board)
+            self.resolve_technology_tile(gp.research_board, rnd)
 
             # Set the built property of the chosen academy to true.
             chosen_academy[0] = True
@@ -1361,10 +1370,10 @@ class Player:
     def federation(self):
         pass
 
-    def research(self, research_board, rnd):
+    def research(self, research_board, rnd, tech_tile=False):
         # Check if the player has enough knowledge to research.
         # Researching costs 4 knowledge.
-        if not self.faction.knowledge > 3:
+        if not self.faction.knowledge > 3 and not tech_tile:
             raise e.InsufficientKnowledgeError
 
         levels = [
@@ -1396,29 +1405,17 @@ class Player:
             try:
                 research_board.tech_tracks[answer - 1] \
                     .research(current_level, self, answer - 1)
-            except e.NoFederationTokensError:
-                print(
-                    "You have no federation tokens. You can't go up on this "
-                    "track. Please choose another."
-                )
+            except e.NoFederationTokensError as ex:
+                print(ex)
                 continue
-            except e.NoFederationGreenError:
-                print(
-                    "You have no federation token with the green side up left."
-                    " You can't go up on this track. Please choose another."
-                )
+            except e.NoFederationGreenError as ex:
+                print(ex)
                 continue
-            except e.NoResearchPossibleError:
-                print(
-                    "You are already at the maximum level of 5. Please choose "
-                    "a different track."
-                )
+            except e.NoResearchPossibleError as ex:
+                print(ex)
                 continue
-            except e.Level5IsFullError:
-                print(
-                    "Another player is already on level 5. Only one person can"
-                    " go to level 5. Please choose a different track."
-                )
+            except e.Level5IsFullError as ex:
+                print(ex)
                 continue
             else:
                 break
@@ -1440,7 +1437,8 @@ class Player:
             f"You have researched "
             f"{research_board.tech_tracks[answer - 1].name}."
         )
-        self.faction.knowledge -= 4
+        if not tech_tile:
+            self.faction.knowledge -= 4
         print(research_board)
         return
 

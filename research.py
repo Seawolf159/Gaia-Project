@@ -62,7 +62,10 @@ class TechTrack:
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
             if self.level5.players:
-                raise e.Level5IsFullError
+                raise e.Level5IsFullError(
+                    "Another player is already on level 5. Only one person can"
+                    " go to level 5. Please choose a different track."
+                )
 
             # Check if the player has any federations.
             if player.federations:
@@ -78,11 +81,21 @@ class TechTrack:
                             "grey and you have been moved to level 5."
                         )
                     else:
-                        raise e.NoFederationGreenError
+                        raise e.NoFederationGreenError(
+                            "You have no federation token with the green side "
+                            "up left. You can't go up on this track. Please "
+                            "choose a different track."
+                        )
             else:
-                raise e.NoFederationTokensError
+                raise e.NoFederationTokensError(
+                    "You have no federation tokens. You can't go up on this "
+                    "track. Please choose a different track."
+                )
         elif num == 5:
-            raise e.NoResearchPossibleError
+            raise e.NoResearchPossibleError(
+                    "You are already at the maximum level of 5. Please choose "
+                    "a different track."
+                )
 
         player_level_pos = [
             "terraforming",
