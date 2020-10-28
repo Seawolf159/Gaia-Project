@@ -1010,6 +1010,7 @@ class Player:
             "You may now select a technology tile. Please type one of the "
             "numbers."
         )
+        choose_another = False
         while True:
             for i, tile in enumerate(available, start=1):
                 print(f"{i}. {tile}")
@@ -1024,13 +1025,7 @@ class Player:
                 print("Please only type one of the available numbers.")
                 continue
 
-            if isinstance(selected_tile, StandardTechnology):
-                self.standard_technology.append(
-                    available[int(chosen_tile) - 1]
-                )
-                print(f"You have chosen: {selected_tile}.")
-                break
-            else:
+            if isinstance(selected_tile, AdvancedTechnology):
                 # Check that the player has any standard technology available.
                 if not self.standard_technology:
                     print(
@@ -1040,51 +1035,111 @@ class Player:
                     )
                     continue
 
-            # Player must choose which standard technology tile to cover up
-            # with the advanced technology tile.
-            print(
-                "Which standard technology do you wish to upgrade? "
-                "It will no longer be available."
-            )
-            for i, tile in enumerate(self.standard_technology, start=1):
-                print(f"{i}. {tile}")
-            print(f"{i + 1}. Choose a different technology tile.")
+                # Player must choose which standard technology tile to cover up
+                # with the advanced technology tile.
+                print(
+                    "Which standard technology do you wish to cover up? "
+                    "It will no longer be available!"
+                )
+                for i, tile in enumerate(self.standard_technology, start=1):
+                    print(f"{i}. {tile}")
+                print(f"{i + 1}. Choose a different technology tile.")
 
-            choose_another = False
-            while True:
-                chosen_std_tile = input("--> ")
-                if chosen_std_tile in [str(n + 1) for n in range(i)]:
-                    selected_std_tile = (
-                        self.standard_technology[int(chosen_std_tile) - 1]
-                    )
-                    self.advanced_technology.append(selected_tile)
-                    self.covered_standard_technology.append(
-                        self.standard_technology.pop(selected_std_tile)
-                    )
-                    print(
-                        f"You have chosen {selected_std_tile} and covered "
-                        f"it with {selected_tile}."
-                    )
-                    break
-                elif chosen_std_tile == f"{i + 1}":
-                    # Return to the main while loop to choose a technology tile
-                    choose_another = True
-                    break
-                else:
-                    print("Please only type one of the available numbers.")
-                    continue
-                break
-            # Player is satisfied with the tile choice.
-            if not choose_another:
-                # TODO go up 1 step on a tech track!!!!!
-                # Go up a research track after having chosen a tile.
-                if isinstance(selected_tile, AdvancedTechnology):
-                    try:
-                        self.research(research_board, rnd)
-                    except e.BackToActionSelection:
-                        # Player chose not to choose a tech track. Go back up
-                        # to pick another tile.
+                while True:
+                    chosen_std_tile = input("--> ")
+                    if chosen_std_tile in [str(n + 1) for n in range(i)]:
+                        selected_std_tile = (
+                            self.standard_technology[int(chosen_std_tile) - 1]
+                        )
+                        print(
+                            f"You have chosen {selected_std_tile} and covered "
+                            f"it with {selected_tile}."
+                        )
+                        break
+                    elif chosen_std_tile == f"{i + 1}":
+                        # Return to the main while loop to choose a different
+                        # technology tile.
+                        choose_another = True
+                        break
+                    else:
+                        print("Please only type one of the available numbers.")
                         continue
+            else:
+                # Player has chosen a standard technology tile.
+                print(f"You have chosen: {selected_tile}.")
+
+            # Player wants to choose a different technology tile.
+            if choose_another:
+                continue
+
+            action_selection = False
+            # Go up a research track after having chosen a tile.
+            if isinstance(selected_tile, AdvancedTechnology):
+                try:
+                    self.research(research_board, rnd, True)
+                except e.BackToActionSelection:
+                    # Player changed his/her mind. Go back up to pick another
+                    # tile.
+                    action_selection = True
+                except e.ResearchError as ex:
+                    print(ex)
+                finally:
+                    # TODO MINOR If player types a wrong number during
+                    # research track selection, he can't undo that. This
+                    # includes the possibility that the player chooses a track
+                    # he can't go up on by mistake or by necessity because he
+                    # is unable to go up on any of the tracks.
+                    if not action_selection:
+                        # If the call to self.research doesn't encounter the
+                        # BackToActionSelection exception, that means the
+                        # player has chosen a track to go up on, so we can add
+                        # the standard tile to the Player object. We do this
+                        # whether or not a ResearchError was encountered,
+                        # because if a player can't go up on the corresponding
+                        # research track, the player can still get the advanced
+                        # technology tile.
+                        self.advanced_technology.append(selected_tile)
+                        self.covered_standard_technology.append(
+                            self.standard_technology.pop(selected_std_tile)
+                        )
+                        return
+            else:
+                # Look if the chosen standard tile is under any of the
+                # research tracks.
+                for i, track in enumerate(research_board.tech_tracks, start=1):
+                    if selected_tile is track.standard:
+                        track_num = str(i)
+                        break
+
+                # If the tile isn't under any research tracks it must be a
+                # standard tile that allows the user to go up any track
+                # they like.
+                else:
+                    track_num = False
+
+                try:
+                    self.research(research_board, rnd, track_num)
+                except e.BackToActionSelection:
+                    # Player changed his/her mind. Go back up to pick another
+                    # tile.
+                    action_selection = True
+                except e.ResearchError as ex:
+                    print(ex)
+                finally:
+                    if not action_selection:
+                        # If the call to self.research doesn't encounter the
+                        # BackToActionSelection exception, that means the
+                        # player has chosen a track to go up on, so we can add
+                        # the standard tile to the Player object. We do this
+                        # whether or not a ResearchError was encountered,
+                        # because if a player can't go up on the corresponding
+                        # research track, the player can still get the standard
+                        # technology tile.
+                        self.standard_technology.append(
+                            available[int(chosen_tile) - 1]
+                        )
+                        return
+
 
     def upgrade(self, gp, rnd):
         """Upgrade a built structure to another structure.
@@ -1109,6 +1164,9 @@ class Player:
         # TODO Lost Planet check if this still works once it has been
         # implemented. (filter out the lost planet since it can't be upgraded).
         # TODO sort per sector for better readability.
+        # TODO filter out the planets with structures that can't be upgraded
+        # anymore (Academy, Planetary Institute)??
+        # TODO Show the cost of upgrading/current resources??
         for i, planet in enumerate(self.empire, start=1):
             print(
                 f"{i}. Sector: {planet.sector} "
@@ -1165,7 +1223,8 @@ class Player:
             if self.faction.credits < credit_cost or self.faction.ore < 2:
                 print(
                     "You don't have enough credits or ore to upgrade this "
-                    "Mine. Please choose a different structure."
+                    "Mine into a Trading Station. Please choose a different "
+                    "structure."
                 )
                 raise e.BackToActionSelection("3")
 
@@ -1371,6 +1430,29 @@ class Player:
         pass
 
     def research(self, research_board, rnd, tech_tile=False):
+        """Function for doing the Research action.
+
+        Args:
+            research_board: Research object
+            rnd: Active Round object
+            tech_tile: Whether or not the player can research because they have
+                taken a technology tile. If they are able to research because
+                of a technology tile, this argument will be a string with the
+                corresponding research track number if the chosen technology
+                tile is under one of the research tracks. The researchable
+                track is fixed in that case.
+                "0" == Terraforming track
+                "1" == Navigation track
+                "2" == Artificial Intelligence track
+                "3" == Gaia Project track
+                "4" == Economy track
+                "5" == Science track
+                tech_tile is True when the player can go up any track they
+                like, in which case this function will ask them which track
+                they want to go up on.
+                tech_tile is False if the player took the research action.
+        """
+
         # Check if the player has enough knowledge to research.
         # Researching costs 4 knowledge.
         if not self.faction.knowledge > 3 and not tech_tile:
@@ -1385,40 +1467,82 @@ class Player:
             self.science,
         ]
 
-        print("\nOn what research track do you want to go up?")
-        print(research_board)
+        if not isinstance(tech_tile, str):
+            print("\nOn what research track do you want to go up?")
+            print(research_board)
+
         options = (
             "Please type the corresponding number or type 7 if you changed "
             "your mind:\n"
         )
         while True:
-            answer = input(f"{options}--> ")
+            if not isinstance(tech_tile, str):
+                track_choice = input(f"{options}--> ")
+            else:
+                track_choice = tech_tile
 
-            if not answer in ["1", "2", "3", "4", "5", "6"]:
-                if answer == "7":
+            if not track_choice in ["1", "2", "3", "4", "5", "6"]:
+                if track_choice == "7":
                     raise e.BackToActionSelection
                 print("Please only type 1-7")
                 continue
 
-            answer = int(answer)
-            current_level = levels[answer - 1]
+            track_choice = int(track_choice)
+            current_level = levels[track_choice - 1]
             try:
-                research_board.tech_tracks[answer - 1] \
-                    .research(current_level, self, answer - 1)
+                research_board.tech_tracks[track_choice - 1] \
+                    .research(current_level, self, track_choice - 1)
             except e.NoFederationTokensError as ex:
+                if isinstance(tech_tile, str):
+                    raise e.ResearchError(
+                        "You have no federation tokens so you can't advance"
+                        "on the "
+                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        "track."
+                    )
                 print(ex)
                 continue
             except e.NoFederationGreenError as ex:
+                if isinstance(tech_tile, str):
+                    raise e.ResearchError(
+                        "You have no federation token with the green side "
+                        "up left so you can't advance on the "
+                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        "track."
+                    )
                 print(ex)
                 continue
             except e.NoResearchPossibleError as ex:
+                if isinstance(tech_tile, str):
+                    raise e.ResearchError(
+                        "You are already at the maximum level of 5 so you "
+                        "can't advance on the "
+                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        "track."
+                    )
                 print(ex)
                 continue
             except e.Level5IsFullError as ex:
+                if isinstance(tech_tile, str):
+                    raise e.ResearchError(
+                        "Another player is already on level 5. Only one "
+                        "person can go to level 5 so you can't advance on the"
+                        f" {research_board.tech_tracks[track_choice - 1]} "
+                        "track."
+                    )
                 print(ex)
                 continue
             else:
                 break
+
+        if not tech_tile:
+            # Pay research cost.
+            self.faction.knowledge -= 4
+        print(research_board)
+        print(
+            f"You have researched "
+            f"{research_board.tech_tracks[track_choice - 1].name}."
+        )
 
         # Check if the current round awards points for researching.
         if rnd.goal == "research":
@@ -1432,14 +1556,6 @@ class Player:
                 if tile.when == "live" and tile.effect == "research":
                     reason = "Because of an advanced technology tile"
                     self.resolve_gain(tile.reward, reason)
-
-        print(
-            f"You have researched "
-            f"{research_board.tech_tracks[answer - 1].name}."
-        )
-        if not tech_tile:
-            self.faction.knowledge -= 4
-        print(research_board)
         return
 
     def enough_power(self, amount):
@@ -1482,6 +1598,7 @@ class Player:
 
         TODO:
             Perhaps make the power/qic cost text summary more readable.
+            Show which actions are still available this round??
         """
 
         intro = (

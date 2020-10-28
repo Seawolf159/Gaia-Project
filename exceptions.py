@@ -29,6 +29,11 @@ class NoResearchPossibleError(Exception):
         Exception.__init__(self, msg)
 
 
+class ResearchError(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
+
+
 class Level5IsFullError(Exception):
     def __init__(self, msg):
         Exception.__init__(self, msg)
