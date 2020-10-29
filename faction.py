@@ -86,10 +86,11 @@ class Faction:
         Add any resources or other things here.
         """
 
-        self.bowl3 = 20
-        self.knowledge = 15
-        self.ore = 15
-        self.qic = 10
+        self.bowl3 = 50
+        self.knowledge = 50
+        self.ore = 50
+        self.qic = 50
+        self.credits = 50
 
     def move_from_gaia_to_bowl(self):
         """Move power from the gaia project bowl to bowl 1."""

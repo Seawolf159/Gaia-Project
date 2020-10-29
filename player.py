@@ -1102,6 +1102,10 @@ class Player:
                         self.covered_standard_technology.append(
                             self.standard_technology.pop(selected_std_tile)
                         )
+
+                        # Check if the tile awards anything right away.
+                        if selected_tile.when == "direct":
+                            selected_tile.resolve_direct(self)
                         return
             else:
                 # Look if the chosen standard tile is under any of the
@@ -1135,11 +1139,15 @@ class Player:
                         # because if a player can't go up on the corresponding
                         # research track, the player can still get the standard
                         # technology tile.
+                        # TODO receive the direct rewards from the technology
                         self.standard_technology.append(
                             available[int(chosen_tile) - 1]
                         )
-                        return
 
+                        # Check if the tile awards anything right away.
+                        if selected_tile.when == "direct":
+                            selected_tile.resolve_direct(self)
+                        return
 
     def upgrade(self, gp, rnd):
         """Upgrade a built structure to another structure.
@@ -1151,6 +1159,8 @@ class Player:
         TODO:
             Show how much money was spent?? Do this with a function ?? Consider
             this for all actions.
+            Award points for certain upgrades if its the bonus for the current
+                round.
         """
 
         # TODO CRITICAL test function
@@ -1165,7 +1175,8 @@ class Player:
         # implemented. (filter out the lost planet since it can't be upgraded).
         # TODO sort per sector for better readability.
         # TODO filter out the planets with structures that can't be upgraded
-        # anymore (Academy, Planetary Institute)??
+        # anymore (Academy, Planetary Institute)?? And upgrades you can't
+        # afford?
         # TODO Show the cost of upgrading/current resources??
         for i, planet in enumerate(self.empire, start=1):
             print(

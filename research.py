@@ -1,7 +1,7 @@
 import random
 
 import exceptions as e
-from technology import AdvancedTechnology, StandardTechnology
+import technology as t
 
 
 class Level:
@@ -257,42 +257,42 @@ class Research:
         # TODO Instantiate even the unused tech tiles, boosters etc..???
         # So the ones that don't get used.
         standard = [
-            StandardTechnology("TECqic.png", "direct", ["ore1", "qic1"]),
-            StandardTechnology("TECtyp.png", "direct", "knowledge1"),
-            StandardTechnology("TECpia.png", "worth4power", False),
-            StandardTechnology("TECvps.png", "direct", "vp7"),
-            StandardTechnology("TECore.png", "income", ["ore1", "power1"]),
-            StandardTechnology("TECknw.png", "income", ["knowledge1",
+            t.OreQic("TECqic.png", "direct", ["ore1", "qic1"]),
+            t.TypesKnowledge("TECtyp.png", "direct", "knowledge1"),
+            t.StandardTechnology("TECpia.png", "worth4power", False),
+            t.SevenVp("TECvps.png", "direct", "vp7"),
+            t.StandardTechnology("TECore.png", "income", ["ore1", "power1"]),
+            t.StandardTechnology("TECknw.png", "income", ["knowledge1",
                                                         "credits1"]),
-            StandardTechnology("TECgai.png", "action mine on gaia", "vp3"),
-            StandardTechnology("TECcre.png", "income", "credits4"),
-            StandardTechnology("TECpow.png", "special", "power4")
+            t.StandardTechnology("TECgai.png", "action mine on gaia", "vp3"),
+            t.StandardTechnology("TECcre.png", "income", "credits4"),
+            t.StandardTechnology("TECpow.png", "special", "power4")
         ]
 
         advanced = [
-            AdvancedTechnology(
+            t.AdvancedTechnology(
                 "ADVfedP.png", "pass", "federationtokens", "vp3"
             ),
-            AdvancedTechnology("ADVstp.png", "live", "research", "vp2"),
-            AdvancedTechnology(
+            t.AdvancedTechnology("ADVstp.png", "live", "research", "vp2"),
+            t.AdvancedTechnology(
                 "ADVqic.png", "special", reward=["qic1", "credits5"]
             ),
-            AdvancedTechnology("ADVminV.png", "direct", "mine", "vp2"),
-            AdvancedTechnology("ADVlab.png", "pass", "researchlab", "vp3"),
-            AdvancedTechnology("ADVsecO.png", "direct", "sectors", "ore1"),
-            AdvancedTechnology(
+            t.MineVp("ADVminV.png", "direct", "mine", "vp2"),
+            t.AdvancedTechnology("ADVlab.png", "pass", "researchlab", "vp3"),
+            t.SectorOre("ADVsecO.png", "direct", "sectors", "ore1"),
+            t.AdvancedTechnology(
                 "ADVtyp.png", "pass", "different_planets", "vp1"),
-            AdvancedTechnology("ADVgai.png", "direct", "gaiaplanet", "vp2"
+            t.GaiaVp("ADVgai.png", "direct", "gaiaplanet", "vp2"
             ),
-            AdvancedTechnology("ADVtrsV.png", "direct", "trade", "vp4"),
-            AdvancedTechnology("ADVsecV.png", "direct", "sectors", "vp2"),
-            AdvancedTechnology("ADVore.png", "special", reward="ore3"),
-            AdvancedTechnology(
+            t.TradeVp("ADVtrsV.png", "direct", "trade", "vp4"),
+            t.SectorVp("ADVsecV.png", "direct", "sectors", "vp2"),
+            t.AdvancedTechnology("ADVore.png", "special", reward="ore3"),
+            t.FedVp(
                 "ADVfedV.png", "direct", "federationtokens", "vp5"
             ),
-            AdvancedTechnology("ADVknw.png", "special", reward="knowledge3"),
-            AdvancedTechnology("ADVminB.png", "live", "mine", "vp3"),
-            AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
+            t.AdvancedTechnology("ADVknw.png", "special", reward="knowledge3"),
+            t.AdvancedTechnology("ADVminB.png", "live", "mine", "vp3"),
+            t.AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
         ]
 
         tech_tracks = [
