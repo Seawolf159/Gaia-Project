@@ -16,7 +16,7 @@ class OreQic(StandardTechnology):
     receiving standard technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -35,7 +35,7 @@ class SevenVp(StandardTechnology):
     standard technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -54,7 +54,7 @@ class TypesKnowledge(StandardTechnology):
     have built on immediately upon receiving standard technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -87,21 +87,90 @@ class AdvancedTechnology:
         return f"Advanced: when: {self.when} | {effect}reward: {self.reward}"
 
 
+class FedVpPass(AdvancedTechnology):
+    """
+    More specific class for the gain 3 vp for every federation token you have
+    when passing.
+    """
+
+    def resolve_effect(self, player):
+        """Player receives the reward when passing.
+
+        Args:
+            player: Player object of the player that has the tile.
+        """
+
+        player.resolve_gain(
+            f"vp{len(player.federations) * 3}",
+            "Because of an Advanced Technology"
+        )
+
+
+class LabVpPass(AdvancedTechnology):
+    """
+    More specific class for the gain 3 vp for every Research Lab you have have
+    built when passing.
+    """
+
+    def resolve_effect(self, player):
+        """Player receives the reward when passing.
+
+        Args:
+            player: Player object of the player that has the tile.
+        """
+
+        # Get the amount of Research Labs the player has built.
+        amount = (
+            len([
+                planet for planet in player.empire
+                if planet.structure == "Research Lab"
+            ])
+        )
+        player.resolve_gain(
+            f"vp{amount * 3}",
+            "Because of an Advanced Technology"
+        )
+
+class TypesVpPass(AdvancedTechnology):
+    """
+    More specific class for the gain 1 vp for every different planet type you
+    have built on when passing.
+    """
+
+    def resolve_effect(self, player):
+        """Player receives the reward when passing.
+
+        Args:
+            player: Player object of the player that has the tile.
+        """
+
+        # Get the amount of different planet types the player has built on.
+        types = len({planet.type for planet in player.empire})
+        player.resolve_gain(
+            f"vp{types}",
+            "Because of an Advanced Technology"
+        )
+
+
 class MineVp(AdvancedTechnology):
     """
     More specific class for the gain 2 vp for every mine you have built
     immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
             player: Player object of the player that acquired the tile.
         """
 
+        # Check if the player has the lost planet.
+        lost_planet = 0
+        if "Lost Planet" in [planet.type for planet in player.empire]:
+            lost_planet = 1
         player.resolve_gain(
-            f"vp{player.faction.mine_built * 2}",
+            f"vp{(player.faction.mine_built + lost_planet) * 2}",
             "Because of the Advanced Technology"
         )
 
@@ -112,7 +181,7 @@ class TradeVp(AdvancedTechnology):
     built immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -131,7 +200,7 @@ class SectorOre(AdvancedTechnology):
     immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -152,7 +221,7 @@ class SectorVp(AdvancedTechnology):
     immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -173,7 +242,7 @@ class GaiaVp(AdvancedTechnology):
     on immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:
@@ -196,7 +265,7 @@ class FedVp(AdvancedTechnology):
     immediately upon receiving advanced technology tile.
     """
 
-    def resolve_direct(self, player):
+    def resolve_effect(self, player):
         """Receive the reward from acquiring this technology tile.
 
         Args:

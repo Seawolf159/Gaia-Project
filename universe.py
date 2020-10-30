@@ -46,6 +46,50 @@ class Planet:
         # f"Federation: {self.federation}"
 
 
+class LostPlanet:
+    def __init__(self):
+        self.sector = False  # Number of the sector this planet is in.
+        self.type = "Lost Planet"
+        self.location = False  # Universe grid (x, y).
+        self.owner = False  # Faction name of owner
+        self.structure = "Mine"  # Type of building built
+        self.federation = False  # Part of federation? True or False
+
+    def place(self, player, universe):
+        # TODO CRITICAL Make lost planet placing function.
+        # TODO ivits space station check
+        print(
+            "You have received the Lost Planet. Where would you like to place "
+            "it? You can't choose a space that contains a Planet, Satellite "
+            "or space station."
+        )
+        # TODO CRITICAL check if the current round rewards points for building
+        # a mine
+        # TODO more players check if anyone can charge power.
+
+        # more players TODO only for 2p right now
+        choose_range = "1-7"
+        while True:
+            print(
+                "Please type the number of the sector you want to place the "
+                "Lost Planet in."
+            )
+
+            sector_choice = input("-->")
+            if not sector_choice in C.SECTORS_2P:
+                # More players TODO make this message dynamic to the board.
+                # If playing with more players it would be 1-10 for example.
+                print(f"Please only type {choose_range}.")
+                continue
+
+
+    def __str__(self):
+        owner = f"Owner: {self.owner} | "
+        structure = f"Structure: Mine | "
+        return f"Type: {self.type} | {owner}{structure}"
+        # f"Federation: {self.federation}"
+
+
 class Sector:
     """Sector tile.
 

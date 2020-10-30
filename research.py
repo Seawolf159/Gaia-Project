@@ -2,6 +2,8 @@ import random
 
 import exceptions as e
 import technology as t
+from federation import FederationToken
+from universe import LostPlanet
 
 
 class Level:
@@ -42,7 +44,7 @@ class TechTrack:
     def __init__(self, name):
         self.name = name
 
-    def research(self, old_level, player, choice):
+    def research(self, old_level, player, choice, universe):
         """Function for going up the chosen research track.
 
         Args:
@@ -108,6 +110,7 @@ class TechTrack:
         # Remove player from the current level's list of players.
         old_level.remove(player.faction.name)
 
+
         # Add player to the next level on the level's list of players.
         exec(f"self.level{num + 1}.add(player.faction.name)")
 
@@ -117,7 +120,21 @@ class TechTrack:
         # Check if anything is gained directly after researching.
         level = eval(f"player.{player_level_pos[choice]}")
         if level.when == "direct":
-            player.resolve_gain(level.reward)
+            # Player received the federation token from goin to level 5 on the
+            # terraforming track.
+            if isinstance(level.reward, FederationToken):
+                # Add federation token to players federation tokens.
+                player.federations.append(level.reward)
+                # Gain the federation token's rewards.
+                player.resolve_gain(level.reward.reward)
+
+            # Player received the lost planet from going to level 5 on the
+            # navigation track.
+            elif isinstance(level.reward, LostPlanet):
+                level.reward.place(player, universe)
+
+            else:
+                player.resolve_gain(level.reward)
 
     def str_ (self, title):
         # From high to low for similarity with the physical game.
@@ -165,8 +182,7 @@ class Navigation(TechTrack):
         self.level3 = Level("level3", 2, "direct", "qic1")
         self.level4 = Level("level4", 3)
         self.advanced = False  # This property is set during setup
-        # TODO insert lost planet object as level 5 reward
-        self.level5 = Level("level5", 4, "direct", "Lost Planet")
+        self.level5 = Level("level5", 4, "direct", LostPlanet())
 
 
 class ArtificialIntelligence(TechTrack):
@@ -262,26 +278,24 @@ class Research:
             t.StandardTechnology("TECpia.png", "worth4power", False),
             t.SevenVp("TECvps.png", "direct", "vp7"),
             t.StandardTechnology("TECore.png", "income", ["ore1", "power1"]),
-            t.StandardTechnology("TECknw.png", "income", ["knowledge1",
-                                                        "credits1"]),
+            t.StandardTechnology(
+                "TECknw.png", "income", ["knowledge1", "credits1"]
+            ),
             t.StandardTechnology("TECgai.png", "action mine on gaia", "vp3"),
             t.StandardTechnology("TECcre.png", "income", "credits4"),
             t.StandardTechnology("TECpow.png", "special", "power4")
         ]
 
         advanced = [
-            t.AdvancedTechnology(
-                "ADVfedP.png", "pass", "federationtokens", "vp3"
-            ),
+            t.FedVpPass("ADVfedP.png", "pass", "federationtokens", "vp3"),
             t.AdvancedTechnology("ADVstp.png", "live", "research", "vp2"),
             t.AdvancedTechnology(
                 "ADVqic.png", "special", reward=["qic1", "credits5"]
             ),
             t.MineVp("ADVminV.png", "direct", "mine", "vp2"),
-            t.AdvancedTechnology("ADVlab.png", "pass", "researchlab", "vp3"),
+            t.LabVpPass("ADVlab.png", "pass", "researchlab", "vp3"),
             t.SectorOre("ADVsecO.png", "direct", "sectors", "ore1"),
-            t.AdvancedTechnology(
-                "ADVtyp.png", "pass", "different_planets", "vp1"),
+            t.TypesVpPass("ADVtyp.png", "pass", "different_planets", "vp1"),
             t.GaiaVp("ADVgai.png", "direct", "gaiaplanet", "vp2"
             ),
             t.TradeVp("ADVtrsV.png", "direct", "trade", "vp4"),

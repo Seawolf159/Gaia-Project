@@ -10,7 +10,7 @@ class Automa:
         self.faction = select_faction(faction.lower())()
 
         # TODO handle this in a difficulty setup function ??
-        if difficulty.lower() == "automalein":
+        if difficulty.lower() == "Automalein":
             self.vp = 0
         else:
             self.vp = 10
@@ -41,39 +41,9 @@ class Automa:
         # Automa doesn't have an income phase.
         pass
 
-    def resolve_gain(self, rewards):
-        if not isinstance(rewards, list):
-            rewards = [rewards]
-
-        for reward in rewards:
-            if reward.startswith("powertoken"):
-                self.faction.bowl1 += int(reward[-1])
-            else:
-                exec(f"self.faction.{reward[:-1]} += int({reward[-1]})")
-            print(f"The Automa has gained {reward[-1]} {reward[:-1]}.")
-
     def gaia_phase(self):
         # Automa doesn't have a gaia phase.
         pass
-
-    def points(self, action):
-        # TODO pq action doesn't sound very user friendly.
-        # Find a way to name the functions better.
-        print(
-            f"How many points does the Automa score for doing the {action} "
-             "action? Please type the number of points."
-        )
-
-        while True:
-            points = input("--> ")
-
-            try:
-                points = int(points)
-            except ValueError:
-                print("Please only type a number.")
-            else:
-                self.vp += points
-                break
 
     def action_phase(self, gp, rnd):
         """Functions for delegating to action functions.
@@ -91,7 +61,7 @@ class Automa:
         mine = "1. Build a mine.\n"
         upgrade = "2. Upgrade an existing structure.\n"
         research = "3. Do research.\n"
-        pq = "4. Power or Q.I.C (Purple/Green) action.\n"
+        pq = "4. Power or Q.I.C. (Purple/Green) action.\n"
         faction_action = "5. Do a faction action.\n"
         pass_ = "6. Pass.\n"
 
@@ -102,7 +72,7 @@ class Automa:
             "3": [self.research, gp.research_board],
             "4": [self.pq],
             "5": [self.faction.faction_action],
-            "6": [self.pass_, gp],
+            "6": [self.pass_, gp, rnd],
         }
 
         print(faction_name)
@@ -139,15 +109,38 @@ class Automa:
                 # User made a mistake and chose the wrong action for the automa
                 continue
             else:
-                self.points(action[0].__name__)
+                action_name = action[0].__name__
+                if not action_name == "pass_":
+                    self.points(action_name)
+                return
+
+    def points(self, action):
+        # Make action names more user friendly.
+        if action == "pq":
+            action = "power/Q.I.C."
+
+        print(
+            f"How many points does the Automa score for doing the {action}"
+            " action? Please type the number of points."
+        )
+
+        while True:
+            points = input("--> ")
+
+            try:
+                points = int(points)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                self.vp += points
                 return
 
     def start_mine(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
-        question = f"Where does the automa place its {count.upper()} mine?\n"
+        question = f"Where does the Automa place its {count.upper()} mine?\n"
         rules = (
-            "The automa places it's mine closest to the center on its own "
-            f"home type ({self.faction.home_type}). If there is a tie, use "
+            "The Automa places it's mine closest to the center on its own "
+            f"home type ({self.faction.home_type}).\nIf there is a tie, use "
             "directional selection with a random card."
         )
 
@@ -183,7 +176,7 @@ class Automa:
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"
         question = (
-            "Which booster does the automa pick? Please turn a random automa "
+            "Which booster does the Automa pick? Please turn a random Automa "
             "card and look at the bottom right."
         )
         print(f"{faction_name}{question}")
@@ -205,9 +198,11 @@ class Automa:
 
         # Instruct player to now shuffle the automa deck.
         print(
-            "You must now shuffle the automa deck with the cards your chosen"
-            " difficulty requires. Don't forget to rotate the 3 bottom cards "
-            "to see when the automa could pass."
+            "You must now shuffle the Automa deck with the cards your chosen"
+            " difficulty requires.\nShuffle the cards that aren't used and set"
+            " them aside for now.\nDon't forget to rotate the 3 bottom cards "
+            "perpendicular to the rest of the deck to see when the Automa "
+            "could pass."
         )
 
         # Allow the player to setup the deck without the game starting yet.
@@ -220,14 +215,14 @@ class Automa:
         """Place a mine for the Automa.
 
         Args:
-            universe: universe object.
-            scoring_board: scoring_board object.
+            universe: Universe object.
+            scoring_board: Scoring object.
             rnd: Active Round object.
         """
         if not self.faction.mine_available:
             raise e.NotEnoughMinesError
 
-        question = f"\nWhere does the automa place its mine?\n"
+        question = f"\nWhere does the Automa place its mine?\n"
         rules = (
             "Valid Options: Any empty planet (including Trans-dim Planets) "
             "within the Automa’s range of a planet the Automa has colonized."
@@ -253,7 +248,7 @@ class Automa:
             while True:
                 try:
                     planets = universe.valid_planets(
-                        self, int(sector_choice), "automa_mine"
+                        self, int(sector_choice), "Automa_mine"
                     )
                 except e.NoValidMinePlanetsError:
                     break
@@ -306,6 +301,7 @@ class Automa:
         pass
 
     def federation(self):
+        # Automa can't do a Federation action.
         pass
 
     def research(self, research_board):
@@ -392,14 +388,70 @@ class Automa:
         pass
 
     def special(self):
+        # Automa can't do a Special action.
         pass
 
-    def pass_(self, gp):
-        # TODO award points for the round when passing.
+    def pass_(self, gp, rnd):
         gp.passed += 1
         self.passed = True
-        print("You Pass.")
-        return
+        print("\nThe Automa Passes.")
+
+        # Check what the current round number is.
+        round_number = gp.scoring_board.rounds.index(rnd) + 1
+
+        # Give the automa points for the current round.
+        if round_number < 4:
+            scored_vp = rnd.first_half
+        else:
+            scored_vp = rnd.second_half
+
+        self.vp += scored_vp
+        print(f"The Automa scored {scored_vp} VP for passing.")
+
+        # Don't pick a new booster when it's the last round.
+        if round_number == 6:
+            return
+
+        print(
+            "Which Booster does the Automa choose? Please choose the Booster's"
+            " corresponding number."
+        )
+        for pos, boost in zip(
+            ["1 (Left)", "2 (Middle)", "3 (Right)"],
+            gp.scoring_board.boosters
+        ):
+            print(f"{pos}. {boost}")
+
+        while True:
+            chosen_booster = input("--> ")
+            if chosen_booster in [str(n + 1) for n in range(3)]:
+                gp.scoring_board.boosters.append(self.booster)
+                self.booster = gp.scoring_board.boosters.pop(
+                    int(chosen_booster) - 1
+                )
+                print(
+                    f"Automa chose {self.booster}."
+                )
+                break
+            else:
+                print("Please only type one of the available numbers.")
+                continue
+
+        print(
+            "Take the discard pile, any cards remaining in the deck, the "
+            "current action and support cards,\nand the top card of the "
+            "set-aside pile and shuffle them together facedown without "
+            "looking at them to create a new Automa deck.\nAnd don't forget to"
+            " rotate the 3 bottom cards perpendicular to the rest of the deck "
+            "to see when the Automa could pass."
+        )
+        input("Press enter when you are ready to continue.\n--> ")
+
+        # If automa passed first, it starts first next round.
+        if gp.passed == 1:
+            gp.players.remove(self)
+            gp.players.insert(0, self)
+            print("Automa starts first next round.")
 
 
 class Faction:
