@@ -97,7 +97,7 @@ class Scoring:
         end_scoring_tiles = [
             EndScoring("FINfed.png", "structures_federation", 10),
             EndScoring("FINbld.png", "structures", 11),
-            EndScoring("FINtyp.png", "different_planets", 5),
+            EndScoring("FINtyp.png", "planet_types", 5),
             EndScoring("FINgai.png", "gaia_planets", 4),
             EndScoring("FINsec.png", "sectors", 6),
             EndScoring("FINsat.png", "satellites", 8)

@@ -32,7 +32,6 @@ class GaiaProject:
         self.federation_tokens = [
             FederationToken("FEDvps.png", 2, "vp12", "grey"),
             FederationToken("FEDqic.png", 2, ["vp8", "qic1"], "green"),
-            FederationToken("FEDpwt.png", 2, ["vp8, powertoken2"], "green"),
             FederationToken("FEDore.png", 2, ["vp7", "ore2"], "green"),
             FederationToken("FEDcre.png", 2, ["vp7", "credits6"], "green"),
             FederationToken("FEDknw.png", 2, ["vp6", "knowledge2"], "green")

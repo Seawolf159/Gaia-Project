@@ -21,7 +21,7 @@ class Automa:
         self.empire = []  # List of owned planets
 
         # Only matters for the “Most Satellites” final scoring tile.
-        self.sattelites = 0
+        self.satellites = 0
 
         # Research levels
         self.terraforming = False  # This property is set during setup
@@ -198,7 +198,7 @@ class Automa:
 
         # Instruct player to now shuffle the automa deck.
         print(
-            "You must now shuffle the Automa deck with the cards your chosen"
+            "\nYou must now shuffle the Automa deck with the cards your chosen"
             " difficulty requires.\nShuffle the cards that aren't used and set"
             " them aside for now.\nDon't forget to rotate the 3 bottom cards "
             "perpendicular to the rest of the deck to see when the Automa "
@@ -248,7 +248,7 @@ class Automa:
             while True:
                 try:
                     planets = universe.valid_planets(
-                        self, int(sector_choice), "Automa_mine"
+                        self, int(sector_choice), "automa_mine"
                     )
                 except e.NoValidMinePlanetsError:
                     break
@@ -292,7 +292,7 @@ class Automa:
         # Check if the end tile with goal "Most Satellites" is active.
         for end in scoring_board.end_scoring:
             if end.goal == "satellites":
-                self.sattelites += 1
+                self.satellites += 1
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.
@@ -342,7 +342,10 @@ class Automa:
             if num == 4:
                 # Automa removes the advanced technology if there still is one.
                 if track.advanced:
-                    print("Automa has taken the advanced tile.")
+                    print(
+                        f"Automa has taken the {track.advanced} "
+                        "Advanced Technology tile."
+                    )
                     track.advanced = False
                     return
                 else:
@@ -393,9 +396,10 @@ class Automa:
         # Automa can't do a Special action.
         pass
 
+    def faction_action(self):
+        pass
+
     def pass_(self, gp, rnd):
-        gp.passed += 1
-        self.passed = True
         print("\nThe Automa Passes.")
 
         # Check what the current round number is.
@@ -407,40 +411,41 @@ class Automa:
         else:
             scored_vp = rnd.second_half
 
+        # Don't pick a new booster when it's the last round.
+        if round_number != 6:
+            print(
+                "Which Booster does the Automa choose? Please choose the "
+                "Booster's corresponding number."
+            )
+            for pos, boost in zip(
+                ["1 (Left)", "2 (Middle)", "3 (Right)"],
+                gp.scoring_board.boosters
+            ):
+                print(f"{pos}. {boost}")
+            print(f"4. You chose the wrong action.")
+
+            while True:
+                booster_choice = input("--> ")
+                if booster_choice in [str(n + 1) for n in range(3)]:
+                    gp.scoring_board.boosters.append(self.booster)
+                    self.booster = gp.scoring_board.boosters.pop(
+                        int(booster_choice) - 1
+                    )
+                    print(f"Automa chose {self.booster}.")
+                    break
+                elif booster_choice == "4":
+                    raise e.BackToActionSelection
+                else:
+                    print("Please only type one of the available numbers.")
+                    continue
+
+        gp.passed += 1
+        self.passed = True
         self.vp += scored_vp
         print(f"The Automa scored {scored_vp} VP for passing.")
 
-        # Don't pick a new booster when it's the last round.
-        if round_number == 6:
-            return
-
         print(
-            "Which Booster does the Automa choose? Please choose the Booster's"
-            " corresponding number."
-        )
-        for pos, boost in zip(
-            ["1 (Left)", "2 (Middle)", "3 (Right)"],
-            gp.scoring_board.boosters
-        ):
-            print(f"{pos}. {boost}")
-
-        while True:
-            chosen_booster = input("--> ")
-            if chosen_booster in [str(n + 1) for n in range(3)]:
-                gp.scoring_board.boosters.append(self.booster)
-                self.booster = gp.scoring_board.boosters.pop(
-                    int(chosen_booster) - 1
-                )
-                print(
-                    f"Automa chose {self.booster}."
-                )
-                break
-            else:
-                print("Please only type one of the available numbers.")
-                continue
-
-        print(
-            "Take the discard pile, any cards remaining in the deck, the "
+            "\nTake the discard pile, any cards remaining in the deck, the "
             "current action and support cards,\nand the top card of the "
             "set-aside pile and shuffle them together facedown without "
             "looking at them to create a new Automa deck.\nAnd don't forget to"

@@ -77,17 +77,18 @@ class TechTrack:
                 # which one was turned around.
                 for federation in player.federations:
                     if federation.state == "green":
-                        federation.state == "grey"
+                        federation.state = "grey"
                         print(
                             f"Your {federation} token has been flipped to "
                             "grey and you have been moved to level 5."
                         )
-                    else:
-                        raise e.NoFederationGreenError(
-                            "You have no federation token with the green side "
-                            "up left. You can't go up on this track. Please "
-                            "choose a different track."
-                        )
+                        break
+                else:
+                    raise e.NoFederationGreenError(
+                        "You have no federation token with the green side "
+                        "up. You can't go up on this track. Please "
+                        "choose a different track."
+                    )
             else:
                 raise e.NoFederationTokensError(
                     "You have no federation tokens. You can't go up on this "
@@ -120,7 +121,7 @@ class TechTrack:
         # Check if anything is gained directly after researching.
         level = eval(f"player.{player_level_pos[choice]}")
         if level.when == "direct":
-            # Player received the federation token from goin to level 5 on the
+            # Player received the federation token from going to level 5 on the
             # terraforming track.
             if isinstance(level.reward, FederationToken):
                 # Add federation token to players federation tokens.
@@ -294,7 +295,7 @@ class Research:
             t.MineVp("ADVminV.png", "direct", "mine", "vp2"),
             t.LabVpPass("ADVlab.png", "pass", "researchlab", "vp3"),
             t.SectorOre("ADVsecO.png", "direct", "sectors", "ore1"),
-            t.TypesVpPass("ADVtyp.png", "pass", "different_planets", "vp1"),
+            t.TypesVpPass("ADVtyp.png", "pass", "planet_types", "vp1"),
             t.GaiaVp("ADVgai.png", "direct", "gaiaplanet", "vp2"
             ),
             t.TradeVp("ADVtrsV.png", "direct", "trade", "vp4"),

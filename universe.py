@@ -22,10 +22,12 @@ class Space:
         # Verify if that works in Universe.valid_spaces to exclude spaces with
         # a space station.
         # Home world of each player that has a sattelite here.
-        self.sattelites = []
+        self.satellites = []
 
     def __str__(self):
-        return f"X: {self.location[0]} Y:{self.location[1]}: x"
+        return (
+            f"Number: {self.num}"
+        )
 
 
 class Planet:
@@ -60,11 +62,14 @@ class LostPlanet:
         self.federation = False  # Part of federation? True or False
 
     def place(self, player, universe, rnd):
-        # TODO ivits space station check
+        # TODO ivits space station check.
+        # TODO CRITICAL placing the Lost Planet requires the player to be
+        #   within range. The player can pay Q.I.C. during placement as well.
+        #   enforce the range limit of 4 + any Q.I.C.
         print(
             "You have received the Lost Planet. Where would you like to place "
             "it? You can't choose a space that contains a Planet, Satellite "
-            "or space station."
+            "or Space Station."
         )
 
         # TODO more players only for 2p right now
@@ -75,7 +80,7 @@ class LostPlanet:
                 "Lost Planet in."
             )
 
-            sector_choice = input("-->")
+            sector_choice = input("--> ")
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
@@ -101,10 +106,11 @@ class LostPlanet:
                 print(f"{i + 1}. Go back to sector selection.")
 
                 while True:
-                    chosen_space = input("--> ")
-                    if chosen_space in [str(n + 1) for n in range(i)]:
-                        chosen_space = spaces[int(chosen_space) - 1]
-                    elif chosen_space == f"{i + 1}":
+                    space_choice = input("--> ")
+                    if space_choice in [str(n + 1) for n in range(i)]:
+                        chosen_space = spaces[int(space_choice) - 1]
+                        break
+                    elif space_choice == f"{i + 1}":
                         break
                     else:
                         print("Please only type one of the available numbers.")
@@ -120,18 +126,30 @@ class LostPlanet:
             player.resolve_gain(f"vp{rnd.vp}", reason)
 
         # Turn the Space object into the Lost Planet object.
+        found = False
         old_space = chosen_space
-        for i, circle in enumerate(eval(f"self.sector{sector_choice}.hexes")):
+        for i, circle in enumerate(eval(f"universe.sector{sector_choice}"
+                                        ".hexes")):
             for x, hex_ in enumerate(circle):
                 if hex_ is chosen_space:
-                    exec(f"universe.sector{sector_choice}.hexes[{i}][{x}]"
-                         f" = {self}")
+                    exec(
+                        f"universe.sector{sector_choice}.hexes[{i}][{x}]"
+                        f" = self"
+                    )
+                    found = True
+                    break
+            if found:
+                break
 
         # Set Lost Planet parameters
         self.sector = old_space.sector
         self.location = old_space.location
         self.num = old_space.num
 
+        print(
+            f"You have placed the Lost Planet in sector "
+            f"{self.sector} on number {self.num}."
+        )
         # TODO more players CRITIAL check if anyone can charge power.
 
     def __str__(self):
@@ -690,6 +708,7 @@ class Universe:
                 if not isinstance(hex_, Space):
                     continue
 
+                # TODO satellites aren't places. Is this step relevant?
                 if hex_.satellites:
                     continue
                 spaces.append(hex_)

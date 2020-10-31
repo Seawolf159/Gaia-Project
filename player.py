@@ -125,6 +125,13 @@ class Player:
             if gain.startswith("power"):
                 power_order.append(gain)
                 print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
+            elif gain.startswith("vp"):
+                # Had to do this because if a double digit integer was rewarded
+                # like vp12 for example, it would break my [-1] functionality.
+                if not "vp" in types_of_gain:
+                    types_of_gain["vp"] = int(gain.lstrip("vp"))
+                else:
+                    types_of_gain["vp"] += int(gain.lstrip("vp"))
             elif not gain[:-1] in types_of_gain:
                 types_of_gain[gain[:-1]] = int(gain[-1])
             else:
@@ -393,7 +400,7 @@ class Player:
             "1": [self.mine, gp.universe, rnd],
             "2": [self.gaia, gp.universe],
             "3": [self.upgrade, gp, rnd],
-            "4": [self.federation],
+            "4": [self.federation, gp, rnd],
             "5": [self.research, gp.research_board, rnd, gp.universe],
             "6": [self.pq, gp, rnd],
             "7": [self.special],
@@ -988,6 +995,8 @@ class Player:
             ):
                 available.append(track.standard)
 
+            # TODO MINOR filter out the advanced tiles if the player has no
+            # federation tokens with the green side up left. ??
             # Check if the player is able to go for any advanced technology
             # tiles.
             if (
@@ -1012,7 +1021,7 @@ class Player:
         )
         abort = "Choose a different structure."
         if pq:
-            abort = "Choose a different action."
+            abort = "Choose a different Power/ Q.I.C. action."
         choose_another = False
         while True:
             for i, tile in enumerate(available, start=1):
@@ -1041,11 +1050,23 @@ class Player:
                     )
                     continue
 
+                # Check if the player has a federation token with the green
+                # side up.
+                if not "green" in [fed.state for fed in self.federations]:
+                    print(
+                        "You need a federation token with the green side up "
+                        "to take an Advanced Technology tile. Please choose a "
+                        "different tile."
+                    )
+                    continue
+
+                # TODO MINOR if only one standard technology is available,
+                #   use that immediately??
                 # Player must choose which standard technology tile to cover up
                 # with the advanced technology tile.
                 print(
                     "Which standard technology do you wish to cover up? "
-                    "It will no longer receive any rewards from it!"
+                    "You will no longer receive any rewards from it!"
                 )
                 for i, tile in enumerate(self.standard_technology, start=1):
                     print(f"{i}. {tile}")
@@ -1056,10 +1077,6 @@ class Player:
                     if chosen_std_tile in [str(n + 1) for n in range(i)]:
                         selected_std_tile = (
                             self.standard_technology[int(chosen_std_tile) - 1]
-                        )
-                        print(
-                            f"You have chosen {selected_std_tile} and covered "
-                            f"it with {selected_tile}."
                         )
                         break
                     elif chosen_std_tile == f"{i + 1}":
@@ -1106,10 +1123,16 @@ class Player:
                         # technology tile.
                         self.advanced_technology.append(selected_tile)
                         self.covered_standard_technology.append(
-                            self.standard_technology.pop(selected_std_tile)
+                            selected_std_tile
+                        )
+                        self.standard_technology.remove(selected_std_tile)
+
+                        print(
+                            f"You have chosen {selected_std_tile} and covered "
+                            f"it with {selected_tile}."
                         )
 
-                        # Check if the tile awards anything right away.
+                        # Check if the tile rewards anything right away.
                         if selected_tile.when == "direct":
                             selected_tile.resolve_effect(self)
                         return
@@ -1121,10 +1144,10 @@ class Player:
                         track_num = str(i)
                         break
 
-                # If the tile isn't under any research tracks it must be a
-                # standard tile that allows the user to go up any track
-                # they like.
                 else:
+                    # If the tile isn't under any research tracks it must be a
+                    # standard tile that allows the user to go up any track
+                    # they like.
                     track_num = False
 
                 try:
@@ -1134,6 +1157,11 @@ class Player:
                     # tile.
                     action_selection = True
                 except e.ResearchError as ex:
+                    # TODO Minor. If the player chose a standard tile that lays
+                    # directly under a research track and the player can't
+                    # go up on that track, ask the player if that is really
+                    # what he/she wants to do as it is possible to take a tile
+                    # under a research track the player isn't able to go up on.
                     print(ex)
                 finally:
                     if not action_selection:
@@ -1145,7 +1173,6 @@ class Player:
                         # because if a player can't go up on the corresponding
                         # research track, the player can still get the standard
                         # technology tile.
-                        # TODO receive the direct rewards from the technology
                         self.standard_technology.append(
                             available[int(chosen_tile) - 1]
                         )
@@ -1173,7 +1200,6 @@ class Player:
             "Please select the planet with the structure you want to "
             "upgrade."
         )
-        # TODO sort per sector for better readability.
         # TODO filter out the planets with structures that can't be upgraded
         # anymore (Academy, Planetary Institute)?? And upgrades you can't
         # afford?
@@ -1183,11 +1209,13 @@ class Player:
         planets = [
             planet for planet in self.empire if planet.type != "Lost Planet"
         ]
+        # Sort on sector and then on planet num.
+        planets.sort(key=lambda planet: (planet.sector, planet.num))
         for i, planet in enumerate(planets, start=1):
             print(
                 f"{i}. Sector: {planet.sector} "
                 f"| Structure: {planet.structure} "
-                f"| Type: {planet.type}"
+                f"| Type: {planet.type} "
                 f"| Number: {planet.num}"
             )
         print(f"{i + 1}. Go back to action selection.")
@@ -1451,9 +1479,53 @@ class Player:
             f"planet in sector {planet_to_upgrade.sector} to a {new}."
         )
 
-    def federation(self):
-        # TODO implement federation round tile reward.
-        pass
+    def federation(self, gp, rnd):
+        # TODO SOMEDAY this function only gives a federation tile now.
+        #   It doesn't set the federation property of planets and doesn't place
+        #   satellites.
+        print("\nPlease choose which Federation tile you want.")
+
+        # TODO MOST STRUCTURES IN FEDERATIONS end scoring tile must be done
+        # manually right now as well as MOST SATELLITES.
+        print(
+            "Use your own judgement when forming a federation as this is not "
+            "yet implemented."
+        )
+        print(
+            "Please type your chosen Federation token's corresponding number."
+        )
+
+        # Get all the available federation tokens.
+        available_tokens = []
+        for token in gp.federation_tokens:
+            if token.count > 0:
+                available_tokens.append(token)
+
+        for i, fed in enumerate(available_tokens, start=1):
+            print(f"{i}. {fed}")
+        print(f"{i + 1}. Go back to action selection.")
+
+        while True:
+            fed_token = input("--> ")
+            if fed_token in [str(n + 1) for n in range(i)]:
+                chosen_fed_token = available_tokens[int(fed_token) - 1]
+                break
+            elif fed_token == f"{i + 1}":
+                raise e.BackToActionSelection
+            else:
+                print("Please only type one of the available numbers.")
+                continue
+
+        if rnd.goal == "fedtoken":
+            reason = "Because of the round"
+            self.resolve_gain(f"vp{rnd.vp}", reason)
+
+        self.federations.append(chosen_fed_token)
+        chosen_fed_token.count -= 1
+        self.resolve_gain(
+            chosen_fed_token.reward,
+            "Because of the Federation token"
+        )
 
     def research(self, research_board, rnd, universe, tech_tile=False):
         """Function for doing the Research action.
@@ -1523,9 +1595,9 @@ class Player:
             except e.NoFederationTokensError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
-                        "You have no federation tokens so you can't advance"
+                        "You have no federation tokens so you can't advance "
                         "on the "
-                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
                     )
                 print(ex)
@@ -1535,7 +1607,7 @@ class Player:
                     raise e.ResearchError(
                         "You have no federation token with the green side "
                         "up left so you can't advance on the "
-                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
                     )
                 print(ex)
@@ -1545,7 +1617,7 @@ class Player:
                     raise e.ResearchError(
                         "You are already at the maximum level of 5 so you "
                         "can't advance on the "
-                        f"{research_board.tech_tracks[track_choice - 1]} "
+                        f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
                     )
                 print(ex)
@@ -1555,8 +1627,8 @@ class Player:
                     raise e.ResearchError(
                         "Another player is already on level 5. Only one "
                         "person can go to level 5 so you can't advance on the"
-                        f" {research_board.tech_tracks[track_choice - 1]} "
-                        "track."
+                        f" {research_board.tech_tracks[track_choice - 1].name}"
+                        " track."
                     )
                 print(ex)
                 continue
@@ -1630,7 +1702,7 @@ class Player:
 
         intro = (
             "\nYou want to take a power or Q.I.C. action. Type the number of "
-            "your action."
+            "your action.\n"
         )
         power = "Power actions:\n"
         knowledge3 = "1. Gain 3 knowledge for 7 power.\n"
@@ -1641,12 +1713,12 @@ class Player:
         terraform1 = "6. Gain 1 terraforming step for 3 power.\n"
         powertoken2 = "7. Gain 2 powertokens for 3 power.\n"
         qic = "Q.I.C. actions:\n"
-        tech_tile = "8. Gain a tech tile.\n"
+        tech_tile = "8. Gain a technology tile.\n"
         score_fed_token = "9. Score one of your federation tokens again.\n"
         vp_for_ptypes = (
             "10. Gain 3 vp and 1 vp for every different planet type.\n"
         )
-        cancel = "11. Pick a different action."
+        cancel = "11. Go back to action selection."
 
         print(
             f"{intro}{power}{knowledge3}{terraform2}{ore2}{credits7}"
@@ -1781,15 +1853,27 @@ class Player:
                     print(f"{i}. {token}")
                 print(f"{i + 1}. Go back to action selection.")
 
+                chosen = False
                 while True:
                     chosen_token = input("--> ")
-                    if not chosen_token in [str(n + 1) for n in range(i)]:
-                        print("Please only type one of the available numbers.")
+                    if chosen_token in [str(n + 1) for n in range(i)]:
+                        chosen = True
+                        break
                     elif chosen_token == f"{i + 1}":
                         break
+                    else:
+                        print("Please only type one of the available numbers.")
+                        continue
 
-                # TODO test that this resolves federation tokens correctly.
-                self.resolve_gain(self.federations[int(chosen_token) - 1])
+                if not chosen:
+                    continue
+
+                # TODO CRITICAL test that this resolves federation tokens
+                #   correctly.
+                self.resolve_gain(
+                    self.federations[int(chosen_token) - 1].reward,
+                    "Because of the Federation token"
+                )
                 self.faction.qic -= 3
 
             elif action == "10":
@@ -1813,51 +1897,58 @@ class Player:
         pass
 
     def pass_(self, gp, rnd):
-        # TODO if it is the last round, you don't have to pick a booster
-        gp.passed += 1
-        self.passed = True
-        print("\nYou Pass.")
+        # TODO MINOR allow player to go back to action selection in case of a
+        #   miss click and the player doesn't want to pass yet??
 
-        # TODO FINAL Wait with this for now
-        # Check if the player has any advanced technology tiles that awards
-        # points when passing.
-        for adv_tile in self.advanced_technology:
-            if adv_tile.when == "pass":
-                adv_tile.resolve_effect(self)
+        print("\nYou Pass.")
 
         # Check what the current round number is.
         round_number = gp.scoring_board.rounds.index(rnd) + 1
 
+        # Keep a reference to the old booster for scoring passing points if
+        # applicable.
+        old_booster = self.booster
         # Don't pick a new booster when it's the last round.
-        if round_number == 6:
-            return
+        if round_number != 6:
+            print("Which booster would you like to pick?")
+            while True:
+                for i, booster in enumerate(
+                    gp.scoring_board.boosters, start=1
+                ):
+                    print(f"{i}. {booster}")
 
-        print("Which booster would you like to pick?")
-        while True:
-            for i, booster in enumerate(gp.scoring_board.boosters, start=1):
-                print(f"{i}. {booster}")
+                booster_choice = input(f"--> ")
+                if booster_choice in [str(n + 1) for n in range(3)]:
+                    gp.scoring_board.boosters.append(self.booster)
+                    self.booster = gp.scoring_board.boosters.pop(
+                        int(booster_choice) - 1
+                    )
+                    print(f"You chose {self.booster}.")
+                    break
+                else:
+                    print("Please only type one of the available numbers.")
+                    continue
 
-            chosen_booster = input(f"--> ")
+        gp.passed += 1
+        self.passed = True
 
-            if chosen_booster in [str(n + 1) for n in range(3)]:
-                gp.scoring_board.boosters.append(self.booster)
-                self.booster = gp.scoring_board.boosters.pop(
-                    int(chosen_booster) - 1
-                )
-                print(f"You chose {self.booster}.")
-                break
-            else:
-                print("Please only type one of the available numbers.")
-                continue
+        # TODO CRITICAL check if points are rewarded by the booster for passing
+
+        #   Check if the player has any advanced technology tiles that awards
+        #   points when passing.
+        for adv_tile in self.advanced_technology:
+            if adv_tile.when == "pass":
+                adv_tile.resolve_effect(self)
 
         # TODO More players. This only works for 2 players right now.
-        # If starting player order is [1, 2, 3, 4] and if player 3 if first
-        # to pass than [3, 1, 2, 4] the player order is messed up.
+        #   If starting player order is [1, 2, 3, 4] and if player 3 if first
+        #   to pass than [3, 1, 2, 4] the player order is messed up.
+        # TODO MINOR instead of "You" make it faction.name starts first...??
         # If player passed first, he/she starts first next round.
         if gp.passed == 1:
             gp.players.remove(self)
             gp.players.insert(0, self)
-            print("player starts first next round.")
+            print("You start first next round.")
 
     def free(self):
         pass
