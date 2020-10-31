@@ -13,10 +13,14 @@ class Space:
     """Empty spaces on the sector tiles.
     """
 
-    def __init__(self, sector, location):
+    def __init__(self, sector, location, num):
         self.sector = sector  # Number of the sector this space is in.
         self.location = location  # (x, y) on universe grid.
+        self.num = num  # Number inside the sector (1-19).
 
+        # TODO Check how to handle the ivits space station.
+        # Verify if that works in Universe.valid_spaces to exclude spaces with
+        # a space station.
         # Home world of each player that has a sattelite here.
         self.sattelites = []
 
@@ -55,19 +59,15 @@ class LostPlanet:
         self.structure = "Mine"  # Type of building built
         self.federation = False  # Part of federation? True or False
 
-    def place(self, player, universe):
-        # TODO CRITICAL Make lost planet placing function.
+    def place(self, player, universe, rnd):
         # TODO ivits space station check
         print(
             "You have received the Lost Planet. Where would you like to place "
             "it? You can't choose a space that contains a Planet, Satellite "
             "or space station."
         )
-        # TODO CRITICAL check if the current round rewards points for building
-        # a mine
-        # TODO more players check if anyone can charge power.
 
-        # more players TODO only for 2p right now
+        # TODO more players only for 2p right now
         choose_range = "1-7"
         while True:
             print(
@@ -82,6 +82,57 @@ class LostPlanet:
                 print(f"Please only type {choose_range}.")
                 continue
 
+            # Choose an empty space.
+            try:
+                spaces = universe.valid_spaces(player, int(sector_choice))
+            except e.NoValidSpacesError:
+                continue
+
+            chosen_space = False
+            # If there is only one valid space, place on that space.
+            if len(spaces) == 1:
+                chosen_space = spaces[0]
+            else:
+                # If there are multiple valid spaces, choose one.
+                # TODO SILLY is space's even a valid word?
+                print("Please type your chosen space's corresponding number.")
+                for i, sp in enumerate(spaces, start=1):
+                    print(f"{i}. {sp}")
+                print(f"{i + 1}. Go back to sector selection.")
+
+                while True:
+                    chosen_space = input("--> ")
+                    if chosen_space in [str(n + 1) for n in range(i)]:
+                        chosen_space = spaces[int(chosen_space) - 1]
+                    elif chosen_space == f"{i + 1}":
+                        break
+                    else:
+                        print("Please only type one of the available numbers.")
+                        continue
+            if not chosen_space:
+                continue
+            else:
+                break
+
+        # Check if the current round awards points for building a mine.
+        if rnd.goal == "mine":
+            reason = "Because of the round"
+            player.resolve_gain(f"vp{rnd.vp}", reason)
+
+        # Turn the Space object into the Lost Planet object.
+        old_space = chosen_space
+        for i, circle in enumerate(eval(f"self.sector{sector_choice}.hexes")):
+            for x, hex_ in enumerate(circle):
+                if hex_ is chosen_space:
+                    exec(f"universe.sector{sector_choice}.hexes[{i}][{x}]"
+                         f" = {self}")
+
+        # Set Lost Planet parameters
+        self.sector = old_space.sector
+        self.location = old_space.location
+        self.num = old_space.num
+
+        # TODO more players CRITIAL check if anyone can charge power.
 
     def __str__(self):
         owner = f"Owner: {self.owner} | "
@@ -134,7 +185,8 @@ class Sector:
 
         self.number = number
         self.hexes = [[hexes.get(10, Space(sector=self.number,
-                                           location=universe_grid[0][0]))]]
+                                           location=universe_grid[0][0],
+                                           num=10))]]
 
         self.planets = []  # List of all planets in the sector
 
@@ -165,7 +217,8 @@ class Sector:
                 self.planets.append(new_planet)
             else:
                 self.inner.append(Space(sector=self.number,
-                                        location=location))
+                                        location=location,
+                                        num=num))
 
         outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
         for i, num in enumerate(outer):
@@ -184,7 +237,11 @@ class Sector:
                 self.planets.append(new_planet)
             else:
                 self.outer.append(Space(sector=self.number,
-                                        location=location))
+                                        location=location,
+                                        num=num))
+
+        # Sort the list of planets by num.
+        self.planets.sort(key=lambda planet: planet.num)
 
         # Add the inner and outer circle to the list of hexes
         self.hexes.append(self.inner)
@@ -619,6 +676,31 @@ class Universe:
 
         return planets
 
+    def valid_spaces(self, player, sector):
+        """Return a list of valid planets for placing the Lost Planet.
+
+        Args:
+            player: Player object.
+            sector (int): Number of the sector to check for valid Spaces.
+        """
+
+        spaces = []
+        for circle in eval(f"self.sector{sector}.hexes"):
+            for hex_ in circle:
+                if not isinstance(hex_, Space):
+                    continue
+
+                if hex_.satellites:
+                    continue
+                spaces.append(hex_)
+
+        if not spaces:
+            raise e.NoValidSpacesError
+
+        # Sort the spaces based on their num.
+        spaces.sort(key=lambda space: space.num)
+        return spaces
+
     def planet_has_neighbours(self, planet_to_check, active_player, players):
         """Determine if a planet is neighbouring opponents.
 
@@ -630,7 +712,8 @@ class Universe:
                 neighbours.
             active_player: Player object for the player that wants to check
                 for neighbours.
-            players (list): Player objects of all players in the game.
+            players (list): gp.players list with objects of all players in the
+                game.
 
         Returns:
             True: if a planet is found owned by an opponent within range 2.

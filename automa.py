@@ -279,6 +279,7 @@ class Automa:
             if planet_chosen:
                 break
 
+        # TODO CRITICAL Check if the opponent can charge power.
         print(
            f"The Automa has built a mine in sector {sector_choice} on the "
            f"{planet.type} planet."
@@ -298,6 +299,8 @@ class Automa:
         pass
 
     def upgrade(self):
+        # TODO CRITICAL For every upgrade, check if the opponent can charge
+        # power.
         pass
 
     def federation(self):
@@ -361,8 +364,6 @@ class Automa:
                 continue
             break
 
-        print(f"Automa has researched {track.name}.")
-
         automa_level_pos = [
             "terraforming",
             "navigation",
@@ -383,6 +384,7 @@ class Automa:
         exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
 
         print(research_board)
+        print(f"Automa has researched {track.name}.")
 
     def pq(self):
         pass

@@ -44,7 +44,7 @@ class TechTrack:
     def __init__(self, name):
         self.name = name
 
-    def research(self, old_level, player, choice, universe):
+    def research(self, old_level, player, choice, universe=False, rnd=False):
         """Function for going up the chosen research track.
 
         Args:
@@ -131,8 +131,7 @@ class TechTrack:
             # Player received the lost planet from going to level 5 on the
             # navigation track.
             elif isinstance(level.reward, LostPlanet):
-                level.reward.place(player, universe)
-
+                level.reward.place(player, universe, rnd)
             else:
                 player.resolve_gain(level.reward)
 

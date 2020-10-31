@@ -53,8 +53,8 @@ class Player:
 
         self.passed = False  # Wether or not the player has passed.
 
-        # Initiate testing parameters
         # TODO CRITICAL remove when game is done.
+        # Initiate testing parameters
         self.faction._testing()
 
     def start_mine(self, count, universe):
@@ -825,7 +825,7 @@ class Player:
                     self, int(sector_choice), action
                 )
             except e.NoValidMinePlanetsError:
-                break
+                continue
 
             # If there is only one valid planet, return that planet.
             if len(planets) == 1:
@@ -977,7 +977,7 @@ class Player:
         self.gaia_forming.append(planet)
         self.faction.gaiaformer -= 1
 
-    def resolve_technology_tile(self, research_board, rnd, pq=False):
+    def resolve_technology_tile(self, research_board, rnd, universe, pq=False):
         available = []
         for track in research_board.tech_tracks:
             # Check for available standard technology tiles connected to a
@@ -1082,7 +1082,7 @@ class Player:
             # Go up a research track after having chosen a tile.
             if isinstance(selected_tile, AdvancedTechnology):
                 try:
-                    self.research(research_board, rnd, True)
+                    self.research(research_board, rnd, universe, True)
                 except e.BackToActionSelection:
                     # Player changed his/her mind. Go back up to pick another
                     # tile.
@@ -1128,7 +1128,7 @@ class Player:
                     track_num = False
 
                 try:
-                    self.research(research_board, rnd, track_num)
+                    self.research(research_board, rnd, universe, track_num)
                 except e.BackToActionSelection:
                     # Player changed his/her mind. Go back up to pick another
                     # tile.
@@ -1167,8 +1167,6 @@ class Player:
             this for all actions.
         """
 
-        # TODO CRITICAL test function
-
         print("\nYou want to upgrade a structure.")
 
         print(
@@ -1180,6 +1178,8 @@ class Player:
         # anymore (Academy, Planetary Institute)?? And upgrades you can't
         # afford?
         # TODO Show the cost of upgrading/current resources??
+        # TODO more players CRITICAL For every upgrade, check if the opponent
+        # can charge power.
         planets = [
             planet for planet in self.empire if planet.type != "Lost Planet"
         ]
@@ -1354,7 +1354,9 @@ class Player:
 
                 # Only if below doesn't raise any exceptions will the player
                 # pay for the structure.
-                self.resolve_technology_tile(gp.research_board, rnd)
+                self.resolve_technology_tile(
+                    gp.research_board, rnd, gp.universe
+                )
 
                 self.faction.credits -= 5
                 self.faction.ore -= 3
@@ -1419,7 +1421,7 @@ class Player:
 
             # Only if below doesn't raise any exceptions will the player pay
             # for the structure.
-            self.resolve_technology_tile(gp.research_board, rnd)
+            self.resolve_technology_tile(gp.research_board, rnd, gp.universe)
 
             # TODO CRITICAL get points if the current round gives points for
             # upgrading to academy.
@@ -1515,7 +1517,9 @@ class Player:
             current_level = levels[track_choice - 1]
             try:
                 research_board.tech_tracks[track_choice - 1] \
-                    .research(current_level, self, track_choice - 1, universe)
+                    .research(
+                        current_level, self, track_choice - 1, universe, rnd
+                    )
             except e.NoFederationTokensError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
@@ -1580,7 +1584,6 @@ class Player:
                 if tile.when == "live" and tile.effect == "research":
                     reason = "Because of an advanced technology tile"
                     self.resolve_gain(tile.reward, reason)
-        return
 
     def enough_power(self, amount):
         # Check if there is enough power in bowl 3.
@@ -1750,7 +1753,9 @@ class Player:
 
                 # Only if below doesn't raise any exceptions will the player
                 # pay for the action.
-                self.resolve_technology_tile(gp.research_board, rnd, pq=True)
+                self.resolve_technology_tile(
+                    gp.research_board, rnd, gp.universe, pq=True
+                )
 
                 gp.research_board.pq_actions[int(action)] = False
                 self.faction.qic -= 4
