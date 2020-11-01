@@ -3,6 +3,7 @@ from math import ceil
 import constants as C
 import exceptions as e
 from faction import select_faction
+from scoring import Booster
 from technology import AdvancedTechnology, StandardTechnology
 
 
@@ -22,10 +23,9 @@ class Player:
             Make every action choice possible to return to the action selection
                 menu in case of accidentally choosing the wrong action or
                 changing ones mind.
-            Don't forget to look at boosters/technology for additional points
-            for some actions.
-            Find consistency in QIC qic or Q.I.C. or whatever.
-            Boosters not completely finished yet.
+            Make all gains print their gain and add a + as the first character
+                Do the same for all payments and add a - as first character??
+            Make every action print something like ACTION NAME:??
         """
 
         self.faction = select_faction(faction.lower())()
@@ -37,6 +37,8 @@ class Player:
         # This property is set during setup and when passing.
         self.booster = False
 
+        # Wether the player owns the lost planet.
+        self.lost_planet = False
         self.empire = []  # List of owned planets
         self.federations = []  # List of federation tokens
 
@@ -385,13 +387,13 @@ class Player:
         faction_name = f"\n{self.faction.name}:"
         intro = ("\nWhat action do you want to take?\n"
                  "Type the number of your action.\n")
-        mine = "1. Build a mine.\n"
-        gaia = "2. Start a gaia project.\n"
+        mine = "1. Build a Mine.\n"
+        gaia = "2. Start a Gaia Project.\n"
         upgrade = "3. Upgrade an existing structure.\n"
         federation = "4. Form a federation.\n"
         research = "5. Do research.\n"
         pq = "6. Power or Q.I.C (Purple/Green) action.\n"
-        special = "7. Do a special (Orange) action.\n"
+        special = "7. Do a Special (Orange) action.\n"
         pass_ = "8. Pass.\n"
         free = "9. Exchange power for resources. (Free action)"
 
@@ -403,7 +405,7 @@ class Player:
             "4": [self.federation, gp, rnd],
             "5": [self.research, gp.research_board, rnd, gp.universe],
             "6": [self.pq, gp, rnd],
-            "7": [self.special],
+            "7": [self.special, gp.universe, rnd],
             "8": [self.pass_, gp, rnd],
             "9": [self.free]
         }
@@ -452,19 +454,8 @@ class Player:
                 else:
                     # Otherwise just call the function.
                     action[0]()
-            except e.NoGaiaFormerError:
-                print(
-                    "You have no available Gaiaformers. Please pick a "
-                    "different action."
-                )
-                prompt_repeat = True
-                choice = "0"
-                continue
-            except e.NotEnoughPowerTokensError:
-                print(
-                    "You don't have enough power tokens to do this "
-                    "action. Please pick a different action."
-                )
+            except (e.NotEnoughPowerTokensError, e.NoGaiaFormerError) as ex:
+                print(ex)
                 prompt_repeat = True
                 choice = "0"
                 continue
@@ -486,10 +477,29 @@ class Player:
             else:
                 return
 
-    def mine(self, universe, rnd, terraform_steps=False, action="mine"):
+    def mine(self,
+             universe,
+             rnd,
+             terraform_steps=0,
+             action="mine",
+             extra_range=0,
+             p_chosen=False):
+        """Function for building a  Mine.
+
+        Args:
+            universe: The universe object used in the main GaiaProject class.
+            rnd: Active Round object.
+            terraform_steps (int): The amount of free terraform steps the
+                player has gotten.
+            action (str): What kind of action called this function.
+            extra_range (int): The amount of extra range the player has gotten.
+            p_chosen: Planet object. Only used in scoring.ExtraRange class.
+        """
         # TODO how to deal with power charging??
-        # TODO Some tech tiles give some points on building a mine same with
-        # round tiles.
+
+        # Error is corrected at runtime so i can ignore this.
+        # pylint: disable=no-member
+        available_range = self.navigation.active + extra_range
 
         # Check if the player has any mines left.
         if self.faction.mine_built == self.faction.mine_max:
@@ -508,14 +518,21 @@ class Player:
             )
             raise e.BackToActionSelection
 
-        print("\nOn what planet do you want to build a mine?")
+        print("\nYou want to build a Mine.")
         while True:
             # Payment flags
             pay_range_qic = False
             pay_gaia_qic = False
             pay_terraform_ore = False
 
-            planet = self.choose_planet(universe, action)
+            if not p_chosen:
+                planet = self.choose_planet(universe, action)
+            else:
+                planet = p_chosen
+
+            # If the planet was gaiaformed, the player only pays for the mine.
+            if planet.structure == "gaiaformer":
+                break
 
             # If this function was called from the pq action function, check
             # if a planet that needs terraforming was actually chosen.
@@ -534,8 +551,8 @@ class Player:
                 continue
 
             # Check if the player is within range of the target planet.
-            not_enough_range = False
             all_distances = []
+            not_enough_range = False
             for owned_planet in self.empire:
                 startx = owned_planet.location[0]
                 starty = owned_planet.location[1]
@@ -549,18 +566,14 @@ class Player:
                 # If the distance of the planet to one of the players planets
                 # is ever smaller or equal to the amount of range the player
                 # has, the planet is close enough.
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                if distance <= self.navigation.active:
+                if distance <= available_range:
                     break
             else:
                 distance = min(all_distances)
                 not_enough_range = True
 
             if not_enough_range:
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                extra_range_needed = distance - self.navigation.active
+                extra_range_needed = distance - available_range
                 qic_needed = ceil(extra_range_needed / 2)
 
                 # Check if player has the required amount of qic needed to
@@ -568,7 +581,7 @@ class Player:
                 if qic_needed > self.faction.qic:
                     print(
                         "You don't have enough range "
-                       f"({self.navigation.active}) to build on your chosen "
+                       f"({available_range}) to build on your chosen "
                         "planet and you don't have enough Q.I.C. "
                        f"({self.faction.qic}) to increase your range."
                     )
@@ -591,8 +604,8 @@ class Player:
                     QIC = "Q.I.C.'s"
                 print(
                     "Your nearest planet is not within range of your chosen "
-                   f"planet. Do you want to spend {qic_needed} {QIC} to "
-                    "increase your range? (Y/N)"
+                    f"planet. Do you want to spend {qic_needed} {QIC} to "
+                    f"increase your range by {qic_needed * 2}? (Y/N)"
                 )
 
                 dont_increase_range = False
@@ -602,7 +615,9 @@ class Player:
                     if not increase_range in ['y', 'n']:
                         print("Please type Y for yes or N for no.")
                         continue
-                    elif increase_range == "n":
+                    elif increase_range == 'n':
+                        if p_chosen:
+                            raise e.ExtraRangeError
                         dont_increase_range = True
                         break
                     else:
@@ -644,7 +659,9 @@ class Player:
                     if not pay_qic in ['y', 'n']:
                         print("Please type Y for yes or N for no.")
                         continue
-                    elif pay_qic == "n":
+                    elif pay_qic == 'n':
+                        if p_chosen:
+                            raise e.ExtraRangeError
                         choose_another_planet = True
                         break
                     else:
@@ -655,20 +672,6 @@ class Player:
 
                 # Player wants to pay QIC.
                 pay_gaia_qic = True
-
-                # Check if the current round awards points for building a mine
-                # on a Gaia planet.
-                if rnd.goal == "gaiamine":
-                    reason = "Because of the round"
-                    self.resolve_gain(f"vp{rnd.vp}", reason)
-
-                # Check if the player has the standard tech tile that grants
-                # points for building a mine on a gaia planet type.
-                if self.standard_technology:
-                    for tile in self.standard_technology:
-                        if tile.when == "action mine on gaia":
-                            reason = "Because of a standard technology tile"
-                            self.resolve_gain(tile.reward, reason)
 
             elif planet.type == "Trans-dim":
                 print(
@@ -736,7 +739,9 @@ class Player:
                         if not pay_terraform_cost in ['y', 'n']:
                             print("Please type Y for yes or N for no.")
                             continue
-                        elif pay_terraform_cost == "n":
+                        elif pay_terraform_cost == 'n':
+                            if p_chosen:
+                                raise e.ExtraRangeError
                             choose_another_planet = True
                             break
                         else:
@@ -760,19 +765,6 @@ class Player:
             f"{planet.type} planet."
         )
 
-        # Check if the current round awards points for building a mine.
-        if rnd.goal == "mine":
-            reason = "Because of the round"
-            self.resolve_gain(f"vp{rnd.vp}", reason)
-
-        # Check if the player has the advanced tech tile that grants points for
-        # building a mine.
-        if self.advanced_technology:
-            for tile in self.advanced_technology:
-                if tile.when == "live" and tile.effect == "mine":
-                    reason = "Because of an advanced technology tile"
-                    self.resolve_gain(tile.reward, reason)
-
         # Apply the various payment options.
         if pay_range_qic:
             self.faction.qic -= pay_range_qic
@@ -784,12 +776,44 @@ class Player:
             self.faction.ore -= self.terraforming.active \
                 * (difficulty - terraform_steps)
 
+        if planet.type == "Gaia":
+            if planet.structure == "gaiaformer":
+                self.faction.gaiaformer += 1
+
+            # Check if the current round awards points for building a mine
+            # on a Gaia planet.
+            if rnd.goal == "gaiamine":
+                reason = "Because of the round"
+                self.resolve_gain(f"vp{rnd.vp}", reason)
+
+            # Check if the player has the standard tech tile that grants
+            # points for building a mine on a gaia planet type.
+            if self.standard_technology:
+                for tile in self.standard_technology:
+                    if tile.when == "action mine on gaia":
+                        reason = "Because of a standard technology tile"
+                        self.resolve_gain(tile.reward, reason)
+
         planet.owner = self.faction.name
         planet.structure = "Mine"
         self.faction.credits -= 2
         self.faction.ore -= 1
         self.faction.mine_built += 1
         self.empire.append(planet)
+
+        # Check if the current round awards points for building a mine.
+        if rnd.goal == "mine":
+            reason = "Because of the round"
+            self.resolve_gain(f"vp{rnd.vp}", reason)
+
+        # Check if the player has the advanced tech tile that grants points for
+        # building a mine.
+        if planet.type != "Gaia":
+            if self.advanced_technology:
+                for tile in self.advanced_technology:
+                    if tile.when == "live" and tile.effect == "mine":
+                        reason = "Because of an advanced technology tile"
+                        self.resolve_gain(tile.reward, reason)
 
     def choose_planet(self, universe, action):
         """Function for choosing a planet on the board.
@@ -800,11 +824,15 @@ class Player:
 
         TODO:
             This function doesn't work with the lantids function when building
-            a mine since it won't show planets that are owned by opponents.
+                a mine since it won't show planets that are owned by opponents.
         """
 
         # more players TODO only for 2p right now
         back_to_action = "Type 8 if you want to choose a different action."
+        if action.startswith("boost"):
+            back_to_action = (
+                "Type 8 if you want to choose a different Special action."
+            )
         choose_range = "1-8"
         if action == "start_mine":
             back_to_action = ""
@@ -855,23 +883,43 @@ class Player:
                     print("Please only type one of the available numbers.")
                     continue
 
-    def gaia(self, universe):
+    def gaia(self, universe, p_chosen=False, action="gaia", extra_range=0):
+        """Function for starting a Gaia Project.
+
+        Args:
+            universe: The universe object used in the main GaiaProject class.
+            planet: Planet object. Only used in scoring.ExtraRange class.
+        """
+
+        # Error is corrected at runtime so i can ignore this.
+        # pylint: disable=no-member
+        available_range = self.navigation.active + extra_range
+
         # Check if the player has an available gaiaformer.
         if not self.faction.gaiaformer > 0:
-            raise e.NoGaiaFormerError
+            raise e.NoGaiaFormerError(
+                "You have no available Gaiaformers. Please pick a "
+                "different action."
+            )
 
         # Error is corrected at runtime so i can ignore this.
         # pylint: disable=no-member
         # Check if the player has enough powertokens to do a gaia project.
         if not self.faction.count_powertokens() >= self.gaia_project.active:
-            raise e.NotEnoughPowerTokensError
+            raise e.NotEnoughPowerTokensError(
+                "You don't have enough power tokens to do this "
+                "action. Please pick a different action."
+            )
 
         print("\nYou want to start a Gaia Project.")
         while True:
             # Payment flag
             pay_range_qic = False
 
-            planet = self.choose_planet(universe, "gaia")
+            if not p_chosen:
+                planet = self.choose_planet(universe, action)
+            else:
+                planet = p_chosen
 
             # Check if the player is within range of the target planet.
             not_enough_range = False
@@ -891,7 +939,7 @@ class Player:
                 # has, the planet is close enough.
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
-                if distance <= self.navigation.active:
+                if distance <= available_range:
                     break
             else:
                 distance = min(all_distances)
@@ -900,7 +948,7 @@ class Player:
             if not_enough_range:
                 # Error is corrected at runtime so i can ignore this.
                 # pylint: disable=no-member
-                extra_range_needed = distance - self.navigation.active
+                extra_range_needed = distance - available_range
                 qic_needed = ceil(extra_range_needed / 2)
 
                 # Check if player has the required amount of qic needed to
@@ -908,13 +956,12 @@ class Player:
                 if qic_needed > self.faction.qic:
                     print(
                         "You don't have enough range "
-                        f"({self.navigation.active}) to build on your chosen "
+                        f"({available_range}) to build on your chosen "
                         "planet and you don't have enough Q.I.C. "
                         f"({self.faction.qic}) to increase your range."
                     )
                     continue
 
-                # TODO Untested!!!!
                 # Check if the player is building on a gaia planet and if
                 # he/she has enough qic to increase the range AND pay a qic for
                 # building on a gaia planet type.
@@ -933,7 +980,7 @@ class Player:
                 print(
                     "Your nearest planet is not within range of your chosen "
                     f"planet. Do you want to spend {qic_needed} {QIC} to "
-                    "increase your range? (Y/N)"
+                    f"increase your range by {qic_needed * 2}? (Y/N)"
                 )
 
                 dont_increase_range = False
@@ -943,7 +990,9 @@ class Player:
                     if not increase_range in ['y', 'n']:
                         print("Please type Y for yes or N for no.")
                         continue
-                    elif increase_range == "n":
+                    elif increase_range == 'n':
+                        if p_chosen:
+                            raise e.ExtraRangeError
                         dont_increase_range = True
                         break
                     else:
@@ -1293,8 +1342,8 @@ class Player:
                 reason = "Because of the round"
                 self.resolve_gain(f"vp{rnd.vp}", reason)
 
-        # TODO faction compatibility this fails with the Bescods faction which
-        # has the academy and planetary institure swapped.
+        # TODO faction compatibility CRITICAL this fails with the Bescods
+        # faction which has the academy and planetary institure swapped.
         # If the chosen planet has a trading station, let the player choose
         # what to upgrade to.
         elif planet_to_upgrade.structure == "Trading Station":
@@ -1354,6 +1403,14 @@ class Player:
                 self.faction.planetary_institute_built += 1
                 new = "Planetary Institute"
 
+                # TODO faction compatibility CRITICAL test that this will work
+                # with the Bescod faction.
+                # Check if the current round awards points for upgrading to a
+                # Planetary Institute.
+                if rnd.goal == "planetaryacademy":
+                    reason = "Because of the round"
+                    self.resolve_gain(f"vp{rnd.vp}", reason)
+
                 # TODO make sure this works with all the implemented factions.
                 # The planetary institute bonus now becomes available:
                 self.faction.planetary_institute_bonus_func()
@@ -1394,7 +1451,6 @@ class Player:
                 self.faction.trading_station_built -= 1
                 self.faction.research_lab_built += 1
                 new = "Research Lab"
-
 
         elif planet_to_upgrade.structure == "Research Lab":
             old = "Research Lab"
@@ -1462,6 +1518,12 @@ class Player:
             self.faction.research_lab_built -= 1
             self.faction.academy_built += 1
             new = "Academy"
+
+            # Check if the current round awards points for upgrading to an
+            # Academy.
+            if rnd.goal == "planetaryacademy":
+                reason = "Because of the round"
+                self.resolve_gain(f"vp{rnd.vp}", reason)
 
         else:
             # A Planetary Institute and an Academy can't be upgraded
@@ -1713,10 +1775,13 @@ class Player:
         terraform1 = "6. Gain 1 terraforming step for 3 power.\n"
         powertoken2 = "7. Gain 2 powertokens for 3 power.\n"
         qic = "Q.I.C. actions:\n"
-        tech_tile = "8. Gain a technology tile.\n"
-        score_fed_token = "9. Score one of your federation tokens again.\n"
+        tech_tile = "8. Gain a technology tile for 4 Q.I.C.\n"
+        score_fed_token = (
+            "9. Score one of your federation tokens again for 3 Q.I.C.\n"
+        )
         vp_for_ptypes = (
-            "10. Gain 3 vp and 1 vp for every different planet type.\n"
+            "10. Gain 3 vp and 1 vp for every different planet type "
+            "for 2 Q.I.C.\n"
         )
         cancel = "11. Go back to action selection."
 
@@ -1890,11 +1955,78 @@ class Player:
 
             return
 
-    def special(self):
-        # TODO academy special
-        # TODO booster special
-        # TODO technology special
-        pass
+    def special(self, universe, rnd):
+        # TODO faction compatibility CRITICAL make sure this works with
+        #   factions that get a special action when their planetary institute
+        #   is built.
+
+        special_actions = []
+        if self.booster.special:
+            if not self.booster.used:
+                special_actions.append(self.booster)
+
+        for standard_tech in self.standard_technology:
+            if standard_tech.when == "special":
+                if not standard_tech.used:
+                    special_actions.append(standard_tech)
+
+        for advanced_tech in self.advanced_technology:
+            if advanced_tech.when == "special":
+                if not advanced_tech.used:
+                    special_actions.append(advanced_tech)
+
+        academy = self.faction.academy_special
+        if academy[0]:
+            if not academy[2]:
+                special_actions.append(f"Academy: {academy[1]}")
+
+        if not special_actions:
+            print(
+                "You don't have any Special (Orange) actions available. "
+                "Please choose a different action."
+            )
+            raise e.BackToActionSelection
+
+        print(
+            "\nPlease type your chosen Special action's corresponding number."
+        )
+        for i, spec in enumerate(special_actions, start=1):
+            print(f"{i}. {spec}")
+        print(f"{i + 1}. Go back to action selection.")
+
+        while True:
+            chosen_special = input("--> ")
+            if chosen_special in [str(n + 1) for n in range(i)]:
+                special = special_actions[int(chosen_special) - 1]
+                break
+            elif chosen_special == f"{i + 1}":
+                raise e.BackToActionSelection
+            else:
+                print("Please only type one of the available numbers.")
+                continue
+
+        # The special action comes from an Academy.
+        if isinstance(special, str):
+            self.resolve_gain(
+                self.faction.academy_special[1],
+                "Because of the special action"
+            )
+            self.faction.academy_special[2] = True
+        # The special action comes from a technology tile or booster.
+        else:
+            if isinstance(special, Booster):
+                try:
+                    special.resolve_effect(self, universe, rnd)
+                except (
+                    e.NoGaiaFormerError,
+                    e.NotEnoughPowerTokensError
+                )as ex:
+                    print(ex)
+                    raise e.BackToActionSelection("7")
+                except e.BackToActionSelection:
+                    raise e.BackToActionSelection("7")
+            else:
+                special.resolve_effect(self)
 
     def pass_(self, gp, rnd):
         # TODO MINOR allow player to go back to action selection in case of a
@@ -1919,11 +2051,13 @@ class Player:
 
                 booster_choice = input(f"--> ")
                 if booster_choice in [str(n + 1) for n in range(3)]:
+                    # Add old booster to the right of the unused boosters.
                     gp.scoring_board.boosters.append(self.booster)
+
+                    # Set own booster to the chosen booster.
                     self.booster = gp.scoring_board.boosters.pop(
                         int(booster_choice) - 1
                     )
-                    print(f"You chose {self.booster}.")
                     break
                 else:
                     print("Please only type one of the available numbers.")
@@ -1933,6 +2067,9 @@ class Player:
         self.passed = True
 
         # TODO CRITICAL check if points are rewarded by the booster for passing
+        if old_booster.vp:
+            old_booster.resolve_effect(self)
+        print(f"Your new booster is {self.booster}.")
 
         #   Check if the player has any advanced technology tiles that awards
         #   points when passing.
@@ -1952,6 +2089,25 @@ class Player:
 
     def free(self):
         pass
+
+    def clean_up(self):
+        # Reset all the Special actions. For simplicity do this wether it was
+        # used or not, because i think most of the time they will all be used
+        # anyway.
+        if self.booster.special:
+            self.booster.used = False
+
+        for standard_tech in self.standard_technology:
+            if standard_tech.when == "special":
+                standard_tech.used = False
+
+        for advanced_tech in self.advanced_technology:
+            if advanced_tech.when == "special":
+                advanced_tech.used = False
+
+        self.faction.academy_special[2] = False
+
+
 
 
 if __name__ == "__main__":

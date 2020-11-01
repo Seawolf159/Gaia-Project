@@ -1,5 +1,8 @@
 import random
 
+import constants as C
+import exceptions as e
+
 
 class Booster:
 
@@ -10,9 +13,119 @@ class Booster:
         self.income2 = income2
         self.special = special
         self.vp = vp
+        self.used = False  # Only used on boosters with special actions.
+
+    def resolve_effect(self, player):
+        """Function for giving the player points when passing.
+
+        Args:
+            player: Player object of the player that passed.
+        """
+
+        reason = "Because of your old booster"
+        if self.vp == "mine1":
+            mines = player.faction.mine_built
+            if player.lost_planet:
+                mines += 1
+            player.resolve_gain(f"vp{mines}", reason)
+        elif self.vp == "trade2":
+            trading_stations = player.faction.trading_station_built
+            player.resolve_gain(f"vp{trading_stations * 2}", reason)
+        elif self.vp == "researchlab3":
+            research_labs = player.faction.research_lab_built
+            player.resolve_gain(f"vp{research_labs * 3}", reason)
+        elif self.vp == "planetaryacademy4":
+            academys = player.faction.academy_built
+            planetary_institutes = player.faction.planetary_institute_built
+            total = academys + planetary_institutes
+            player.resolve_gain(f"vp{total * 4}", reason)
+        elif self.vp == "gaia1":
+            gaia_planets = len(
+                [
+                    planet for planet in player.empire
+                        if planet.type == "Gaia"
+                        # TODO CRITICAL test that it doesn't include planets
+                        #   with gaiaformers.
+                        and planet.structure != "gaiaformer"
+                ]
+            )
+            player.resolve_gain(f"vp{gaia_planets}", reason)
 
     def __str__(self):
-        return f"{self.income1 or self.special or self.vp} | {self.income2}"
+        return (
+            f"Booster: {self.income1 or self.special or self.vp} "
+            f"| {self.income2}"
+        )
+
+
+class Terraform(Booster):
+    """
+    More specific class for the gain 1 terraforming step booster
+    special action.
+    """
+
+    def resolve_effect(self, player, universe, rnd):
+        """Receive the reward from doing this boosters special action.
+
+        Args:
+            player: Player object of the player that acquired the tile.
+            universe: The universe object used in the main GaiaProject class.
+            rnd: Active Round object.
+        """
+
+        print(
+            "You have gained 1 terraforming step. You must now build a mine."
+        )
+        player.mine(universe, rnd, 1, action="boost_terraform")
+        self.used = True
+
+
+class ExtraRange(Booster):
+    """
+    More specific class for the gain 3 extra range booster special action.
+    """
+
+    def resolve_effect(self, player, universe, rnd):
+        """Receive the reward from doing this boosters special action.
+
+        Args:
+            player: Player object of the player that acquired the tile.
+            universe: The universe object used in the main GaiaProject class.
+            rnd: Active Round object.
+        """
+
+        print(
+            "You have gained 3 extra range. You must now build a Mine or "
+            "start a Gaia Project."
+        )
+        action = "boost_range"
+
+        while True:
+            planet = player.choose_planet(universe, action)
+            try:
+                # Player want to build a mine.
+                if planet.type in C.mine_types:
+                    player.mine(
+                        universe,
+                        rnd,
+                        extra_range=3,
+                        p_chosen=planet,
+                        action=action
+                    )
+                # Player wants to start a gaia Project.
+                else:
+                    player.gaia(
+                        universe,
+                        p_chosen=planet,
+                        action=action,
+                        extra_range=3
+                    )
+            except e.ExtraRangeError:
+                continue
+
+            break
+
+        self.used = True
 
 
 class RoundScoring:
@@ -61,8 +174,10 @@ class Scoring:
             Booster("BOOknw.png", income1="ore1", income2="knowledge1"),
             Booster("BOOpwt.png", income1="powertoken2", income2="ore1"),
             Booster("BOOqic.png", income1="credits2", income2="qic1"),
-            Booster("BOOter.png", special="terraforming1", income2="credits2"),
-            Booster("BOOnav.png", special="range3", income2="power2"),
+            Terraform(
+                "BOOter.png", special="terraforming1", income2="credits2"
+            ),
+            ExtraRange("BOOnav.png", special="range3", income2="power2"),
             Booster("BOOmin.png", vp="mine1", income2="ore1"),
             Booster("BOOtrs.png", vp="trade2", income2="ore1"),
             Booster("BOOlab.png", vp="researchlab3", income2="knowledge1"),

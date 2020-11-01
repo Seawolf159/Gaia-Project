@@ -70,11 +70,11 @@ class TechTrack:
                 )
 
             # Check if the player has any federations.
+            # If they do, check if there are any green sides left and flip
+            # the first one found as i don't think it matters which one is
+            # flipped if there are multiple ones. Do inform the player
+            # which one was turned around.
             if player.federations:
-                # If they do, check if there are any green sides left and flip
-                # the first one found as i don't think it matters which one is
-                # flipped if there are multiple ones. Do inform the player
-                # which one was turned around.
                 for federation in player.federations:
                     if federation.state == "green":
                         federation.state = "grey"
@@ -128,6 +128,12 @@ class TechTrack:
                 player.federations.append(level.reward)
                 # Gain the federation token's rewards.
                 player.resolve_gain(level.reward.reward)
+
+                # Check if the current round rewards points for gaining
+                # federation tokens.
+                if rnd.goal == "fedtoken":
+                    reason = "Because of the round"
+                    player.resolve_gain(f"vp{rnd.vp}", reason)
 
             # Player received the lost planet from going to level 5 on the
             # navigation track.
@@ -289,7 +295,7 @@ class Research:
         advanced = [
             t.FedVpPass("ADVfedP.png", "pass", "federationtokens", "vp3"),
             t.AdvancedTechnology("ADVstp.png", "live", "research", "vp2"),
-            t.AdvancedTechnology(
+            t.SpecialAdvanced(
                 "ADVqic.png", "special", reward=["qic1", "credits5"]
             ),
             t.MineVp("ADVminV.png", "direct", "mine", "vp2"),
@@ -300,11 +306,11 @@ class Research:
             ),
             t.TradeVp("ADVtrsV.png", "direct", "trade", "vp4"),
             t.SectorVp("ADVsecV.png", "direct", "sectors", "vp2"),
-            t.AdvancedTechnology("ADVore.png", "special", reward="ore3"),
+            t.SpecialAdvanced("ADVore.png", "special", reward="ore3"),
             t.FedVp(
                 "ADVfedV.png", "direct", "federationtokens", "vp5"
             ),
-            t.AdvancedTechnology("ADVknw.png", "special", reward="knowledge3"),
+            t.SpecialAdvanced("ADVknw.png", "special", reward="knowledge3"),
             t.AdvancedTechnology("ADVminB.png", "live", "mine", "vp3"),
             t.AdvancedTechnology("ADVtrsB.png", "live", "trade", "vp3"),
         ]

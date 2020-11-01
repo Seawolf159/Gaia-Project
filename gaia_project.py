@@ -343,7 +343,6 @@ class GaiaProject:
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
                 # TODO move this to cleanup?
-                player.passed = False
                 player.income_phase()
                 player.gaia_phase()
 
@@ -354,8 +353,15 @@ class GaiaProject:
                         player.action_phase(self, rnd)
 
             # 4. Clean up phase
+            # TODO set the used property of tiles with special actions to False
             for x in range(1, 11):
                 self.research_board.pq_actions[x] = True
+
+            # Reset all players special actions and set passed to false.
+            for player in self.players:
+                player.clean_up()
+                player.passed = False
+
 
             # Break to avoid infinite loops while testing
             # break

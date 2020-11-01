@@ -60,3 +60,6 @@ class NoValidSpacesError(Exception):
             "There are no valid spaces in the sector to build a mine on. "
             "Please choose a different sector."
         )
+
+class ExtraRangeError(Exception):
+    pass

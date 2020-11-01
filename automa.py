@@ -422,12 +422,17 @@ class Automa:
                 gp.scoring_board.boosters
             ):
                 print(f"{pos}. {boost}")
-            print(f"4. You chose the wrong action.")
+            print(
+                f"4. You chose the wrong action. Go back to action selection."
+            )
 
             while True:
                 booster_choice = input("--> ")
                 if booster_choice in [str(n + 1) for n in range(3)]:
+                    # Add old booster to the right of the unused boosters.
                     gp.scoring_board.boosters.append(self.booster)
+
+                    # Set own booster to the chosen booster.
                     self.booster = gp.scoring_board.boosters.pop(
                         int(booster_choice) - 1
                     )
@@ -459,6 +464,10 @@ class Automa:
             gp.players.remove(self)
             gp.players.insert(0, self)
             print("Automa starts first next round.")
+
+    def clean_up(self):
+        # Automa has no clean up to do.
+        pass
 
 
 class Faction:

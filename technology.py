@@ -5,6 +5,23 @@ class StandardTechnology:
         self.when = when
         self.reward = reward
 
+        # Only used on the StandardTechnology with a special action.
+        self.used = False
+
+    def resolve_effect(self, player):
+        """Receive the reward from doing the special action.
+
+        Args:
+            player: Player object of the player that does the special action.
+        """
+
+        player.resolve_gain(
+            self.reward,
+            "Because of the special action"
+        )
+        self.used = True
+
+
     def __str__(self):
         # TODO Print this prettier!
         return f"Standard: when: {self.when} | reward: {self.reward}"
@@ -76,6 +93,9 @@ class AdvancedTechnology:
         self.when = when
         self.effect = effect
         self.reward = reward
+
+        # Only used on AdvancedTechnology with a special action.
+        self.used = False
 
     def __str__(self):
         # TODO Print this prettier!
@@ -167,7 +187,7 @@ class MineVp(AdvancedTechnology):
 
         # Check if the player has the lost planet.
         lost_planet = 0
-        if "Lost Planet" in [planet.type for planet in player.empire]:
+        if player.lost_planet:
             lost_planet = 1
         player.resolve_gain(
             f"vp{(player.faction.mine_built + lost_planet) * 2}",
@@ -251,7 +271,13 @@ class GaiaVp(AdvancedTechnology):
 
         # Get the amount of Gaia Planets the player has built on.
         gaia_planets = len(
-            [planet for planet in player.empire if planet.type == "Gaia"]
+            [
+                planet for planet in player.empire
+                    if planet.type == "Gaia"
+                    # TODO CRITICAL test that it doesn't include planets with
+                    #   gaiaformers.
+                    and planet.strucure != "gaiaformer"
+            ]
         )
         player.resolve_gain(
             f"vp{gaia_planets * 2}",
@@ -276,3 +302,24 @@ class FedVp(AdvancedTechnology):
             f"vp{len(player.federations) * 5}",
             "Because of the Advanced Technology"
         )
+
+
+class SpecialAdvanced(AdvancedTechnology):
+    """
+    More specific class for the gain
+    1 Q.I.C. and 5 credits / 3 ore / 3 knowledge
+    Advanced Technology special action.
+    """
+
+    def resolve_effect(self, player):
+        """Receive the reward from doing the special action.
+
+        Args:
+            player: Player object of the player that does the special action.
+        """
+
+        player.resolve_gain(
+            self.reward,
+            "Because of the special action"
+        )
+        self.used = True

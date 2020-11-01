@@ -46,9 +46,10 @@ class Faction:
         # Total amount of academies available at the start.
         self.academy_max = 2
 
-        # True means that it is built.
+        # First False means that it is not built.
         self.academy_income = [False, "knowledge2"]
-        self.academy_special = [False, "qic1"]
+        # Second False means the special action hasn't been used yet.
+        self.academy_special = [False, "qic1", False]
 
         self.planetary_institute_built = 0
         # Total amount of planetary institutes available at the start.

@@ -57,6 +57,7 @@ class LostPlanet:
         self.sector = False  # Number of the sector this planet is in.
         self.type = "Lost Planet"
         self.location = False  # Universe grid (x, y).
+        self.num = False  # Number inside the sector (1-19).
         self.owner = False  # Faction name of owner
         self.structure = "Mine"  # Type of building built
         self.federation = False  # Part of federation? True or False
@@ -99,7 +100,6 @@ class LostPlanet:
                 chosen_space = spaces[0]
             else:
                 # If there are multiple valid spaces, choose one.
-                # TODO SILLY is space's even a valid word?
                 print("Please type your chosen space's corresponding number.")
                 for i, sp in enumerate(spaces, start=1):
                     print(f"{i}. {sp}")
@@ -119,11 +119,6 @@ class LostPlanet:
                 continue
             else:
                 break
-
-        # Check if the current round awards points for building a mine.
-        if rnd.goal == "mine":
-            reason = "Because of the round"
-            player.resolve_gain(f"vp{rnd.vp}", reason)
 
         # Turn the Space object into the Lost Planet object.
         found = False
@@ -145,11 +140,20 @@ class LostPlanet:
         self.sector = old_space.sector
         self.location = old_space.location
         self.num = old_space.num
+        self.owner = player.faction.name
+        player.empire.append(self)
+        player.lost_planet = True
 
         print(
             f"You have placed the Lost Planet in sector "
             f"{self.sector} on number {self.num}."
         )
+
+        # Check if the current round awards points for building a mine.
+        if rnd.goal == "mine":
+            reason = "Because of the round"
+            player.resolve_gain(f"vp{rnd.vp}", reason)
+
         # TODO more players CRITIAL check if anyone can charge power.
 
     def __str__(self):
@@ -670,16 +674,18 @@ class Universe:
             types = [player.faction.home_type]
         elif action == "mine":
             types = C.mine_types
-        elif action == "pq":
+        elif action == "pq" or action == "boost_terraform":
+            # When gaining terraforming steps i think you are not allowed to
+            # build on gaia planets so it will be like that.
             types = C.home_types
-        elif action == "automa_mine":
+        elif action == "automa_mine" or action == "boost_range":
             types = C.PLANETS
         elif action == "upgrade":
             types = [player.faction.home_type]
         elif action == "gaia":
             types = ["Trans-dim"]
 
-        # Filtor out unnecessary planets.
+        # Filter out unnecessary planets.
         planets = []
         for planet in eval(f"self.sector{sector}.planets"):
             if planet.type in types:
