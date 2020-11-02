@@ -1,3 +1,4 @@
+import re
 from math import ceil
 
 import constants as C
@@ -37,7 +38,7 @@ class Player:
         # This property is set during setup and when passing.
         self.booster = False
 
-        # Wether the player owns the lost planet.
+        # whether the player owns the lost planet.
         self.lost_planet = False
         self.empire = []  # List of owned planets
         self.federations = []  # List of federation tokens
@@ -53,7 +54,7 @@ class Player:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
-        self.passed = False  # Wether or not the player has passed.
+        self.passed = False  # whether or not the player has passed.
 
         # TODO CRITICAL remove when game is done.
         # Initiate testing parameters
@@ -188,7 +189,7 @@ class Player:
         if not isinstance(gains, list):
             gains = [gains]
 
-        # If different types of power are gained (Power and power tokens),
+        # If different types of power are gained (power and power tokens),
         # allow the player to choose in which order he/she would like to
         # receive it.
         power_order = []
@@ -1537,6 +1538,9 @@ class Player:
         )
 
     def federation(self, gp, rnd):
+        """Function for forming a federation.
+        """
+
         # TODO SOMEDAY this function only gives a federation tile now.
         #   It doesn't set the federation property of planets and doesn't place
         #   satellites.
@@ -1718,39 +1722,8 @@ class Player:
                     reason = "Because of an advanced technology tile"
                     self.resolve_gain(tile.reward, reason)
 
-    def enough_power(self, amount):
-        # Check if there is enough power in bowl 3.
-        if not self.faction.bowl3 >= amount:
-            print(
-                "You don't have enough power to do this action. "
-                "Please choose a different action."
-            )
-            return False
-        return True
-
-    def enough_qic(self, amount):
-        # Check the player has enough qic's
-        if not self.faction.qic >= amount:
-            print(
-                "You don't have enough Q.I.C.'s to do this action. "
-                "Please choose a different action."
-            )
-            return False
-        return True
-
-    def pq_availabe(self, research_board, num):
-        # Check if the action is still available.
-        if not research_board.pq_actions[num]:
-            print(
-                "This power action is already used this round. "
-                "Please choose a different action."
-            )
-            return False
-        return True
-
-
     def pq(self, gp, rnd):
-        """Power and Qic action function.
+        """Power and Q.I.C. action function.
 
         Args:
             gp: GaiaProject class.
@@ -1954,7 +1927,39 @@ class Player:
 
             return
 
+    def enough_power(self, amount):
+        # Check if there is enough power in bowl 3.
+        if not self.faction.bowl3 >= amount:
+            print(
+                "You don't have enough power to do this action. "
+                "Please choose a different action."
+            )
+            return False
+        return True
+
+    def enough_qic(self, amount):
+        # Check the player has enough qic's
+        if not self.faction.qic >= amount:
+            print(
+                "You don't have enough Q.I.C.'s to do this action. "
+                "Please choose a different action."
+            )
+            return False
+        return True
+
+    def pq_availabe(self, research_board, num):
+        # Check if the action is still available.
+        if not research_board.pq_actions[num]:
+            print(
+                "This power action is already used this round. "
+                "Please choose a different action."
+            )
+            return False
+        return True
+
     def special(self, universe, rnd):
+        """Function for Special (Orange) actions."""
+
         # TODO faction compatibility CRITICAL make sure this works with
         #   factions that get a special action when their planetary institute
         #   is built.
@@ -2028,6 +2033,8 @@ class Player:
                 special.resolve_effect(self)
 
     def pass_(self, gp, rnd):
+        """Function for passing."""
+
         # TODO MINOR allow player to go back to action selection in case of a
         #   miss click and the player doesn't want to pass yet??
 
@@ -2087,10 +2094,103 @@ class Player:
             print("You start first next round.")
 
     def free(self):
-        pass
+        """Function for exchanging resources as a free action.
+
+        TODO:
+            Print the options prettier.
+            Try to make the selection easier if multiple exchanges are possible
+            Sort out all the free actions that the player can't afford.
+        """
+
+        free_actions = self.faction.free_actions
+
+        # again means that the user has already chosen once so there is no
+        # need to print all the options again as they are still in view.
+        again = False
+        while True:
+            if not again:
+                again = True
+                print(
+                    "\nPlease type the number of the resource you want to "
+                    "exchange."
+                )
+                for i, f_a in enumerate(free_actions, start=1):
+                    pay = " Pay"
+                    for_ = "for"
+
+                    # If the cost can be exchanged for 2 things.
+                    if isinstance(free_actions[f_a], list):
+                        exchange = 'or '.join(free_actions[f_a])
+
+                    # Elif the cost can only be exchanged for 1 thing.
+                    elif isinstance(free_actions[f_a], str):
+                        exchange = free_actions[f_a]
+
+                    # Otherwise the exchange is self.move_from_bowl2_to_bowl3
+                    # which is a function.
+                    else:
+                        exchange = "to charge 1 power from bowl 2 to bowl 3"
+                        pay = ""
+                        for_ = "to"
+
+                    print(f"{i}.{pay} {f_a} {for_} {exchange}.")
+                print(f"{i + 1}. Go back to action selection.")
+
+            chosen_free = input("--> ")
+            if chosen_free in [str(n + 1) for n in range(i)]:
+                cost = list(free_actions.keys())[int(chosen_free) - 1]
+                cost_exchange = free_actions[cost]
+            elif chosen_free == f"{i + 1}":
+                raise e.BackToActionSelection
+            else:
+                print("Please only type one of the available numbers.")
+                continue
+
+            # Pay for the cost and receive the exchanged resources.
+            # If there are multiple things to exchange to, ask for the right
+            # one.
+            if isinstance(cost_exchange, list):
+                # TODO ask which one of the two the player wants to exchange.
+                pass
+            # If there is only one resource to exchange, make the exchange.
+            elif isinstance(cost_exchange, str):
+                self.resolve_cost(cost)
+                self.resolve_gain(cost_exchange)
+
+    def resolve_cost(self, cost):
+        """Subtract the cost of stuff.
+
+        Args:
+            cost (str): 1 cost to be payed by the player. Looks like:
+                "power1", "vp2", "knowledge4"
+
+        TODO:
+            Turn this into the main cost resolving function for all costs or
+                figure something out that works to use for everything??
+
+        Returns:
+            True: If the player was able to pay??
+            False: If the player was unable to pay??
+        """
+
+        pattern = r"(\D+)(\d+)"
+        split_up = re.match(pattern, cost)
+        cost_type = split_up.group(1)
+        amount = split_up.group(2)
+
+        if cost_type == "power":
+            self.use_power(amount)
+            return True
+        elif cost_type == "vp":
+            exec(f"self.{cost_type} -= {amount}")
+        else:
+            exec(f"self.faction.{cost_type} -= {amount}")
+
+        print(f"You have spent {amount} {cost_type}.")
+        return True
 
     def clean_up(self):
-        # Reset all the Special actions. For simplicity do this wether it was
+        # Reset all the Special actions. For simplicity do this whether it was
         # used or not, because i think most of the time they will all be used
         # anyway.
         if self.booster.special:

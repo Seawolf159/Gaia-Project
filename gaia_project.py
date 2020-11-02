@@ -25,7 +25,7 @@ class GaiaProject:
         Args:
             player1-4 (str): Name of the faction the corresonding player is
                 playing.
-            automa (bool): Wether or not you are playing against the automa.
+            automa (bool): whether or not you are playing against the automa.
         """
 
         # more players TODO federations have 3 of each type in 3+ player games
@@ -159,12 +159,12 @@ class GaiaProject:
 
         # Place first structures (start with first player and going clockwise):
         # TODO Final Commented for faster testing. Uncomment code block:
-        for player in self.players:
-            player.start_mine("first", self.universe)
+        # for player in self.players:
+        #     player.start_mine("first", self.universe)
 
         # TODO Final Commented for faster testing. Uncomment code block:
-        for player in reversed(self.players):
-            player.start_mine("second", self.universe)
+        # for player in reversed(self.players):
+        #     player.start_mine("second", self.universe)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
@@ -388,7 +388,7 @@ if __name__ == "__main__":
 
 
     # Uncomment if files are opened.
-    open_stuff()
+    # open_stuff()
 
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
     # print(new_game.universe.sector4)

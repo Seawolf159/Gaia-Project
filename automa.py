@@ -31,7 +31,7 @@ class Automa:
         self.economy = False  # This property is set during setup
         self.science = False  # This property is set during setup
 
-        self.passed = False  # Wether or not the automa has passed.
+        self.passed = False  # whether or not the automa has passed.
 
     def setup(self, research_board):
         # TODO Set yourself on the proper research level.

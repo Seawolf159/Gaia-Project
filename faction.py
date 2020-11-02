@@ -78,7 +78,7 @@ class Faction:
             "knowledge1": "credits1",
             "qic1": ["range2", "ore1"],
             "ore1": ["credits1", "powertoken1"],
-            "bowl2tobowl3": self.move_from_bowl2_to_bowl3
+            "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3
         }
 
     def _testing(self):
@@ -156,7 +156,7 @@ class HadschHalla(Faction):
             "knowledge1": "credits1",
             "qic": ["range2", "ore1"],
             "ore1": ["credits1", "powertoken1"],
-            "bowl2tobowl3": self.move_from_bowl2_to_bowl3,
+            "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3,
 
             # planetary institute bonus
             "credits3": "ore1",
