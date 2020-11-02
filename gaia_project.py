@@ -388,7 +388,7 @@ if __name__ == "__main__":
 
 
     # Uncomment if files are opened.
-    # open_stuff()
+    open_stuff()
 
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
     # print(new_game.universe.sector4)

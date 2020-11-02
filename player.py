@@ -97,6 +97,80 @@ class Player:
             else:
                 print("Please only type one of the available numbers.")
 
+    def income_phase(self):
+        print(f"\nDoing income for {self.faction.name}.")
+
+        # Collect the income from all the different sources.
+        total_income = []
+
+        # First look at the standard income that you are always going to get.
+        total_income.extend(self.faction.standard_income)
+
+        # Second look at income from structures.
+        # Ore from mines.
+        ore = 0
+        for i, _ in enumerate(range(self.faction.mine_built)):
+            ore += self.faction.mine_income[i]
+        total_income.append(f"ore{ore}")
+
+        # Credits from trading stations.
+        credits_ = 0
+        for i, _ in enumerate(range(self.faction.trading_station_built)):
+            credits_ += self.faction.trading_station_income[i]
+        total_income.append(f"credits{credits_}")
+
+        # Knowledge from research labs.
+        knowledge_rl = 0
+        for i, _ in enumerate(range(self.faction.research_lab_built)):
+            knowledge_rl += self.faction.research_lab_income[i]
+        total_income.append(f"knowledge{knowledge_rl}")
+
+        # Knowledge from academy.
+        knowledge_a = 0
+        if self.faction.academy_income[0]:
+            knowledge_a += self.faction.academy_income[1]
+        total_income.append(f"knowledge{knowledge_a}")
+
+        # Income from planetary_institute.
+        if self.faction.planetary_institute_built == 1:
+            total_income.extend(self.faction.planetary_institute_income)
+
+        # Third look at income from booster.
+        if self.booster.income1:
+            total_income.append(self.booster.income1)
+        if self.booster.income2:
+            total_income.append(self.booster.income2)
+
+        # Fourth look at income from standard technology
+        for technology in self.standard_technology:
+            if technology.when == "income":
+                if isinstance(technology.reward, list):
+                    total_income.extend(technology.reward)
+                else:
+                    total_income.append(technology.reward)
+
+        # Fifth look at income from research tracks
+        levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        for level in levels:
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            if level.when == "income":
+                if isinstance(level.reward, list):
+                    total_income.extend(level.reward)
+                else:
+                    total_income.append(level.reward)
+
+        # Take all the income and give it to the player.
+        self.resolve_gain(total_income)
+
     def resolve_gain(self, gains, reason=""):
         """Function for resolving all resources that are gained.
 
@@ -107,13 +181,16 @@ class Player:
                 f"{reason} you have gained...."
         """
 
-        # If gains is not a list and therefore a single income, put that
-        # single income in a list to not iterate over a string instead. For
+        # If gains is not a list and therefore a single gain, put that
+        # single gain in a list to not iterate over a string instead. For
         # example if gains == "ore2" the iteration below would fail so
         # correct it like so: gains = ["ore2"]
         if not isinstance(gains, list):
             gains = [gains]
 
+        # If different types of power are gained (Power and power tokens),
+        # allow the player to choose in which order he/she would like to
+        # receive it.
         power_order = []
 
         text = " you have gained "
@@ -121,7 +198,7 @@ class Player:
             text = "You have gained "
 
         # Add up all of the types of income. "knowledge, vp, powertoken" etc.
-        # and add them at the same time.
+        # and add them at the same time to keep the output clean.
         types_of_gain = {}
         for gain in gains:
             if gain.startswith("power"):
@@ -276,86 +353,7 @@ class Player:
 
         print(f"You have spent {amount} power.")
 
-    def income_phase(self):
-        # TODO Never allow more than the maximium allowed of a resource.
-        # TODO get all income into one list and than call the self.resolve_gain
-        # function.
-        # For example: max credits is 30, max ore is 15
-        print(f"\nDoing income for {self.faction.name}.")
-
-        # Income from faction board.
-        # Store income of type "power" and "powertoken" here to resolve the
-        # order later.
-
-        total_income = []
-        # First look at the standard income that you are always going to get.
-        total_income.extend(self.faction.standard_income)
-        # Second look at income from structures.
-        # Ore from mines.
-        ore = 0
-        for i, _ in enumerate(range(self.faction.mine_built)):
-            ore += self.faction.mine_income[i]
-        total_income.append(f"ore{ore}")
-
-        # Credits from trading stations.
-        credits_ = 0
-        for i, _ in enumerate(range(self.faction.trading_station_built)):
-            credits_ += self.faction.trading_station_income[i]
-        total_income.append(f"credits{credits_}")
-
-        # Knowledge from research labs.
-        knowledge_rl = 0
-        for i, _ in enumerate(range(self.faction.research_lab_built)):
-            knowledge_rl += self.faction.research_lab_income[i]
-        total_income.append(f"knowledge{knowledge_rl}")
-
-        # Knowledge from academy.
-        knowledge_a = 0
-        if self.faction.academy_income[0]:
-            knowledge_a += self.faction.academy_income[1]
-        total_income.append(f"knowledge{knowledge_a}")
-
-        # Income from planetary_institute.
-        if self.faction.planetary_institute_built == 1:
-            total_income.extend(self.faction.planetary_institute_income)
-
-        # Third look at income from booster.
-        if self.booster.income1:
-            total_income.append(self.booster.income1)
-        if self.booster.income2:
-            total_income.append(self.booster.income2)
-
-        # Fourth look at income from standard technology
-        for technology in self.standard_technology:
-            if technology.when == "income":
-                if isinstance(technology.reward, list):
-                    total_income.extend(technology.reward)
-                else:
-                    total_income.append(technology.reward)
-
-        # Fifth look at income from research tracks
-        levels = [
-            self.terraforming,
-            self.navigation,
-            self.a_i,
-            self.gaia_project,
-            self.economy,
-            self.science,
-        ]
-
-        for level in levels:
-            # Error is corrected at runtime so i can ignore this.
-            # pylint: disable=no-member
-            if level.when == "income":
-                if isinstance(level.reward, list):
-                    total_income.extend(level.reward)
-                else:
-                    total_income.append(level.reward)
-
-        self.resolve_gain(total_income)
-
     def gaia_phase(self):
-        # TODO untested function
         # TODO Faction incompatibility. Might not work with faction Itars,
         # Bal Tak's
         if self.faction.gaia_bowl > 0:
@@ -454,7 +452,11 @@ class Player:
                 else:
                     # Otherwise just call the function.
                     action[0]()
-            except (e.NotEnoughPowerTokensError, e.NoGaiaFormerError) as ex:
+            except (
+                e.NotEnoughPowerTokensError,
+                e.NoGaiaFormerError,
+                e.InsufficientKnowledgeError
+            ) as ex:
                 print(ex)
                 prompt_repeat = True
                 choice = "0"
@@ -464,15 +466,6 @@ class Player:
                 # some costs.
                 choice = back.choice
                 prompt_repeat = True
-                continue
-            except e.InsufficientKnowledgeError:
-                print(
-                    "You don't have enough knowledge to research. You "
-                    f"currently have {self.faction.knowledge} knowledge. "
-                    "Please choose a different action."
-                )
-                prompt_repeat = True
-                choice = "0"
                 continue
             else:
                 return
@@ -495,7 +488,6 @@ class Player:
             extra_range (int): The amount of extra range the player has gotten.
             p_chosen: Planet object. Only used in scoring.ExtraRange class.
         """
-        # TODO how to deal with power charging??
 
         # Error is corrected at runtime so i can ignore this.
         # pylint: disable=no-member
@@ -889,6 +881,9 @@ class Player:
         Args:
             universe: The universe object used in the main GaiaProject class.
             planet: Planet object. Only used in scoring.ExtraRange class.
+            p_chosen: Planet object. Only used in scoring.ExtraRange class.
+            action (str): What kind of action called this function.
+            extra_range (int): The amount of extra range the player has gotten.
         """
 
         # Error is corrected at runtime so i can ignore this.
@@ -1020,7 +1015,7 @@ class Player:
                 self.faction.gaia_bowl += 1
 
         print(
-            f"You have started a gaia project in sector "
+            "You have started a gaia project in sector "
             f"{planet.sector} on the {planet.type} planet."
         )
 
@@ -1616,7 +1611,11 @@ class Player:
         # Check if the player has enough knowledge to research.
         # Researching costs 4 knowledge.
         if not self.faction.knowledge > 3 and not tech_tile:
-            raise e.InsufficientKnowledgeError
+            raise e.InsufficientKnowledgeError(
+                "You don't have enough knowledge to research. You "
+                f"currently have {self.faction.knowledge} knowledge. "
+                "Please choose a different action."
+            )
 
         levels = [
             self.terraforming,
