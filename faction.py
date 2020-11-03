@@ -71,13 +71,16 @@ class Faction:
         self.gaia_to_power = "bowl1"
 
         # free actions
+        # TODO CRITICAL fix the duplicate name problem
         self.free_actions = {
             "power1": "credits1",
             "power3": "ore1",
-            "power4": ["qic1", "knowledge1"],
+            "power4": "qic1",
+            "power4": "knowledge1",
             "knowledge1": "credits1",
-            "qic1": ["range2", "ore1"],
-            "ore1": ["credits1", "powertoken1"],
+            "qic1": "ore1",
+            "ore1": "credits1",
+            "ore1": "powertoken1",
             "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3
         }
 
@@ -152,10 +155,12 @@ class HadschHalla(Faction):
             # standard
             "power1": "credits1",
             "power3": "ore1",
-            "power4": ["qic1", "knowledge1"],
+            "power4": "qic1",
+            "power4": "knowledge1",
             "knowledge1": "credits1",
-            "qic": ["range2", "ore1"],
-            "ore1": ["credits1", "powertoken1"],
+            "qic1": "ore1",
+            "ore1": "credits1",
+            "ore1": "powertoken1",
             "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3,
 
             # planetary institute bonus

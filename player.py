@@ -24,8 +24,6 @@ class Player:
             Make every action choice possible to return to the action selection
                 menu in case of accidentally choosing the wrong action or
                 changing ones mind.
-            Make all gains print their gain and add a + as the first character
-                Do the same for all payments and add a - as first character??
             Make every action print something like ACTION NAME:??
         """
 
@@ -58,7 +56,7 @@ class Player:
 
         # TODO CRITICAL remove when game is done.
         # Initiate testing parameters
-        self.faction._testing()
+        # self.faction._testing()
 
     def start_mine(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
@@ -242,7 +240,7 @@ class Player:
                         amount = 0
                 exec(f"self.faction.{added_up_gain} += {amount}")
             if not amount == 0:
-                print(f"{reason}{text}{amount} {added_up_gain}.")
+                print(f"    + {reason}{text}{amount} {added_up_gain}.")
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -345,14 +343,14 @@ class Player:
                 break
             amount -= 1
             charged += 1
-        print(f"{charged} Power has been charged.")
+        print(f"    + {charged} Power has been charged.")
 
     def use_power(self, amount):
         for _ in range(amount):
             self.faction.bowl3 -= 1
             self.faction.bowl1 += 1
 
-        print(f"You have spent {amount} power.")
+        print(f"    - You have spent {amount} power.")
 
     def gaia_phase(self):
         # TODO Faction incompatibility. Might not work with faction Itars,
@@ -2118,18 +2116,14 @@ class Player:
                     pay = " Pay"
                     for_ = "for"
 
-                    # If the cost can be exchanged for 2 things.
-                    if isinstance(free_actions[f_a], list):
-                        exchange = 'or '.join(free_actions[f_a])
-
-                    # Elif the cost can only be exchanged for 1 thing.
-                    elif isinstance(free_actions[f_a], str):
+                    # If the exchanged resource is a string.
+                    if isinstance(free_actions[f_a], str):
                         exchange = free_actions[f_a]
 
-                    # Otherwise the exchange is self.move_from_bowl2_to_bowl3
-                    # which is a function.
+                    # Else the exchanged resource self.move_from_bowl2_to_bowl3
+                    # will be done by a function.
                     else:
-                        exchange = "to charge 1 power from bowl 2 to bowl 3"
+                        exchange = "charge 1 power from bowl 2 to bowl 3"
                         pay = ""
                         for_ = "to"
 
@@ -2151,21 +2145,21 @@ class Player:
             # one.
             if isinstance(cost_exchange, list):
                 # TODO ask which one of the two the player wants to exchange.
-                # TODO check that this correctly checks if the player has enough resources
+                # TODO check that this correctly checks if the player has
+                # enough resources
                 cost_exchange = "TODO new single cost_exchange string here"
-            
+
             # Make the exchange.
             if isinstance(cost_exchange, str):
-                if self.resolve_cost(cost)
+                if self.resolve_cost(cost):
                     self.resolve_gain(cost_exchange)
                 else:
                     pattern = r"\D+"
-                    split_up = re.match(pattern, cost)
-                    cost_type = split_up  # TODO check that this works
-                    
+                    cost_type = re.search(pattern, cost).group(0).capitalize()
+
                     print(
                         f"You don't have enough {cost_type}. "
-                        "Please choose a different free action."
+                        "Please choose a different Free action."
                     )
 
     def resolve_cost(self, cost):
@@ -2185,9 +2179,9 @@ class Player:
         """
 
         pattern = r"(\D+)(\d+)"
-        split_up = re.match(pattern, cost)
+        split_up = re.search(pattern, cost)
         cost_type = split_up.group(1)
-        amount = split_up.group(2)
+        amount = int(split_up.group(2))
 
         if cost_type == "power":
             # Check if the player has enough power to make the exchange.
@@ -2201,13 +2195,13 @@ class Player:
                 return False
             exec(f"self.{cost_type} -= {amount}")
         else:
-            # TODO check that this correctly checks if the player has enough 
+            # TODO check that this correctly checks if the player has enough
             # resources
-            if not eval(f"self.faction.{cost_type}") >= amount:  
+            if not eval(f"self.faction.{cost_type}") >= amount:
                 return False
             exec(f"self.faction.{cost_type} -= {amount}")
 
-        print(f"You have spent {amount} {cost_type}.")
+        print(f"    - You have spent {amount} {cost_type}.")
         return True
 
     def clean_up(self):
