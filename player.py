@@ -2151,11 +2151,22 @@ class Player:
             # one.
             if isinstance(cost_exchange, list):
                 # TODO ask which one of the two the player wants to exchange.
-                pass
-            # If there is only one resource to exchange, make the exchange.
-            elif isinstance(cost_exchange, str):
-                self.resolve_cost(cost)
-                self.resolve_gain(cost_exchange)
+                # TODO check that this correctly checks if the player has enough resources
+                cost_exchange = "TODO new single cost_exchange string here"
+            
+            # Make the exchange.
+            if isinstance(cost_exchange, str):
+                if self.resolve_cost(cost)
+                    self.resolve_gain(cost_exchange)
+                else:
+                    pattern = r"\D+"
+                    split_up = re.match(pattern, cost)
+                    cost_type = split_up  # TODO check that this works
+                    
+                    print(
+                        f"You don't have enough {cost_type}. "
+                        "Please choose a different free action."
+                    )
 
     def resolve_cost(self, cost):
         """Subtract the cost of stuff.
@@ -2179,11 +2190,21 @@ class Player:
         amount = split_up.group(2)
 
         if cost_type == "power":
-            self.use_power(amount)
-            return True
+            # Check if the player has enough power to make the exchange.
+            if self.faction.bowl3 >= amount:
+                self.use_power(amount)
+                return True
+            else:
+                return False
         elif cost_type == "vp":
+            if not self.vp >= amount:
+                return False
             exec(f"self.{cost_type} -= {amount}")
         else:
+            # TODO check that this correctly checks if the player has enough 
+            # resources
+            if not eval(f"self.faction.{cost_type}") >= amount:  
+                return False
             exec(f"self.faction.{cost_type} -= {amount}")
 
         print(f"You have spent {amount} {cost_type}.")
