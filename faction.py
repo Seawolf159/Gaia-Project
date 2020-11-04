@@ -70,18 +70,18 @@ class Faction:
         self.gaia_bowl = 0
         self.gaia_to_power = "bowl1"
 
-        # free actions
+        # free actions. The _ is to be able to have for example power4 2 times.
         # TODO CRITICAL fix the duplicate name problem
         self.free_actions = {
             "power1": "credits1",
             "power3": "ore1",
             "power4": "qic1",
-            "power4": "knowledge1",
+            "power4_": "knowledge1",
             "knowledge1": "credits1",
             "qic1": "ore1",
             "ore1": "credits1",
-            "ore1": "powertoken1",
-            "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3
+            "ore1_": "powertoken1",
+            "Discard 1 Power token from bowl 2": self.move_from_bowl2_to_bowl3
         }
 
     def _testing(self):
@@ -161,7 +161,7 @@ class HadschHalla(Faction):
             "qic1": "ore1",
             "ore1": "credits1",
             "ore1": "powertoken1",
-            "Discard 1 power token from bowl 2": self.move_from_bowl2_to_bowl3,
+            "Discard 1 Power token from bowl 2": self.move_from_bowl2_to_bowl3,
 
             # planetary institute bonus
             "credits3": "ore1",

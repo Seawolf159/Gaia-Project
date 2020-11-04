@@ -106,16 +106,14 @@ class GaiaProject:
 
         self.scoring_board.randomise_boosters(player_count)
 
-        # Load the setup into an image to see it more easily as a human.
         # CIRITICAL TODO uncomment line below when finished. Commented because
-        # it kept changing the img file which is not necessary right now.
+        #   it kept changing the img file which is not necessary right now.
+        # Load the setup into an image to see it more easily as a human.
         # self.visual_setup()
 
+        # TODO Let player choose faction after seeing setup.
         # Start of the game:
         # Choose faction (start with first player and going clockwise):
-        # TODO Let player choose faction after seeing setup and don't forget to
-        # see if they get to go up on any of the research tracks at the
-        # beginning of the game.
 
         # Place players on level 0 of all research boards and check if they
         # start on level 1 of any of them. Add the level to the player object
@@ -157,14 +155,14 @@ class GaiaProject:
                         current_level = levels[i]
                         track.research(current_level, p, i)
 
-        # Place first structures (start with first player and going clockwise):
         # TODO Final Commented for faster testing. Uncomment code block:
-        # for player in self.players:
-        #     player.start_mine("first", self.universe)
+        # Place first structures (start with first player and going clockwise):
+        for player in self.players:
+            player.start_mine("first", self.universe)
 
         # TODO Final Commented for faster testing. Uncomment code block:
-        # for player in reversed(self.players):
-        #     player.start_mine("second", self.universe)
+        for player in reversed(self.players):
+            player.start_mine("second", self.universe)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
@@ -361,7 +359,6 @@ class GaiaProject:
             for player in self.players:
                 player.clean_up()
                 player.passed = False
-
 
             # Break to avoid infinite loops while testing
             # break

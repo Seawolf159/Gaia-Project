@@ -25,6 +25,11 @@ class Player:
                 menu in case of accidentally choosing the wrong action or
                 changing ones mind.
             Make every action print something like ACTION NAME:??
+            in resolve gain and in free actions make 1 credits say 1 credit
+                and make qic say Q.I.C. 2 Power Tokens and 1 Power Token
+                and capitalize all the income. and payments and make use re in
+                resolve gain function as well??
+            Make everything spent go through the Player.resolve_cost function.
         """
 
         self.faction = select_faction(faction.lower())()
@@ -202,7 +207,7 @@ class Player:
         for gain in gains:
             if gain.startswith("power"):
                 power_order.append(gain)
-                print(f"{reason}{text}{gain[-1]} {gain[:-1]}.")
+                print(f"+ {reason}{text}{gain[-1]} {gain[:-1]}.")
             elif gain.startswith("vp"):
                 # Had to do this because if a double digit integer was rewarded
                 # like vp12 for example, it would break my [-1] functionality.
@@ -223,7 +228,7 @@ class Player:
                 # the player go over the limit.
                 if added_up_gain == "credits":
                     if self.faction.credits \
-                            + amount > self.faction.credits_max:
+                        + amount > self.faction.credits_max:
                         if self.faction.credits > self.faction.credits_max:
                             continue
                         amount = 0
@@ -240,7 +245,7 @@ class Player:
                         amount = 0
                 exec(f"self.faction.{added_up_gain} += {amount}")
             if not amount == 0:
-                print(f"    + {reason}{text}{amount} {added_up_gain}.")
+                print(f"+ {reason}{text}{amount} {added_up_gain}.")
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -343,14 +348,14 @@ class Player:
                 break
             amount -= 1
             charged += 1
-        print(f"    + {charged} Power has been charged.")
+        print(f"+ {charged} Power has been charged.")
 
     def use_power(self, amount):
         for _ in range(amount):
             self.faction.bowl3 -= 1
             self.faction.bowl1 += 1
 
-        print(f"    - You have spent {amount} power.")
+        print(f"- You have spent {amount} power.")
 
     def gaia_phase(self):
         # TODO Faction incompatibility. Might not work with faction Itars,
@@ -381,18 +386,52 @@ class Player:
             or not printing all the options with every loop.
         """
 
+        # Summary of actions
         faction_name = f"\n{self.faction.name}:"
-        intro = ("\nWhat action do you want to take?\n"
-                 "Type the number of your action.\n")
-        mine = "1. Build a Mine.\n"
-        gaia = "2. Start a Gaia Project.\n"
-        upgrade = "3. Upgrade an existing structure.\n"
-        federation = "4. Form a federation.\n"
-        research = "5. Do research.\n"
-        pq = "6. Power or Q.I.C (Purple/Green) action.\n"
-        special = "7. Do a Special (Orange) action.\n"
-        pass_ = "8. Pass.\n"
+        intro_1 = "What action do you want to take?"
+        intro_2 = "Type the number of your action."
+        mine = "1. Build a Mine."
+        gaia = "2. Start a Gaia Project."
+        upgrade = "3. Upgrade an existing structure."
+        federation = "4. Form a federation."
+        research = "5. Do research."
+        pq = "6. Power or Q.I.C (Purple/Green) action."
+        special = "7. Do a Special (Orange) action."
+        pass_ = "8. Pass."
         free = "9. Exchange power for resources. (Free action)"
+
+        # Summary of resources
+        resources = "Your resources are:"
+        vp = f"Victory points: {self.vp}"
+        credits_ = f"Credits: {self.faction.credits}"
+        ore = f"Ore: {self.faction.ore}"
+        knowledge = f"Knowledge: {self.faction.knowledge}"
+        qic = f"Q.I.C.: {self.faction.qic}"
+        g_formers = f"Gaia formers: {self.faction.gaiaformer}"
+        power_1 = f"Power in bowl 1: {self.faction.bowl1}"
+        power_2 = f"Power in bowl 2: {self.faction.bowl2}"
+        power_3 = f"Power in bowl 3: {self.faction.bowl3}"
+        gaia_bowl = f"Power in Gaia bowl: {self.faction.gaia_bowl}"
+
+        # Fill the string from the left with spaces until it's as long as
+        # the longest string in the row (in this case the free variable is
+        # the longest string). To line up both columns
+        filler = lambda text_left: " " * (len(free) - len(text_left) + 7)
+
+        prompt = (
+            f"{faction_name}{filler(faction_name.strip())}{resources}\n"
+            f"{intro_1}{filler(intro_1)}{vp}\n"
+            f"{intro_2}{filler(intro_2)}{credits_}\n"
+            f"{mine}{filler(mine)}{ore}\n"
+            f"{gaia}{filler(gaia)}{knowledge}\n"
+            f"{upgrade}{filler(upgrade)}{qic}\n"
+            f"{federation}{filler(federation)}{g_formers}\n"
+            f"{research}{filler(research)}{power_1}\n"
+            f"{pq}{filler(pq)}{power_2}\n"
+            f"{special}{filler(special)}{power_3}\n"
+            f"{pass_}{filler(pass_)}{gaia_bowl}\n"
+            f"{free}"
+        )
 
         # Value is a list with the function and the arguments it needs.
         options = {
@@ -407,32 +446,8 @@ class Player:
             "9": [self.free]
         }
 
-        print(faction_name)
-        # Summary of resources
-        print("Your resources are:")
-        print(f"Victory points: {self.vp}")
-        print(f"Credits: {self.faction.credits}")
-        print(f"Ore: {self.faction.ore}")
-        print(f"Knowledge: {self.faction.knowledge}")
-        print(f"Qic: {self.faction.qic}")
-        print(f"Gaia formers: {self.faction.gaiaformer}")
-        print(f"Power in bowl 1: {self.faction.bowl1}")
-        print(f"Power in bowl 2: {self.faction.bowl2}")
-        print(f"Power in bowl 3: {self.faction.bowl3}")
-
-        prompt = (
-            f"{intro}{mine}{gaia}{upgrade}"
-            f"{federation}{research}{pq}{special}{pass_}{free}"
-        )
-
-        # Prompt repeat is set when an exception was raised somewhere and the
-        # user got back to action selection.
-        prompt_repeat = False
-        print(prompt)
-
         while True:
-            if prompt_repeat and choice == "0":
-                print(prompt)
+            print(prompt)
 
             if not choice or choice == "0":
                 choice = input("--> ")
@@ -457,14 +472,12 @@ class Player:
                 e.InsufficientKnowledgeError
             ) as ex:
                 print(ex)
-                prompt_repeat = True
                 choice = "0"
                 continue
             except e.BackToActionSelection as back:
                 # User chose to pick another action or wasn't able to pay for
                 # some costs.
                 choice = back.choice
-                prompt_repeat = True
                 continue
             else:
                 return
@@ -1730,6 +1743,7 @@ class Player:
         TODO:
             Perhaps make the power/qic cost text summary more readable.
             Show which actions are still available this round??
+            Show the resources on the right just like in action phases??
         """
 
         intro = (
@@ -1737,20 +1751,20 @@ class Player:
             "your action.\n"
         )
         power = "Power actions:\n"
-        knowledge3 = "1. Gain 3 knowledge for 7 power.\n"
-        terraform2 = "2. Gain 2 terraforming steps for 5 power.\n"
-        ore2 = "3. Gain 2 ore for 4 power.\n"
-        credits7 = "4. Gain 7 credits for 4 power.\n"
-        knowledge2 = "5. Gain 2 knowledge for 4 power.\n"
-        terraform1 = "6. Gain 1 terraforming step for 3 power.\n"
-        powertoken2 = "7. Gain 2 powertokens for 3 power.\n"
+        knowledge3 = "1. Gain 3 Knowledge for 7 Power.\n"
+        terraform2 = "2. Gain 2 Terraforming steps for 5 Power.\n"
+        ore2 = "3. Gain 2 Ore for 4 Power.\n"
+        credits7 = "4. Gain 7 Credits for 4 Power.\n"
+        knowledge2 = "5. Gain 2 Knowledge for 4 Power.\n"
+        terraform1 = "6. Gain 1 Terraforming step for 3 Power.\n"
+        powertoken2 = "7. Gain 2 Power Tokens for 3 Power.\n"
         qic = "Q.I.C. actions:\n"
         tech_tile = "8. Gain a technology tile for 4 Q.I.C.\n"
         score_fed_token = (
-            "9. Score one of your federation tokens again for 3 Q.I.C.\n"
+            "9. Score one of your Federation Tokens again for 3 Q.I.C.\n"
         )
         vp_for_ptypes = (
-            "10. Gain 3 vp and 1 vp for every different planet type "
+            "10. Gain 3 VP and 1 VP for every different planet type "
             "for 2 Q.I.C.\n"
         )
         cancel = "11. Go back to action selection."
@@ -2105,6 +2119,7 @@ class Player:
         # again means that the user has already chosen once so there is no
         # need to print all the options again as they are still in view.
         again = False
+        pattern = re.compile(r"(\D+)(\d+)")
         while True:
             if not again:
                 again = True
@@ -2112,22 +2127,43 @@ class Player:
                     "\nPlease type the number of the resource you want to "
                     "exchange."
                 )
-                for i, f_a in enumerate(free_actions, start=1):
-                    pay = " Pay"
-                    for_ = "for"
+                for i, free_action in enumerate(free_actions, start=1):
 
                     # If the exchanged resource is a string.
-                    if isinstance(free_actions[f_a], str):
-                        exchange = free_actions[f_a]
+                    if isinstance(free_actions[free_action], str):
+                        free_cost_match = pattern.match(free_action)
+                        free_exchange_match = pattern.match(
+                            free_actions[free_action]
+                        )
+
+                        # f_c_a is free_cost (payment amount to be done). (1)
+                        f_c_a = f" {free_cost_match.group(2).capitalize()}"
+
+                        # f_c is free_cost (payment type to be done). (power)
+                        f_c = f" {free_cost_match.group(1).capitalize()}"
+
+                        # f_e_a free_exchange (resource amount to be received).
+                        # (1).
+                        f_e_a = f" {free_exchange_match.group(2).capitalize()}"
+
+                        # f_e is free_exchange (resource type to be received).
+                        # (credits).
+                        f_e = f" {free_exchange_match.group(1).capitalize()}"
+
+                        pay = " Pay"
+                        for_ = " for"
 
                     # Else the exchanged resource self.move_from_bowl2_to_bowl3
                     # will be done by a function.
                     else:
-                        exchange = "charge 1 power from bowl 2 to bowl 3"
                         pay = ""
-                        for_ = "to"
+                        f_c_a = ""
+                        f_c = f" {free_action}"
+                        for_ = " to "
+                        f_e_a = ""
+                        f_e = "charge 1 Power from bowl 2 to bowl 3"
 
-                    print(f"{i}.{pay} {f_a} {for_} {exchange}.")
+                    print(f"{i}.{pay}{f_c_a}{f_c}{for_}{f_e_a}{f_e}.")
                 print(f"{i + 1}. Go back to action selection.")
 
             chosen_free = input("--> ")
@@ -2147,6 +2183,7 @@ class Player:
                 # TODO ask which one of the two the player wants to exchange.
                 # TODO check that this correctly checks if the player has
                 # enough resources
+                # TODO CRITICAL implement this
                 cost_exchange = "TODO new single cost_exchange string here"
 
             # Make the exchange.
@@ -2201,7 +2238,7 @@ class Player:
                 return False
             exec(f"self.faction.{cost_type} -= {amount}")
 
-        print(f"    - You have spent {amount} {cost_type}.")
+        print(f"- You have spent {amount} {cost_type}.")
         return True
 
     def clean_up(self):

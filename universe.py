@@ -325,9 +325,9 @@ class Sector:
             self.hexes[2] = self.hexes[2][-2:] + self.hexes[2][:-2]
 
             self.universe_grid[1] = (self.universe_grid[1][-1:]
-                                + self.universe_grid[1][:-1])
+                            + self.universe_grid[1][:-1])
             self.universe_grid[2] = (self.universe_grid[2][-2:]
-                                + self.universe_grid[2][:-2])
+                            + self.universe_grid[2][:-2])
 
             self.rotation += 1
             if self.rotation == 6:
