@@ -282,7 +282,8 @@ class Automa:
         # TODO CRITICAL Check if the opponent can charge power.
         print(
            f"The Automa has built a mine in sector {sector_choice} on the "
-           f"{planet.type} planet."
+           f"{planet.type} planet. Don't forget to place a satellite if "
+           "applicable."
         )
         planet.owner = self.faction.name
         planet.structere = "mine"
@@ -290,9 +291,9 @@ class Automa:
         self.empire.append(planet)
 
         # Check if the end tile with goal "Most Satellites" is active.
-        for end in scoring_board.end_scoring:
-            if end.goal == "satellites":
-                self.satellites += 1
+        # for end in scoring_board.end_scoring:
+        #     if end.goal == "satellites":
+        #         self.satellites += 1
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.

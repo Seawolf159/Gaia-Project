@@ -696,7 +696,7 @@ class Universe:
                     planets.append(planet)
 
         if not planets:
-            raise e.NoValidMinePlanetsError
+            raise e.NoValidMinePlanetsError(types, action)
 
         return planets
 

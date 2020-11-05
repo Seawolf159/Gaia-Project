@@ -45,6 +45,7 @@ class Player:
         self.lost_planet = False
         self.empire = []  # List of owned planets
         self.federations = []  # List of federation tokens
+        self.satellites = 0  # Amount fo satellites placed.
 
         # List of trans-dim planets undergoing a gaia project.
         self.gaia_forming = []
@@ -61,7 +62,7 @@ class Player:
 
         # TODO CRITICAL remove when game is done.
         # Initiate testing parameters
-        # self.faction._testing()
+        self.faction._testing()
 
     def start_mine(self, count, universe):
         faction_name = f"\n{self.faction.name}:\n"
@@ -183,6 +184,11 @@ class Player:
                 ["credits3", "vp2", "knowledge1"]
             reason (str): String specifying why something was gained.
                 f"{reason} you have gained...."
+
+        TODO:
+            print a message like "! Couldn't add full gain because you have "
+                "reached max resources". Do this with charge_power function
+                as well "! Couldn't charge all power"??
         """
 
         # If gains is not a list and therefore a single gain, put that
@@ -201,13 +207,15 @@ class Player:
         if not reason:
             text = "You have gained "
 
+        # TODO CRITICAL reimplement this function using the re module and print
+        # Power gains only once.
         # Add up all of the types of income. "knowledge, vp, powertoken" etc.
         # and add them at the same time to keep the output clean.
         types_of_gain = {}
         for gain in gains:
             if gain.startswith("power"):
                 power_order.append(gain)
-                print(f"+ {reason}{text}{gain[-1]} {gain[:-1]}.")
+                print(f"+ {reason}{text}{gain[-1]} {gain[:-1].capitalize()}.")
             elif gain.startswith("vp"):
                 # Had to do this because if a double digit integer was rewarded
                 # like vp12 for example, it would break my [-1] functionality.
@@ -231,21 +239,26 @@ class Player:
                         + amount > self.faction.credits_max:
                         if self.faction.credits > self.faction.credits_max:
                             continue
-                        amount = 0
+                        amount = self.faction.credits_max \
+                            - self.faction.credits
                 elif added_up_gain == "ore":
                     if self.faction.ore + amount > self.faction.ore_max:
                         if self.faction.ore > self.faction.ore_max:
                             continue
-                        amount = 0
+                        amount = self.faction.ore_max - self.faction.ore
                 elif added_up_gain == "knowledge":
                     if self.faction.knowledge + amount \
                             > self.faction.knowledge_max:
                         if self.faction.knowledge > self.faction.knowledge_max:
                             continue
-                        amount = 0
+                        amount = self.faction.knowledge_max \
+                            - self.faction.knowledge
                 exec(f"self.faction.{added_up_gain} += {amount}")
             if not amount == 0:
-                print(f"+ {reason}{text}{amount} {added_up_gain}.")
+                print(
+                    f"+ {reason}{text}{amount} "
+                    f"{added_up_gain.capitalize()}."
+                )
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -398,40 +411,7 @@ class Player:
         pq = "6. Power or Q.I.C (Purple/Green) action."
         special = "7. Do a Special (Orange) action."
         pass_ = "8. Pass."
-        free = "9. Exchange power for resources. (Free action)"
-
-        # Summary of resources
-        resources = "Your resources are:"
-        vp = f"Victory points: {self.vp}"
-        credits_ = f"Credits: {self.faction.credits}"
-        ore = f"Ore: {self.faction.ore}"
-        knowledge = f"Knowledge: {self.faction.knowledge}"
-        qic = f"Q.I.C.: {self.faction.qic}"
-        g_formers = f"Gaia formers: {self.faction.gaiaformer}"
-        power_1 = f"Power in bowl 1: {self.faction.bowl1}"
-        power_2 = f"Power in bowl 2: {self.faction.bowl2}"
-        power_3 = f"Power in bowl 3: {self.faction.bowl3}"
-        gaia_bowl = f"Power in Gaia bowl: {self.faction.gaia_bowl}"
-
-        # Fill the string from the left with spaces until it's as long as
-        # the longest string in the row (in this case the free variable is
-        # the longest string). To line up both columns
-        filler = lambda text_left: " " * (len(free) - len(text_left) + 7)
-
-        prompt = (
-            f"{faction_name}{filler(faction_name.strip())}{resources}\n"
-            f"{intro_1}{filler(intro_1)}{vp}\n"
-            f"{intro_2}{filler(intro_2)}{credits_}\n"
-            f"{mine}{filler(mine)}{ore}\n"
-            f"{gaia}{filler(gaia)}{knowledge}\n"
-            f"{upgrade}{filler(upgrade)}{qic}\n"
-            f"{federation}{filler(federation)}{g_formers}\n"
-            f"{research}{filler(research)}{power_1}\n"
-            f"{pq}{filler(pq)}{power_2}\n"
-            f"{special}{filler(special)}{power_3}\n"
-            f"{pass_}{filler(pass_)}{gaia_bowl}\n"
-            f"{free}"
-        )
+        free = "9. Exchange resources. (Free action)"
 
         # Value is a list with the function and the arguments it needs.
         options = {
@@ -447,6 +427,39 @@ class Player:
         }
 
         while True:
+            # Summary of resources
+            resources = "Your resources are:"
+            vp = f"Victory points: {self.vp}"
+            credits_ = f"Credits: {self.faction.credits}"
+            ore = f"Ore: {self.faction.ore}"
+            knowledge = f"Knowledge: {self.faction.knowledge}"
+            qic = f"Q.I.C.: {self.faction.qic}"
+            g_formers = f"Gaia formers: {self.faction.gaiaformer}"
+            power_1 = f"Power in bowl 1: {self.faction.bowl1}"
+            power_2 = f"Power in bowl 2: {self.faction.bowl2}"
+            power_3 = f"Power in bowl 3: {self.faction.bowl3}"
+            gaia_bowl = f"Power in Gaia bowl: {self.faction.gaia_bowl}"
+
+            # Fill the string from the left with spaces until it's as long as
+            # the longest string in the row (in this case the free variable is
+            # the longest string). To line up both columns and add 7 spaces
+            # between columns.
+            filler = lambda text_left: " " * (len(free) - len(text_left) + 7)
+
+            prompt = (
+                f"{faction_name}{filler(faction_name.strip())}{resources}\n"
+                f"{intro_1}{filler(intro_1)}{vp}\n"
+                f"{intro_2}{filler(intro_2)}{credits_}\n"
+                f"{mine}{filler(mine)}{ore}\n"
+                f"{gaia}{filler(gaia)}{knowledge}\n"
+                f"{upgrade}{filler(upgrade)}{qic}\n"
+                f"{federation}{filler(federation)}{g_formers}\n"
+                f"{research}{filler(research)}{power_1}\n"
+                f"{pq}{filler(pq)}{power_2}\n"
+                f"{special}{filler(special)}{power_3}\n"
+                f"{pass_}{filler(pass_)}{gaia_bowl}\n"
+                f"{free}"
+            )
             print(prompt)
 
             if not choice or choice == "0":
@@ -964,8 +977,8 @@ class Player:
                     print(
                         "You don't have enough range "
                         f"({available_range}) to build on your chosen "
-                        "planet and you don't have enough Q.I.C. "
-                        f"({self.faction.qic}) to increase your range."
+                        "planet and you don't have enough Q.I.C. to increase "
+                        "your range."
                     )
                     continue
 
@@ -1246,8 +1259,7 @@ class Player:
             rnd: Active Round object.
 
         TODO:
-            Show how much money was spent?? Do this with a function ?? Consider
-            this for all actions.
+            Show how much upgrading that building will cost.
         """
 
         print("\nYou want to upgrade a structure.")
@@ -1554,17 +1566,35 @@ class Player:
 
         # TODO SOMEDAY this function only gives a federation tile now.
         #   It doesn't set the federation property of planets and doesn't place
-        #   satellites.
-        print("\nPlease choose which Federation tile you want.")
-
+        #   satellites on spaces, but just keeps track of total satellites.
         # TODO MOST STRUCTURES IN FEDERATIONS end scoring tile must be done
-        # manually right now as well as MOST SATELLITES.
+        # manually right now.
+        # TODO faction compatibility IVITS pay qic to pay for federations.
         print(
-            "Use your own judgement when forming a federation as this is not "
-            "yet implemented."
+            "\nUse your own judgement when forming a Federation as this is "
+            "not yet implemented.\nHow many satellites did forming your "
+            "federation take? Forming a Federation costs Power Tokens."
         )
+
+        while True:
+            amount = input("--> ")
+
+            try:
+                amount = int(amount)
+            except ValueError:
+                print("Please only type a number.")
+
+            if not self.resolve_cost(f"powertoken{amount}"):
+                print(
+                    "You don't have enough Power Tokens to make that "
+                    "Federation."
+                )
+                continue
+            break
+
         print(
-            "Please type your chosen Federation token's corresponding number."
+            "\nPlease type your chosen Federation token's corresponding "
+            "number."
         )
 
         # Get all the available federation tokens.
@@ -1747,35 +1777,63 @@ class Player:
         """
 
         intro = (
-            "\nYou want to take a power or Q.I.C. action. Type the number of "
-            "your action.\n"
+            "\nYou want to take a Power or Q.I.C. action. Please type the "
+            "number of your action."
         )
-        power = "Power actions:\n"
-        knowledge3 = "1. Gain 3 Knowledge for 7 Power.\n"
-        terraform2 = "2. Gain 2 Terraforming steps for 5 Power.\n"
-        ore2 = "3. Gain 2 Ore for 4 Power.\n"
-        credits7 = "4. Gain 7 Credits for 4 Power.\n"
-        knowledge2 = "5. Gain 2 Knowledge for 4 Power.\n"
-        terraform1 = "6. Gain 1 Terraforming step for 3 Power.\n"
-        powertoken2 = "7. Gain 2 Power Tokens for 3 Power.\n"
-        qic = "Q.I.C. actions:\n"
-        tech_tile = "8. Gain a technology tile for 4 Q.I.C.\n"
+        power = "Power actions:"
+        knowledge3 = "1. Gain 3 Knowledge for 7 Power."
+        terraform2 = "2. Gain 2 Terraforming steps for 5 Power."
+        ore2 = "3. Gain 2 Ore for 4 Power."
+        credits7 = "4. Gain 7 Credits for 4 Power."
+        knowledge2 = "5. Gain 2 Knowledge for 4 Power."
+        terraform1 = "6. Gain 1 Terraforming step for 3 Power."
+        powertoken2 = "7. Gain 2 Power Tokens for 3 Power."
+        qic = "Q.I.C. actions:"
+        tech_tile = "8. Gain a technology tile for 4 Q.I.C."
         score_fed_token = (
-            "9. Score one of your Federation Tokens again for 3 Q.I.C.\n"
+            "9. Score one of your Federation Tokens again for 3 Q.I.C."
         )
         vp_for_ptypes = (
             "10. Gain 3 VP and 1 VP for every different planet type "
-            "for 2 Q.I.C.\n"
+            "for 2 Q.I.C."
         )
         cancel = "11. Go back to action selection."
 
-        print(
-            f"{intro}{power}{knowledge3}{terraform2}{ore2}{credits7}"
-            f"{knowledge2}{terraform1}{powertoken2}{qic}{tech_tile}"
-            f"{score_fed_token}{vp_for_ptypes}{cancel}"
-        )
-
         while True:
+            # Summary of resources
+            resources = "Your resources are:"
+            vp = f"Victory points: {self.vp}"
+            credits_ = f"Credits: {self.faction.credits}"
+            ore = f"Ore: {self.faction.ore}"
+            knowledge = f"Knowledge: {self.faction.knowledge}"
+            qic = f"Q.I.C.: {self.faction.qic}"
+            power_1 = f"Power in bowl 1: {self.faction.bowl1}"
+            power_2 = f"Power in bowl 2: {self.faction.bowl2}"
+            power_3 = f"Power in bowl 3: {self.faction.bowl3}"
+
+            # Fill the string from the left with spaces until it's as long as
+            # the longest string in the column (in this case the intro variable
+            # is the longest string) to line up both columns and add 7 spaces
+            # between columns.
+            filler = lambda text_left: " " * (len(intro) - len(text_left) + 7)
+
+            prompt = (
+                f"{intro}{filler(intro.lstrip())}{resources}\n"
+                f"{power}{filler(power)}{vp}\n"
+                f"{knowledge3}{filler(knowledge3)}{credits_}\n"
+                f"{terraform2}{filler(terraform2)}{ore}\n"
+                f"{ore2}{filler(ore2)}{knowledge}\n"
+                f"{credits7}{filler(credits7)}{qic}\n"
+                f"{knowledge2}{filler(knowledge2)}{power_1}\n"
+                f"{terraform1}{filler(terraform1)}{power_2}\n"
+                f"{powertoken2}{filler(powertoken2)}{power_3}\n"
+                f"{qic}\n"
+                f"{tech_tile}\n"
+                f"{score_fed_token}\n"
+                f"{vp_for_ptypes}\n"
+                f"{cancel}"
+            )
+            print(prompt)
             action = input("--> ")
 
             if action == "11":
@@ -2109,62 +2167,97 @@ class Player:
         """Function for exchanging resources as a free action.
 
         TODO:
-            Print the options prettier.
-            Try to make the selection easier if multiple exchanges are possible
             Sort out all the free actions that the player can't afford.
         """
 
         free_actions = self.faction.free_actions
 
-        # again means that the user has already chosen once so there is no
-        # need to print all the options again as they are still in view.
-        again = False
         pattern = re.compile(r"(\D+)(\d+)")
         while True:
-            if not again:
-                again = True
-                print(
-                    "\nPlease type the number of the resource you want to "
-                    "exchange."
-                )
-                for i, free_action in enumerate(free_actions, start=1):
+            intro = (
+                "\nPlease type the number of the resource you want to "
+                "exchange."
+            )
+            reminder = (
+                "Remember that you can only take a free action if you will "
+                "do an action!"
+            )
 
-                    # If the exchanged resource is a string.
-                    if isinstance(free_actions[free_action], str):
-                        free_cost_match = pattern.match(free_action)
-                        free_exchange_match = pattern.match(
-                            free_actions[free_action]
-                        )
+            # Summary of resources
+            resources = "Your resources are:"
+            credits_ = f"Credits: {self.faction.credits}"
+            ore = f"Ore: {self.faction.ore}"
+            knowledge = f"Knowledge: {self.faction.knowledge}"
+            qic = f"Q.I.C.: {self.faction.qic}"
+            power_1 = f"Power in bowl 1: {self.faction.bowl1}"
+            power_2 = f"Power in bowl 2: {self.faction.bowl2}"
+            power_3 = f"Power in bowl 3: {self.faction.bowl3}"
 
-                        # f_c_a is free_cost (payment amount to be done). (1)
-                        f_c_a = f" {free_cost_match.group(2).capitalize()}"
+            # Fill the string from the left with spaces until it's as long as
+            # the longest string in the row (in this case the intro variable is
+            # the longest string). To line up both columns and add 7 spaces
+            # between columns.
+            # "9. Discard 1 Power token from bowl 2 to charge 1 Power from "
+            # bowl 2 to bowl 3." is 77 characters long which is the longest
+            # string we need to subtract from to fill the rest to the same
+            # length.
+            filler = (
+                lambda text_left: " " * (77 - len(text_left) + 7)
+            )
 
-                        # f_c is free_cost (payment type to be done). (power)
-                        f_c = f" {free_cost_match.group(1).capitalize()}"
+            summary = [
+                ore,
+                knowledge,
+                qic,
+                power_1,
+                power_2,
+                power_3,
+            ]
+            print(f"{intro}{filler(intro.strip())}{resources}")
+            print(f"{reminder}{filler(reminder)}{credits_}")
 
-                        # f_e_a free_exchange (resource amount to be received).
-                        # (1).
-                        f_e_a = f" {free_exchange_match.group(2).capitalize()}"
+            for i, free_action in enumerate(free_actions, start=1):
 
-                        # f_e is free_exchange (resource type to be received).
-                        # (credits).
-                        f_e = f" {free_exchange_match.group(1).capitalize()}"
+                # If the exchanged resource is a string.
+                if isinstance(free_actions[free_action], str):
+                    free_cost_match = pattern.match(free_action)
+                    free_exchange_match = pattern.match(
+                        free_actions[free_action]
+                    )
 
-                        pay = " Pay"
-                        for_ = " for"
+                    # f_c_a is free_cost (payment amount to be done). (1)
+                    f_c_a = f" {free_cost_match.group(2).capitalize()}"
 
-                    # Else the exchanged resource self.move_from_bowl2_to_bowl3
-                    # will be done by a function.
-                    else:
-                        pay = ""
-                        f_c_a = ""
-                        f_c = f" {free_action}"
-                        for_ = " to "
-                        f_e_a = ""
-                        f_e = "charge 1 Power from bowl 2 to bowl 3"
+                    # f_c is free_cost (payment type to be done). (power)
+                    f_c = f" {free_cost_match.group(1).capitalize()}"
 
-                    print(f"{i}.{pay}{f_c_a}{f_c}{for_}{f_e_a}{f_e}.")
-                print(f"{i + 1}. Go back to action selection.")
+                    # f_e_a free_exchange (resource amount to be received).
+                    # (1).
+                    f_e_a = f" {free_exchange_match.group(2).capitalize()}"
+
+                    # f_e is free_exchange (resource type to be received).
+                    # (credits).
+                    f_e = f" {free_exchange_match.group(1).capitalize()}"
+
+                    pay = " Pay"
+                    for_ = " for"
+
+                # Else the exchanged resource self.move_from_bowl2_to_bowl3
+                # will be done by a function.
+                else:
+                    pay = ""
+                    f_c_a = ""
+                    f_c = f" {free_action}"
+                    for_ = " to "
+                    f_e_a = ""
+                    f_e = "charge 1 Power from bowl 2 to bowl 3"
+
+                total = f"{i}.{pay}{f_c_a}{f_c}{for_}{f_e_a}{f_e}."
+                if i < 7:
+                    print(f"{total}{filler(total)}{summary[i - 1]}")
+                else:
+                    print(f"{total}")
+            print(f"{i + 1}. Go back to action selection.")
 
             chosen_free = input("--> ")
             if chosen_free in [str(n + 1) for n in range(i)]:
@@ -2176,28 +2269,28 @@ class Player:
                 print("Please only type one of the available numbers.")
                 continue
 
-            # Pay for the cost and receive the exchanged resources.
-            # If there are multiple things to exchange to, ask for the right
-            # one.
-            if isinstance(cost_exchange, list):
-                # TODO ask which one of the two the player wants to exchange.
-                # TODO check that this correctly checks if the player has
-                # enough resources
-                # TODO CRITICAL implement this
-                cost_exchange = "TODO new single cost_exchange string here"
-
             # Make the exchange.
             if isinstance(cost_exchange, str):
                 if self.resolve_cost(cost):
                     self.resolve_gain(cost_exchange)
                 else:
-                    pattern = r"\D+"
-                    cost_type = re.search(pattern, cost).group(0).capitalize()
+                    pattern2 = r"\D+"
+                    cost_type = re.search(pattern2, cost).group(0).capitalize()
 
                     print(
                         f"You don't have enough {cost_type}. "
                         "Please choose a different Free action."
                     )
+                    continue
+            # The player chose to discard 1 powertoken from bowl 2 to charge
+            # 1 power from bowl 2 to bowl 3.
+            else:
+                # Check if the player has 2 tokens available to do this free
+                # action.
+                if self.faction.bowl2 > 1:
+                    cost_exchange()
+                else:
+                    print("You don't have enough Power Tokens in bowl 2.")
 
     def resolve_cost(self, cost):
         """Subtract the cost of stuff.
@@ -2206,13 +2299,15 @@ class Player:
             cost (str): 1 cost to be payed by the player. Looks like:
                 "power1", "vp2", "knowledge4"
 
-        TODO:
-            Turn this into the main cost resolving function for all costs or
-                figure something out that works to use for everything??
-
         Returns:
             True: If the player was able to pay??
             False: If the player was unable to pay??
+
+        TODO:
+            Turn this into the main cost resolving function for all costs or
+                figure something out that works to use for everything??
+            print that something couldn't be payed?? "! not enough of "
+                	"{resource}"??
         """
 
         pattern = r"(\D+)(\d+)"
@@ -2227,18 +2322,28 @@ class Player:
                 return True
             else:
                 return False
+        elif cost_type == "powertoken":
+            if not self.faction.count_powertokens() >= amount:
+                return False
+            for _ in range(amount):
+                # Prioritise taking from the lowest bowl as i don't see why it
+                # would ever be better to not do that.
+                if self.faction.bowl1 > 0:
+                    self.faction.bowl1 -= 1
+                elif self.faction.bowl2 > 0:
+                    self.faction.bowl2 -= 1
+                elif self.faction.bowl3 > 0:
+                    self.faction.bowl3 -= 1
         elif cost_type == "vp":
             if not self.vp >= amount:
                 return False
             exec(f"self.{cost_type} -= {amount}")
         else:
-            # TODO check that this correctly checks if the player has enough
-            # resources
             if not eval(f"self.faction.{cost_type}") >= amount:
                 return False
             exec(f"self.faction.{cost_type} -= {amount}")
 
-        print(f"- You have spent {amount} {cost_type}.")
+        print(f"- You have spent {amount} {cost_type.capitalize()}.")
         return True
 
     def clean_up(self):

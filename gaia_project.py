@@ -318,11 +318,6 @@ class GaiaProject:
     def create_universe(self):
         self.universe = Universe()
 
-    def update_board(self):
-        # Placeholder for when i put structures on the map and this function
-        # will update the map with new structures.
-        pass
-
     def play(self):
         """This function will setup and allow you to start playing a game."""
 
@@ -334,7 +329,7 @@ class GaiaProject:
         for rnd in self.scoring_board.rounds:
             # TODO for testing only
             print(
-                ', '.join([str(x).upper() for x in self.scoring_board.rounds])
+                ' | '.join([str(x).upper() for x in self.scoring_board.rounds])
             )
             print(f"Current round {str(rnd).upper()}.")
             self.passed = 0
@@ -360,12 +355,6 @@ class GaiaProject:
                 player.clean_up()
                 player.passed = False
 
-            # Break to avoid infinite loops while testing
-            # break
-
-
-        # self.update_board()
-
 
 if __name__ == "__main__":
     # TODO for testing only
@@ -373,8 +362,7 @@ if __name__ == "__main__":
     def open_stuff():
         # Gaia Project folder
         os.startfile(
-            r"C:\Users\Gebruiker\Desktop\Programming\My Projects\Gaia "
-            r"Project"
+            r"C:\Users\Gebruiker\Desktop\Programming\My Projects\Gaia Project"
         )
         # Rules
         os.startfile("Gaia Project Rules - EN.pdf")
@@ -390,7 +378,5 @@ if __name__ == "__main__":
     new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
     # print(new_game.universe.sector4)
     # print(new_game.universe.sector5)
-
-
 
     # new_game.play()  # Start a game by calling this if convenient.

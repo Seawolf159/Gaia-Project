@@ -71,7 +71,6 @@ class Faction:
         self.gaia_to_power = "bowl1"
 
         # free actions. The _ is to be able to have for example power4 2 times.
-        # TODO CRITICAL fix the duplicate name problem
         self.free_actions = {
             "power1": "credits1",
             "power3": "ore1",
@@ -94,7 +93,7 @@ class Faction:
         self.knowledge = 50
         self.ore = 50
         self.qic = 50
-        self.credits = 50
+        self.credits = 29
 
     def move_from_gaia_to_bowl(self):
         """Move power from the gaia project bowl to bowl 1."""
@@ -114,7 +113,9 @@ class Faction:
     def move_from_bowl2_to_bowl3(self):
         if self.bowl2 > 1:
             self.bowl2 -= 2
+            print("- You have discarded 1 Power Token from bowl 2.")
             self.bowl3 += 1
+            print(f"+ 1 Power has been charged from bowl 2 to bowl 3.")
 
     def count_powertokens(self):
         total = self.bowl1 + self.bowl2 + self.bowl3
@@ -151,21 +152,23 @@ class HadschHalla(Faction):
         self.bowl2 = 4
 
     def planetary_institute_bonus_func(self):
+        # free actions. The _ is to be able to have for example power4 2 times.
         self.free_actions = {
             # standard
             "power1": "credits1",
             "power3": "ore1",
             "power4": "qic1",
-            "power4": "knowledge1",
+            "power4_": "knowledge1",
             "knowledge1": "credits1",
             "qic1": "ore1",
             "ore1": "credits1",
-            "ore1": "powertoken1",
+            "ore1_": "powertoken1",
             "Discard 1 Power token from bowl 2": self.move_from_bowl2_to_bowl3,
 
             # planetary institute bonus
             "credits3": "ore1",
-            "credits4": ["qic1", "knowledge1"]
+            "credits4": "qic1",
+            "credits4_": "knowledge1"
         }
 
 
