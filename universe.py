@@ -726,7 +726,11 @@ class Universe:
         spaces.sort(key=lambda space: space.num)
         return spaces
 
-    def planet_has_neighbours(self, planet_to_check, active_player, players):
+    def planet_has_neighbours(self,
+                              planet_to_check,
+                              active_player,
+                              players,
+                              neighbour_charge=False):
         """Determine if a planet is neighbouring opponents.
 
         An opponent is a neighbour if he is within a range of 2 of the planet
@@ -745,7 +749,9 @@ class Universe:
             False: if no neighbours are found.
 
         TODO:
-            Ask for power charging here?
+            This function returns immediately when a neighbour has been found.
+                It doesn't look at which neighbouring structure has the highest
+                power value.
         """
 
         for player in players:
@@ -761,10 +767,70 @@ class Universe:
 
                 distance = self.distance(startx, starty, targetx, targety)
                 if distance <= 2:
+                    if neighbour_charge:
+                        self.charge_neighbour_power(active_player, player)
                     return True
         else:
             return False
 
+    def charge_neighbour_power(self, trigger_player, charging_player):
+        """Function for charging Power due to neighborhood.
+
+        Args:
+            trigger_player: The Player object of the player that built a mine
+                or upgraded in the neighborhood of the charging player.
+            charging_player: The Player object of the player that is able to
+                charge power.
+        """
+
+        # TODO faction compatibility. There is a faction which has a thing that
+        #   makes his buildings have more power, so with the technology that
+        #   gives the planetary institute and the academy 1 extra power, he can
+        #   get up to 5 power from them for 4 vp and right now this function
+        #   only allows input of 1-4.
+        # TODO implement this functionality more automatic.
+        print(
+            f"\n{charging_player.faction.name} do you want to charge Power for"
+            f" being in the neighborhood of {trigger_player.faction.name}? "
+            "Charging Power costs chargable amount of Power - 1 Victory "
+            "Points."
+        )
+
+        print(
+            "Please type the amount you want to charge or 0 if you "
+            f"don't want to charge any Power. You have {charging_player.vp} "
+            "Victory Points."
+        )
+        while True:
+            charge_chosen = input("--> ")
+
+            try:
+                charge_chosen = int(charge_chosen)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                if charge_chosen > 4:
+                    print(
+                        "4 is the maximum you can charge from being in the "
+                        "neighborhood."
+                    )
+                    continue
+                else:
+                    break
+
+        # TODO CRITICAL STOPPED HERE this works really badly, make it better.
+        # Charge as much power as the player is able to pay.
+        vp_cost = charge_chosen - 1
+        while vp_cost:
+            if charging_player.resolve_cost("vp1"):
+                charging_player.charge_power(1)
+                vp_cost -= 1
+            else:
+                print("You can't pay any more Victory points.")
+        else:
+            # Charge one more because you get 1 more power than what you
+            # payed for with VP.
+            charging_player.charge_power(1)
 
 
 if __name__ == "__main__":

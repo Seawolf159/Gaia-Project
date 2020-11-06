@@ -2178,6 +2178,10 @@ class Player:
                 "\nPlease type the number of the resource you want to "
                 "exchange."
             )
+            # TODO CRITICAL enforce the disability of doing the pass action
+            # doing the free action, but make sure that the player can undo
+            # having taken the free action as to not get stuck if he can't
+            # do any other action.
             reminder = (
                 "Remember that you can only take a free action if you will "
                 "do an action!"
@@ -2300,8 +2304,8 @@ class Player:
                 "power1", "vp2", "knowledge4"
 
         Returns:
-            True: If the player was able to pay??
-            False: If the player was unable to pay??
+            True: If the player was able to pay.
+            False: If the player was unable to pay.
 
         TODO:
             Turn this into the main cost resolving function for all costs or

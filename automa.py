@@ -67,7 +67,7 @@ class Automa:
 
         # Value is a list with the function and the arguments it needs.
         options = {
-            "1": [self.mine, gp.universe, gp.scoring_board, rnd],
+            "1": [self.mine, gp],
             "2": [self.upgrade],
             "3": [self.research, gp.research_board],
             "4": [self.pq],
@@ -120,8 +120,8 @@ class Automa:
             action = "power/Q.I.C."
 
         print(
-            f"How many points does the Automa score for doing the {action}"
-            " action? Please type the number of points."
+            f"\nHow many points does the Automa score for doing the "
+            f"{action.capitalize()} action? Please type the number of points."
         )
 
         while True:
@@ -211,14 +211,13 @@ class Automa:
             "begin the game.\n--> "
         )
 
-    def mine(self, universe, scoring_board, rnd):
+    def mine(self, gp):
         """Place a mine for the Automa.
 
         Args:
-            universe: Universe object.
-            scoring_board: Scoring object.
-            rnd: Active Round object.
+            gp: GaiaProject main game object.
         """
+
         if not self.faction.mine_available:
             raise e.NotEnoughMinesError
 
@@ -247,7 +246,7 @@ class Automa:
 
             while True:
                 try:
-                    planets = universe.valid_planets(
+                    planets = gp.universe.valid_planets(
                         self, int(sector_choice), "automa_mine"
                     )
                 except e.NoValidMinePlanetsError:
@@ -279,21 +278,20 @@ class Automa:
             if planet_chosen:
                 break
 
-        # TODO CRITICAL Check if the opponent can charge power.
         print(
            f"The Automa has built a mine in sector {sector_choice} on the "
            f"{planet.type} planet. Don't forget to place a satellite if "
            "applicable."
         )
+
         planet.owner = self.faction.name
         planet.structere = "mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
 
-        # Check if the end tile with goal "Most Satellites" is active.
-        # for end in scoring_board.end_scoring:
-        #     if end.goal == "satellites":
-        #         self.satellites += 1
+        gp.universe.planet_has_neighbours(
+            planet, self, gp.players, neighbour_charge=True
+        )
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.
