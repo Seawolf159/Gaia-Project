@@ -797,9 +797,9 @@ class Universe:
         )
 
         print(
-            "Please type the amount you want to charge or 0 if you "
-            f"don't want to charge any Power. You have {charging_player.vp} "
-            "Victory Points."
+            "Please type the amount of your highest Power value structure or "
+            "0 if you don't want to charge any Power. You have "
+            f"{charging_player.vp} Victory Points."
         )
         while True:
             charge_chosen = input("--> ")
@@ -812,25 +812,43 @@ class Universe:
                 if charge_chosen > 4:
                     print(
                         "4 is the maximum you can charge from being in the "
-                        "neighborhood."
+                        "neighborhood if you have the Standard Technology."
                     )
                     continue
                 else:
                     break
 
-        # TODO CRITICAL STOPPED HERE this works really badly, make it better.
-        # Charge as much power as the player is able to pay.
-        vp_cost = charge_chosen - 1
+        # If the player is ALLOWED charge 3, but is only ABLE to charge let's
+        # say 2 he/she will only need to pay 1, but is otherwise not able to
+        # charge less than he/she is ALLOWED to do.
+        chargeable_power = charging_player.faction.bowl1 * 2 \
+            + charging_player.faction.bowl2
+        if chargeable_power < charge_chosen:
+            vp_cost = chargeable_power - 1
+        else:
+            vp_cost = charge_chosen - 1
+
+        # Player chose to charge 1 power so he/she pays nothing.
+        if vp_cost == 0:
+            charging_player.charge_power(1)
+            return
+        # Player chose not to charge anything.
+        elif vp_cost == -1:
+            return
+
+        # Player chose to charge more than 1 and is able to do so. Charge as
+        # much as the player is able to pay.
         while vp_cost:
-            if charging_player.resolve_cost("vp1"):
-                charging_player.charge_power(1)
+            if not charging_player.resolve_cost(f"vp{vp_cost}"):
                 vp_cost -= 1
             else:
-                print("You can't pay any more Victory points.")
+                # Charge one more because you get 1 more power than what you
+                # payed for with VP.
+                charging_player.charge_power(vp_cost + 1)
+                return
         else:
-            # Charge one more because you get 1 more power than what you
-            # payed for with VP.
-            charging_player.charge_power(1)
+            charging_player.charge_power(vp_cost + 1)
+            return
 
 
 if __name__ == "__main__":

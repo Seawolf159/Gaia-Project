@@ -2320,7 +2320,7 @@ class Player:
         amount = int(split_up.group(2))
 
         if cost_type == "power":
-            # Check if the player has enough power to make the exchange.
+            # Check if the player has enough power to spend.
             if self.faction.bowl3 >= amount:
                 self.use_power(amount)
                 return True
