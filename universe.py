@@ -48,7 +48,10 @@ class Planet:
         if self.owner:
             owner = f"Owner: {self.owner} | "
             structure = f"Structure: {self.structure} | "
-        return f"Type: {self.type} | {owner}{structure}Num: {self.num}"
+        return (
+            f"Sector: {self.sector} | Type: {self.type} | {owner}{structure}"
+            f"Num: {self.num}"
+        )
         # f"Federation: {self.federation}"
 
 
@@ -743,6 +746,8 @@ class Universe:
                 for neighbours.
             players (list): gp.players list with objects of all players in the
                 game.
+            neighbour_charge (Bool): Whether or not to handle neighbour Power
+                charging.
 
         Returns:
             True: if a planet is found owned by an opponent within range 2.
@@ -754,11 +759,11 @@ class Universe:
                 power value.
         """
 
-        for player in players:
-            if player is active_player:
+        for opponent in players:
+            if opponent is active_player:
                 continue
 
-            for planet in player.empire:
+            for planet in opponent.empire:
                 startx = planet_to_check.location[0]
                 starty = planet_to_check.location[1]
 
@@ -768,7 +773,9 @@ class Universe:
                 distance = self.distance(startx, starty, targetx, targety)
                 if distance <= 2:
                     if neighbour_charge:
-                        self.charge_neighbour_power(active_player, player)
+                        self.charge_neighbour_power(
+                            active_player, opponent
+                        )
                     return True
         else:
             return False
@@ -791,15 +798,15 @@ class Universe:
         # TODO implement this functionality more automatic.
         print(
             f"\n{charging_player.faction.name} do you want to charge Power for"
-            f" being in the neighborhood of {trigger_player.faction.name}? "
+            f" being in the neighborhood of {trigger_player.faction.name}?\n"
             "Charging Power costs chargable amount of Power - 1 Victory "
             "Points."
         )
 
         print(
-            "Please type the amount of your highest Power value structure or "
-            "0 if you don't want to charge any Power. You have "
-            f"{charging_player.vp} Victory Points."
+            "Please type the amount of your highest Power value structure in "
+            "the neighbourhood or 0 if you don't want to charge any Power.\n"
+            f"You have {charging_player.vp} Victory Points."
         )
         while True:
             charge_chosen = input("--> ")
@@ -836,6 +843,8 @@ class Universe:
         elif vp_cost == -1:
             return
 
+        # TODO MINOR if the player isn't able to charge the full amount of the
+        #   power or pay the full amount of VP, let the player know that.
         # Player chose to charge more than 1 and is able to do so. Charge as
         # much as the player is able to pay.
         while vp_cost:

@@ -470,8 +470,8 @@ class Player:
                 choice = "0"
                 continue
 
+            action = options[choice]
             try:
-                action = options[choice]
                 if len(action) > 1:
                     # If the action function needs additional arguments,
                     # unpack the arguments from the options list.
@@ -666,7 +666,7 @@ class Player:
                     QIC = "Q.I.C.'s"
                 print(
                     "To build a mine on this planet, you need to pay 1 Q.I.C. "
-                   f"You now have {qic_storage} {QIC}. Use a Q.I.C.? (Y/N)"
+                    "spend 1 Q.I.C.? (Y/N)"
                 )
 
                 choose_another_planet = False
@@ -1525,9 +1525,6 @@ class Player:
             # Only if below doesn't raise any exceptions will the player pay
             # for the structure.
             self.resolve_technology_tile(gp.research_board, rnd, gp.universe)
-
-            # TODO CRITICAL get points if the current round gives points for
-            # upgrading to academy.
 
             # Set the built property of the chosen academy to true.
             chosen_academy[0] = True

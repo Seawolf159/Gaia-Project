@@ -45,7 +45,7 @@ class Automa:
         # Automa doesn't have a gaia phase.
         pass
 
-    def action_phase(self, gp, rnd):
+    def action_phase(self, gp, rnd, choice=False):
         """Functions for delegating to action functions.
 
         Args:
@@ -68,7 +68,7 @@ class Automa:
         # Value is a list with the function and the arguments it needs.
         options = {
             "1": [self.mine, gp],
-            "2": [self.upgrade],
+            "2": [self.upgrade, gp],
             "3": [self.research, gp.research_board],
             "4": [self.pq],
             "5": [self.faction.faction_action],
@@ -84,10 +84,12 @@ class Automa:
         )
 
         while True:
-            choice = input(prompt)
+            if not choice or choice == "0":
+                choice = input(prompt)
 
             if not choice in options.keys():
                 print("Please type the action's corresponding number.")
+                choice = "0"
                 continue
 
             action = options[choice]
@@ -99,14 +101,13 @@ class Automa:
                 else:
                     # Otherwise just call the function.
                     action[0]()
-            except e.NotEnoughMinesError:
-                print(
-                    "Automa doesn't have any mines left. It will upgrade "
-                    "instead."
-                )
+            except e.NotEnoughMinesError as ex:
+                print(ex)
+                choice = "2"
                 continue
-            except e.BackToActionSelection:
+            except e.BackToActionSelection as back:
                 # User made a mistake and chose the wrong action for the automa
+                choice = back.choice
                 continue
             else:
                 action_name = action[0].__name__
@@ -169,7 +170,7 @@ class Automa:
            f"{planet.type} planet."
         )
         planet.owner = self.faction.name
-        planet.structure = "mine"
+        planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
 
@@ -219,7 +220,10 @@ class Automa:
         """
 
         if not self.faction.mine_available:
-            raise e.NotEnoughMinesError
+            raise e.NotEnoughMinesError(
+                "Automa doesn't have any mines left. It will upgrade "
+                "instead."
+            )
 
         question = f"\nWhere does the Automa place its mine?\n"
         rules = (
@@ -285,7 +289,9 @@ class Automa:
         )
 
         planet.owner = self.faction.name
-        planet.structere = "mine"
+        if planet.type == "Trans-dim":
+            planet.type = "Gaia"
+        planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
 
@@ -297,10 +303,227 @@ class Automa:
         # Automa can't do a Gaia Project action.
         pass
 
-    def upgrade(self):
+    def upgrade(self, gp):
         # TODO CRITICAL For every upgrade, check if the opponent can charge
-        # power.
-        pass
+        #   power.
+
+        # 1. Condition: The Automa can resolve an upgrade.
+        # 2. Valid Options: The Automa upgrades structures based on the
+        #   following priority list (also shown on the “upgrade” icon).
+        #   Move down the list until you reach an upgrade the Automa can
+        #   resolve; planets with the necessary structure are valid. Note
+        #   that there is no difference between the Automa’s academies.
+        #   a. Upgrade a trading station into a planetary institute.
+        #   b. Upgrade a mine into a trading station.
+        #   c. Upgrade a research lab into an academy.
+        #   d. Upgrade a trading station into a research lab.
+
+    	# Check for availability of all the structures.
+        trade_available = self.faction.trading_station_available != 0
+        institute_available = self.faction.planetary_institute_available != 0
+        mine_available = self.faction.mine_available != 0
+        research_available = self.faction.research_lab_available != 0
+        academy_available = self.faction.academy_available != 0
+
+        # Keep checking for available upgrades until one is found.
+        i = 0
+        while True:
+            if i == 0 and trade_available and institute_available:
+                candidates = list(filter(
+                    lambda planet: planet.structure == "Trading Station",
+                    self.empire
+                ))
+                if candidates:
+                    structure_upgrade = "Planetary Institute"
+                    self.faction.trading_station_available += 1
+                    self.faction.planetary_institute_available -= 1
+                    break
+            elif i == 1 and mine_available and trade_available:
+                candidates = list(filter(
+                    lambda planet: planet.structure == "Mine",
+                    self.empire
+                ))
+                if candidates:
+                    structure_upgrade = "Trading Station"
+                    self.faction.mine_available += 1
+                    self.faction.trading_station_available -= 1
+                    break
+            elif i == 2 and research_available and academy_available:
+                candidates = list(filter(
+                    lambda planet: planet.structure == "Research Lab",
+                    self.empire
+                ))
+                if candidates:
+                    structure_upgrade = "Academy"
+                    self.faction.research_lab_available += 1
+                    self.faction.academy_available -= 1
+                    break
+            elif i == 3 and trade_available and research_available:
+                candidates = list(filter(
+                    lambda planet: planet.structure == "Trading Station",
+                    self.empire
+                ))
+                if candidates:
+                    structure_upgrade = "Research Lab"
+                    self.faction.trading_station_available += 1
+                    self.faction.research_lab_available -= 1
+                    break
+
+            if i == 3:
+                # If nothing was upgradable, the Automa does nothing.
+                print(
+                    "\nNo structure can be Upgraded. The Automa does nothing "
+                    "this turn. The Automa DOES score points though!"
+                    )
+                return
+            else:
+                i += 1
+
+        # 3. Tiebreaker:
+        #   a. Closest to any of your planets.
+        #   # TODO someday handle Directional selection automatically.
+        #   b. Directional selection. Let the player handle this for now.
+
+        # If the candidate list is only 1 long, there must only be 1 upgradable
+        # structure so just upgrade it.
+        if len(candidates) == 1:
+            planet = candidates[0]
+
+            # Check if the planet is neighbouring the opponent.
+            closest_distance = self.closest_distance_to_opponent(
+                gp, candidates
+            )
+
+        # Look at the tiebreakers for which structure to upgrade.
+        else:
+            # a. Closest to any of player's planets.
+            closest_distance = self.closest_distance_to_opponent(
+                gp, candidates
+            )
+
+            # Check which planets are equally closest.
+            closest_planets = self.closest_planet_to_opponent(
+                gp, closest_distance, candidates
+            )
+
+            if len(closest_planets) == 1:
+                planet = closest_planets[0]
+
+            # If there are multiple closest planets, let the player handle
+            # the b. Directional selection tiebreaker.
+            else:
+                print(
+                    "\nThere are multiple planets that are equally closest "
+                    "to you.\nPlease use directional selection to select "
+                    "one of the candidates. Type the number of the planet "
+                    "that was chosen this way."
+                )
+
+                # Sort on sector and then on planet num.
+                closest_planets.sort(
+                    key=lambda planet: (planet.sector, planet.num)
+                )
+                for i, candidate in enumerate(closest_planets, start=1):
+                    print(f"{i}. {candidate}")
+
+                while True:
+                    chosen_candidate = input("--> ")
+                    if chosen_candidate in [str(n + 1) for n in range(i)]:
+                        planet = closest_planets[int(chosen_candidate) - 1]
+                        break
+                    else:
+                        print("Please only type one of the available numbers.")
+                        continue
+
+        planet.owner = self.faction.name
+        print(
+            f"The Automa has upgraded Planet: {planet} and placed a "
+            f"{structure_upgrade} there."
+        )
+        planet.structure = structure_upgrade
+
+        if closest_distance < 3:
+            for player in gp.players:
+                if player is self:
+                    continue
+                opponent = player
+
+            gp.universe.charge_neighbour_power(
+                self, opponent
+            )
+
+    def closest_distance_to_opponent(self, gp, candidates):
+        """Function for determining the closest distance to the opponent.
+
+        Args:
+            gp: GaiaProject main game object.
+            canididates: List of candidates that are upgradable.
+
+        Returns:
+            The distance of the closest planet to the opponent.
+                (1 is the lowest it can be.)
+        """
+
+        closest_distance = 43  # Abitrarily high so found distance is lower.
+        for opponent in gp.players:
+            if opponent is self:
+                continue
+
+            # Check all candidatates what the shortest distance is to the
+            # opponent.
+            for automa_planet in candidates:
+                for opponent_planet in opponent.empire:
+                    startx = automa_planet.location[0]
+                    starty = automa_planet.location[1]
+
+                    targetx = opponent_planet.location[0]
+                    targety = opponent_planet.location[1]
+
+                    distance = gp.universe.distance(
+                        startx, starty, targetx, targety
+                    )
+                    if distance < closest_distance:
+                        closest_distance = distance
+                        # Can't get lower than 1 so immediately return
+                        if closest_distance == 1:
+                            return closest_distance
+            return closest_distance
+
+    def closest_planet_to_opponent(self, gp, closest_distance, candidates):
+        """Function for determining the closest planet to the opponent.
+
+        Args:
+            gp: GaiaProject main game object.
+            closest_distance (Int): The distance that's closest to the
+                opponent.
+            canididates: List of candidates that are upgradable.
+
+        Returns:
+            A list of planets that are equally close the the opponent.
+        """
+
+        closest_planets = []
+        for opponent in gp.players:
+            if opponent is self:
+                continue
+
+            # Check all candidates if they are one of the closest to the
+            # opponent.
+            for automa_planet in candidates:
+                for opponent_planet in opponent.empire:
+                    startx = automa_planet.location[0]
+                    starty = automa_planet.location[1]
+
+                    targetx = opponent_planet.location[0]
+                    targety = opponent_planet.location[1]
+
+                    distance = gp.universe.distance(
+                        startx, starty, targetx, targety
+                    )
+                    if distance == closest_distance:
+                        closest_planets.append(automa_planet)
+
+            return closest_planets
 
     def federation(self):
         # Automa can't do a Federation action.
