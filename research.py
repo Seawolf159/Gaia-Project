@@ -115,7 +115,7 @@ class TechTrack:
         # Add player to the next level on the level's list of players.
         exec(f"self.level{num + 1}.add(player.faction.name)")
 
-        # Add level to the player object's corresponding technology property.
+        # Add level to the player object's corresponding research property.
         exec(f"player.{player_level_pos[choice]} = self.level{num + 1}")
 
         # Check if anything is gained directly after researching.

@@ -1290,7 +1290,7 @@ class Player:
 
         # Choose a planet
         while True:
-            chosen_planet = input(f"--> ")
+            chosen_planet = input("--> ")
             if chosen_planet in [str(n + 1) for n in range(i)]:
                 planet_to_upgrade = self.empire[int(chosen_planet) - 1]
                 break
@@ -1771,6 +1771,11 @@ class Player:
             Perhaps make the power/qic cost text summary more readable.
             Show which actions are still available this round??
             Show the resources on the right just like in action phases??
+            If the player wants to take for example the 5. Gain 2 Knowledge
+                for 4 Power action, but is already at max (15 knowledge) or
+                unable to receive the full amount of 2 (if he/she is at 14)
+                is that action allowed?? For now i don't allow former, but
+                allow latter.
         """
 
         intro = (
@@ -1785,7 +1790,7 @@ class Player:
         knowledge2 = "5. Gain 2 Knowledge for 4 Power."
         terraform1 = "6. Gain 1 Terraforming step for 3 Power."
         powertoken2 = "7. Gain 2 Power Tokens for 3 Power."
-        qic = "Q.I.C. actions:"
+        qic_action = "Q.I.C. actions:"
         tech_tile = "8. Gain a technology tile for 4 Q.I.C."
         score_fed_token = (
             "9. Score one of your Federation Tokens again for 3 Q.I.C."
@@ -1824,7 +1829,7 @@ class Player:
                 f"{knowledge2}{filler(knowledge2)}{power_1}\n"
                 f"{terraform1}{filler(terraform1)}{power_2}\n"
                 f"{powertoken2}{filler(powertoken2)}{power_3}\n"
-                f"{qic}\n"
+                f"{qic_action}\n"
                 f"{tech_tile}\n"
                 f"{score_fed_token}\n"
                 f"{vp_for_ptypes}\n"
@@ -1845,6 +1850,13 @@ class Player:
 
             if action == "1":
                 # Gain 3 knowledge for 7 power.
+
+                if self.faction.knowledge == 15:
+                    print(
+                        "You are already at the maximum Knowledge you can "
+                        "have. Please choose a different Power/Q.I.C. Action."
+                    )
+                    continue
 
                 if not self.enough_power(7):
                     continue
@@ -1871,6 +1883,13 @@ class Player:
             elif action == "3":
                 # Gain 2 ore for 4 power.
 
+                if self.faction.ore == 15:
+                    print(
+                        "You are already at the maximum Ore you can have. "
+                        "Please choose a different Power/Q.I.C. Action."
+                    )
+                    continue
+
                 if not self.enough_power(4):
                     continue
 
@@ -1881,6 +1900,13 @@ class Player:
             elif action == "4":
                 # Gain 7 credits for 4 ore.
 
+                if self.faction.credits == 30:
+                    print(
+                        "You are already at the maximum Credits you can have. "
+                        "Please choose a different Power/Q.I.C. Action."
+                    )
+                    continue
+
                 if not self.enough_power(4):
                     continue
 
@@ -1889,6 +1915,15 @@ class Player:
                 self.resolve_gain("credits7")
 
             elif action == "5":
+                # Gain 2 knowledge for 4 power.
+
+                if self.faction.knowledge == 15:
+                    print(
+                        "You are already at the maximum Knowledge you can "
+                        "have. Please choose a different Power/Q.I.C. Action."
+                    )
+                    continue
+
                 if not self.enough_power(4):
                     continue
 
@@ -1999,7 +2034,7 @@ class Player:
         if not self.faction.bowl3 >= amount:
             print(
                 "You don't have enough power to do this action. "
-                "Please choose a different action."
+                "Please choose a different Power/Q.I.C. Action."
             )
             return False
         return True
@@ -2009,7 +2044,7 @@ class Player:
         if not self.faction.qic >= amount:
             print(
                 "You don't have enough Q.I.C.'s to do this action. "
-                "Please choose a different action."
+                "Please choose a different Power/Q.I.C. Action."
             )
             return False
         return True
@@ -2019,7 +2054,7 @@ class Player:
         if not research_board.pq_actions[num]:
             print(
                 "This power action is already used this round. "
-                "Please choose a different action."
+                "Please choose a different Power/Q.I.C. Action."
             )
             return False
         return True

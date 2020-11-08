@@ -33,109 +33,6 @@ class Automa:
 
         self.passed = False  # whether or not the automa has passed.
 
-    def setup(self, research_board):
-        # TODO Set yourself on the proper research level.
-        pass
-
-    def income_phase(self):
-        # Automa doesn't have an income phase.
-        pass
-
-    def gaia_phase(self):
-        # Automa doesn't have a gaia phase.
-        pass
-
-    def action_phase(self, gp, rnd, choice=False):
-        """Functions for delegating to action functions.
-
-        Args:
-            gp: GaiaProject class
-
-        TODO:
-            Automate drawing automa cards.
-            Print summary of available strucures?
-        """
-
-        faction_name = f"\n{self.faction.name}:"
-        intro = "What action does the Automa choose?\n"
-        mine = "1. Build a mine.\n"
-        upgrade = "2. Upgrade an existing structure.\n"
-        research = "3. Do research.\n"
-        pq = "4. Power or Q.I.C. (Purple/Green) action.\n"
-        faction_action = "5. Do a faction action.\n"
-        pass_ = "6. Pass.\n"
-
-        # Value is a list with the function and the arguments it needs.
-        options = {
-            "1": [self.mine, gp],
-            "2": [self.upgrade, gp],
-            "3": [self.research, gp.research_board],
-            "4": [self.pq],
-            "5": [self.faction.faction_action],
-            "6": [self.pass_, gp, rnd],
-        }
-
-        print(faction_name)
-        print(f"Automa has {self.vp} victory points.\n")
-
-        prompt = (
-            f"{intro}{mine}{upgrade}"
-            f"{research}{pq}{faction_action}{pass_}--> "
-        )
-
-        while True:
-            if not choice or choice == "0":
-                choice = input(prompt)
-
-            if not choice in options.keys():
-                print("Please type the action's corresponding number.")
-                choice = "0"
-                continue
-
-            action = options[choice]
-            try:
-                if len(action) > 1:
-                    # If the action function needs additional arguments, unpack
-                    # the arguments from the options list.
-                    action[0](*action[1:])
-                else:
-                    # Otherwise just call the function.
-                    action[0]()
-            except e.NotEnoughMinesError as ex:
-                print(ex)
-                choice = "2"
-                continue
-            except e.BackToActionSelection as back:
-                # User made a mistake and chose the wrong action for the automa
-                choice = back.choice
-                continue
-            else:
-                action_name = action[0].__name__
-                if not action_name == "pass_":
-                    self.points(action_name)
-                return
-
-    def points(self, action):
-        # Make action names more user friendly.
-        if action == "pq":
-            action = "power/Q.I.C."
-
-        print(
-            f"\nHow many points does the Automa score for doing the "
-            f"{action.capitalize()} action? Please type the number of points."
-        )
-
-        while True:
-            points = input("--> ")
-
-            try:
-                points = int(points)
-            except ValueError:
-                print("Please only type a number.")
-            else:
-                self.vp += points
-                return
-
     def start_mine(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the Automa place its {count.upper()} mine?\n"
@@ -211,6 +108,112 @@ class Automa:
             "Press enter when you are ready to select your own booster and "
             "begin the game.\n--> "
         )
+
+    def income_phase(self):
+        # Automa doesn't have an income phase.
+        pass
+
+    def gaia_phase(self):
+        # Automa doesn't have a gaia phase.
+        pass
+
+    def action_phase(self, gp, rnd, choice=False):
+        """Functions for delegating to action functions.
+
+        Args:
+            gp: GaiaProject class
+
+        TODO:
+            Automate drawing automa cards.
+            Print summary of available strucures?
+        """
+
+        faction_name = f"\n{self.faction.name}:"
+        intro = "What action does the Automa choose?"
+        mine = "1. Build a mine."
+        upgrade = "2. Upgrade an existing structure."
+        research = "3. Do research."
+        pq = "4. Power or Q.I.C. (Purple/Green) action."
+        faction_action = "5. Do a faction action."
+        pass_ = "6. Pass."
+
+        # Value is a list with the function and the arguments it needs.
+        options = {
+            "1": [self.mine, gp],
+            "2": [self.upgrade, gp],
+            "3": [self.research, gp.research_board],
+            "4": [self.pq, gp.research_board],
+            "5": [self.faction.faction_action],
+            "6": [self.pass_, gp, rnd],
+        }
+
+        while True:
+            automa_points = f"Automa has {self.vp} victory points."
+            prompt = (
+                f"{faction_name}\n"
+                f"{automa_points}\n"
+                f"{intro}\n"
+                f"{mine}\n"
+                f"{upgrade}\n"
+                f"{research}\n"
+                f"{pq}\n"
+                f"{faction_action}\n"
+                f"{pass_}\n"
+                "--> "
+            )
+            if not choice or choice == "0":
+                choice = input(prompt)
+
+            if not choice in options.keys():
+                print("Please type the action's corresponding number.")
+                choice = "0"
+                continue
+
+            action = options[choice]
+            try:
+                if len(action) > 1:
+                    # If the action function needs additional arguments, unpack
+                    # the arguments from the options list.
+                    action[0](*action[1:])
+                else:
+                    # Otherwise just call the function.
+                    action[0]()
+            except e.NotEnoughMinesError as ex:
+                print(ex)
+                choice = "2"
+                continue
+            except e.BackToActionSelection as back:
+                # User made a mistake and chose the wrong action for the automa
+                choice = back.choice
+                continue
+            else:
+                action_name = action[0].__name__
+                if not action_name == "pass_":
+                    self.points(action_name)
+                return
+
+    def points(self, action):
+        # Make action names more user friendly.
+        if action == "pq":
+            action = "Power/Q.I.C."
+        else:
+            action = action.capitalize()
+
+        print(
+            f"\nHow many points does the Automa score for doing the "
+            f"{action} action? Please type the number of points."
+        )
+
+        while True:
+            points = input("--> ")
+
+            try:
+                points = int(points)
+            except ValueError:
+                print("Please only type a number.")
+            else:
+                self.vp += points
+                return
 
     def mine(self, gp):
         """Place a mine for the Automa.
@@ -604,15 +607,103 @@ class Automa:
         # Add the Automa to the next level on the level's list of players.
         exec(f"track.level{num + 1}.add(self.faction.name)")
 
-        # Add the level to the Automa object's corresponding technology
+        # Add the level to the Automa object's corresponding research
         # property.
         exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
 
         print(research_board)
         print(f"Automa has researched {track.name}.")
 
-    def pq(self):
-        pass
+    def pq(self, research_board):
+        # Check if there are any Power/Q.I.C. actions still open
+        if not any(research_board.pq_actions.values()):
+            print(
+                "\nThere are no available Power/Q.I.C. Actions left. "
+                "The Automa does nothing this turn. the Automa DOES score "
+                "points though!"
+            )
+            return
+
+        print(
+            "\nWhich Power/Q.I.C. Action does the Automa take?"
+        )
+
+        while True:
+            number = input(
+                "Please type the number of the Numbered Selection (1-5).\n"
+                "Type 0 if the Automa does a different Action.\n--> "
+            )
+
+            if number == "0":
+                raise e.BackToActionSelection
+            elif not number in [str(num) for num in range(1, 6)]:
+                continue
+
+            number_selection = False
+            while True:
+                print(
+                    "Please type the number of the corresponding direction "
+                    "the arrow of the Numbered Selection is pointing to."
+                )
+                for i, direct in enumerate(["Left", "Right"], start=1):
+                    print(f"{i}. {direct}")
+                print(f"{i + 1}. Go back to number selection.")
+
+                direction = input("--> ")
+
+                if direction == f"{i + 1}":
+                    number_selection = True
+                    break
+                elif not direction in [str(n + 1) for n in range(i)]:
+                    print(
+                        "Please type the number of the corresponding direction"
+                        " the arrow is pointing to."
+                    )
+                    continue
+                break
+            if number_selection:
+                continue
+            else:
+                break
+
+        context = [
+            "Gain 3 Knowledge for 7 Power.",
+            "Gain 2 Terraforming steps for 5 Power.",
+            "Gain 2 Ore for 4 Power.",
+            "Gain 7 Credits for 4 Power.",
+            "Gain 2 Knowledge for 4 Power.",
+            "Gain 1 Terraforming step for 3 Power.",
+            "Gain 2 Power Tokens for 3 Power.",
+            "Gain a technology tile for 4 Q.I.C.",
+            "Score one of your Federation Tokens again for 3 Q.I.C.",
+            "Gain 3 VP and 1 VP for every different planet type for 2 " \
+            "Q.I.C."
+        ]
+
+        number = int(number)
+        if direction == "1":
+            i = 10
+        else:
+            i = 1
+        # Keep looking for available actions until the amount of actions
+        # checked is equal to the Numbered Selection number.
+        while number:
+            if research_board.pq_actions[i]:
+                number -= 1
+                if number == 0:
+                    continue
+            if direction == "1":
+                i -= 1
+                if i == 0:
+                    i = 10
+            else:
+                i += 1
+                if i == 11:
+                    i =1
+        else:
+            research_board.pq_actions[i] = False
+
+        print(f"The Automa has chosen the {context[i - 1]} action.")
 
     def special(self):
         # Automa can't do a Special action.

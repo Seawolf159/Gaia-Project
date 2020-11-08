@@ -93,7 +93,7 @@ class Faction:
         self.knowledge = 50
         self.ore = 50
         self.qic = 50
-        self.credits = 29
+        self.credits = 50
 
     def move_from_gaia_to_bowl(self):
         """Move power from the gaia project bowl to bowl 1."""
