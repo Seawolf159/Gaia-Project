@@ -391,7 +391,7 @@ class Player:
         """Functions for delegating to action functions.
 
         Args:
-            gp: GaiaProject class.
+            gp: GaiaProject main game object.
             rnd: Active Round object.
 
         TODO:

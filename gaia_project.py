@@ -354,6 +354,9 @@ class GaiaProject:
             for player in self.players:
                 player.clean_up()
                 player.passed = False
+        else:
+            # End game scoring.
+
 
 
 if __name__ == "__main__":

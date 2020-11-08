@@ -143,7 +143,7 @@ class Automa:
             "2": [self.upgrade, gp],
             "3": [self.research, gp.research_board],
             "4": [self.pq, gp.research_board],
-            "5": [self.faction.faction_action],
+            "5": [self.faction.faction_action, gp, self],
             "6": [self.pass_, gp, rnd],
         }
 
@@ -709,9 +709,6 @@ class Automa:
         # Automa can't do a Special action.
         pass
 
-    def faction_action(self):
-        pass
-
     def pass_(self, gp, rnd):
         print("\nThe Automa Passes.")
 
@@ -834,7 +831,14 @@ class Taklons(Faction):
         #     ["oxide", "terra"]
         # ]
 
-    def faction_action(self):
+    def faction_action(self, gp, automa):
+        """Function for doing the Taklons Faction Action.
+
+        Args:
+            gp: GaiaProject main game object.
+            automa: Automa object.
+        """
+
         # TODO create the faction action of the automa
         # faction_action = ["mine", "pq"]
         # range = 3
