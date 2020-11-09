@@ -356,7 +356,7 @@ class GaiaProject:
                 player.passed = False
         else:
             # End game scoring.
-
+            pass
 
 
 if __name__ == "__main__":

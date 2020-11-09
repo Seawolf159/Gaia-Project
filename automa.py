@@ -121,7 +121,8 @@ class Automa:
         """Functions for delegating to action functions.
 
         Args:
-            gp: GaiaProject class
+            gp: GaiaProject main game object.
+            rnd: Active Round object.
 
         TODO:
             Automate drawing automa cards.
@@ -188,7 +189,7 @@ class Automa:
                 continue
             else:
                 action_name = action[0].__name__
-                if not action_name == "pass_":
+                if not action_name in ["pass_", "faction_action"]:
                     self.points(action_name)
                 return
 
@@ -215,7 +216,7 @@ class Automa:
                 self.vp += points
                 return
 
-    def mine(self, gp):
+    def mine(self, gp, faction_action=False):
         """Place a mine for the Automa.
 
         Args:
@@ -237,15 +238,25 @@ class Automa:
         print(f"{question}{rules}")
 
         planet_chosen = False
-        while True:
+        if faction_action:
+            sector = (
+                "Please type the number of the sector the chosen planet "
+                "is in.\n--> "
+            )
+        else:
             sector = (
                 "Please type the number of the sector the chosen planet "
                 "is in. Type 8 if you chose the wrong action.\n--> "
             )
+        while True:
             sector_choice = input(sector)
 
             if sector_choice == "8":
-                raise e.BackToActionSelection
+                if faction_action:
+                    print("Please only type 1-7")
+                    continue
+                else:
+                    raise e.BackToActionSelection
 
             if not sector_choice in C.SECTORS_2P:
                 print("Please only type 1-7")
@@ -306,10 +317,7 @@ class Automa:
         # Automa can't do a Gaia Project action.
         pass
 
-    def upgrade(self, gp):
-        # TODO CRITICAL For every upgrade, check if the opponent can charge
-        #   power.
-
+    def upgrade(self, gp, faction_action=False):
         # 1. Condition: The Automa can resolve an upgrade.
         # 2. Valid Options: The Automa upgrades structures based on the
         #   following priority list (also shown on the “upgrade” icon).
@@ -374,9 +382,16 @@ class Automa:
 
             if i == 3:
                 # If nothing was upgradable, the Automa does nothing.
-                print(
-                    "\nNo structure can be Upgraded. The Automa does nothing "
-                    "this turn. The Automa DOES score points though!"
+                if faction_action:
+                    print(
+                        "\nNo structure can be Upgraded. The Automa skips "
+                        "this action."
+                    )
+                else:
+                    print(
+                        "\nNo structure can be Upgraded. The Automa does "
+                        "nothing this turn. The Automa DOES score points "
+                        "though!"
                     )
                 return
             else:
@@ -438,13 +453,13 @@ class Automa:
                         print("Please only type one of the available numbers.")
                         continue
 
-        planet.owner = self.faction.name
         print(
             f"The Automa has upgraded Planet: {planet} and placed a "
             f"{structure_upgrade} there."
         )
         planet.structure = structure_upgrade
 
+        # Let opponent charge power.
         if closest_distance < 3:
             for player in gp.players:
                 if player is self:
@@ -614,7 +629,7 @@ class Automa:
         print(research_board)
         print(f"Automa has researched {track.name}.")
 
-    def pq(self, research_board):
+    def pq(self, research_board, faction_action=False):
         # Check if there are any Power/Q.I.C. actions still open
         if not any(research_board.pq_actions.values()):
             print(
@@ -628,14 +643,24 @@ class Automa:
             "\nWhich Power/Q.I.C. Action does the Automa take?"
         )
 
-        while True:
-            number = input(
+        if faction_action:
+            prompt = (
+                "Please type the number of the Numbered Selection (1-5).\n"
+                "--> "
+            )
+        else:
+            prompt = (
                 "Please type the number of the Numbered Selection (1-5).\n"
                 "Type 0 if the Automa does a different Action.\n--> "
             )
+        while True:
+            number = input(prompt)
 
             if number == "0":
-                raise e.BackToActionSelection
+                if faction_action:
+                    continue
+                else:
+                    raise e.BackToActionSelection
             elif not number in [str(num) for num in range(1, 6)]:
                 continue
 
@@ -645,7 +670,7 @@ class Automa:
                     "Please type the number of the corresponding direction "
                     "the arrow of the Numbered Selection is pointing to."
                 )
-                for i, direct in enumerate(["Left", "Right"], start=1):
+                for i, direct in enumerate(["<--", "-->"], start=1):
                     print(f"{i}. {direct}")
                 print(f"{i + 1}. Go back to number selection.")
 
@@ -667,15 +692,15 @@ class Automa:
                 break
 
         context = [
-            "Gain 3 Knowledge for 7 Power.",
-            "Gain 2 Terraforming steps for 5 Power.",
-            "Gain 2 Ore for 4 Power.",
-            "Gain 7 Credits for 4 Power.",
-            "Gain 2 Knowledge for 4 Power.",
-            "Gain 1 Terraforming step for 3 Power.",
-            "Gain 2 Power Tokens for 3 Power.",
-            "Gain a technology tile for 4 Q.I.C.",
-            "Score one of your Federation Tokens again for 3 Q.I.C.",
+            "Gain 3 Knowledge for 7 Power",
+            "Gain 2 Terraforming steps for 5 Power",
+            "Gain 2 Ore for 4 Power",
+            "Gain 7 Credits for 4 Power",
+            "Gain 2 Knowledge for 4 Power",
+            "Gain 1 Terraforming step for 3 Power",
+            "Gain 2 Power Tokens for 3 Power",
+            "Gain a technology tile for 4 Q.I.C",
+            "Score one of your Federation Tokens again for 3 Q.I.C",
             "Gain 3 VP and 1 VP for every different planet type for 2 " \
             "Q.I.C."
         ]
@@ -703,7 +728,7 @@ class Automa:
         else:
             research_board.pq_actions[i] = False
 
-        print(f"The Automa has chosen the {context[i - 1]} action.")
+        print(f"The Automa has chosen the {context[i - 1]} Action.")
 
     def special(self):
         # Automa can't do a Special action.
@@ -839,16 +864,21 @@ class Taklons(Faction):
             automa: Automa object.
         """
 
-        # TODO create the faction action of the automa
-        # faction_action = ["mine", "pq"]
-        # range = 3
-        # tiebreaker = (
-        #     "TIEBREAKER 3a:\nShortest distance to one of the "
-        #     "human's' planets"
-        # )
-        # vp = 2
-        pass
+        print(
+            "\nAutoma will do his Faction Action. He will build a Mine with "
+            "TIEBREAKER 3a: Shortest distance to one of YOUR planets,\n"
+            "followed by a Power/Q.I.C. Action and he will gain 2 "
+            "Victory Points."
+        )
 
+        try:
+            automa.mine(gp, faction_action=True)
+        except e.NotEnoughMinesError as ex:
+            print(ex)
+            automa.upgrade(gp)
+        automa.pq(gp.research_board, faction_action=True)
+        automa.vp += 2
+        print("Automa has gained 2 Victory Points.")
 
 def select_faction(faction):
     factions = {
