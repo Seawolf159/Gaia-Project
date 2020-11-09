@@ -223,6 +223,75 @@ class Scoring:
             end_scoring_tiles.pop(random.randrange(len(end_scoring_tiles)))
         ]
 
+    def end_game_scoring(self, gp):
+        # TODO MORE PLAYERS CRITICAL Only works while playing against Automa.
+
+        # Score per place.
+        first = 18
+        second = 12
+        third = 6
+        for end_tile in self.end_scoring:
+            # TODO score points from research and for the human, also score 1
+            # point for every 3 resources.
+            end_tile_goals = []
+            for player in gp.players:
+                if end_tile.goal == "structures_federation":
+                    if type(player).__name__ == "Automa":
+                        # mines = 8 - player.faction.mine_available
+                        # trade = 4 - player.faction.trading_station_available
+                        # res_lab = 3 - player.faction.research_lab_available
+                        # academy = 2 - player.faction.academy_available
+                        # plan_insti = (
+                        #     1 - player.faction.planetary_institute_available
+                        # )
+
+                        # structures_built = (
+                        #     mines
+                        #     + trade
+                        #     + res_lab
+                        #     + academy
+                        #     + plan_insti
+                        # )
+
+                        end_tile_score = len(player.empire) - 1
+                        end_tile_goals.append([player, end_tile_score])
+                else:
+                    print(
+                        f"{player.faction.name}, how many structures that are "
+                        "part of a Federation do you have?"
+                    )
+
+                    while True:
+                        end_tile_score = input("--> ")
+
+                        try:
+                            end_tile_score = int(end_tile_score)
+                        except ValueError:
+                            print("Please only type a number.")
+                            continue
+                        else:
+                            break
+
+                    end_tile_goals.append([player, end_tile_score])
+
+            neutral_score = end_tile.neutral
+            end_tile_goals.append(["Neutral", neutral_score])
+
+            # Sort by score.
+            end_tile_goals.sort(key=lambda result: result[1])
+
+            # Check if there are any duplicate scores.
+
+
+            print(f"Result for scoring {end_tile.name}:")
+
+                # print(
+                #     f"{player.faction.name} gained {end_tile_points} "
+                #     f"Victory Points when scoring the {end_tile.goal} "
+                #     "end scoring tile."
+                # )
+
+
     def __str__(self):
         boosters = []
         rounds = []

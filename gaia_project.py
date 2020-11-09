@@ -327,7 +327,7 @@ class GaiaProject:
         # During 6 rounds, cycle through the 4 phases of the game.
         # TODO Announce what bonus points can be gained in current round?
         for rnd in self.scoring_board.rounds:
-            # TODO for testing only
+            # TODO CRITICAL for testing only
             print(
                 ' | '.join([str(x).upper() for x in self.scoring_board.rounds])
             )
@@ -356,7 +356,7 @@ class GaiaProject:
                 player.passed = False
         else:
             # End game scoring.
-            pass
+            self.scoring_board.end_game_scoring(self)
 
 
 if __name__ == "__main__":

@@ -886,3 +886,8 @@ def select_faction(faction):
     }
 
     return factions[faction]
+
+
+if __name__ == "__main__":
+    test = Automa("Taklons")
+    print(type(test).__name__)
