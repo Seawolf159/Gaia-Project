@@ -60,6 +60,9 @@ class Player:
 
         self.passed = False  # whether or not the player has passed.
 
+        self.end_scoring1 = False  # Used in end scoring for the top tile.
+        self.end_scoring2 = False  # Used in end scoring for the bottom tile.
+
         # TODO CRITICAL remove when game is done.
         # Initiate testing parameters
         self.faction._testing()

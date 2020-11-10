@@ -225,36 +225,18 @@ class Scoring:
 
     def end_game_scoring(self, gp):
         # TODO MORE PLAYERS CRITICAL Only works while playing against Automa.
-
-        # Score per place.
-        first = 18
-        second = 12
-        third = 6
-        for end_tile in self.end_scoring:
+        for num, end_tile in enumerate(self.end_scoring, start=1):
             # TODO score points from research and for the human, also score 1
-            # point for every 3 resources.
-            end_tile_goals = []
+            #   point for every 3 resources.
+
+            # Used for determining the winner and for shared places.
+            scores = []
             for player in gp.players:
                 if end_tile.goal == "structures_federation":
                     if type(player).__name__ == "Automa":
-                        # mines = 8 - player.faction.mine_available
-                        # trade = 4 - player.faction.trading_station_available
-                        # res_lab = 3 - player.faction.research_lab_available
-                        # academy = 2 - player.faction.academy_available
-                        # plan_insti = (
-                        #     1 - player.faction.planetary_institute_available
-                        # )
-
-                        # structures_built = (
-                        #     mines
-                        #     + trade
-                        #     + res_lab
-                        #     + academy
-                        #     + plan_insti
-                        # )
-
                         end_tile_score = len(player.empire) - 1
-                        end_tile_goals.append([player, end_tile_score])
+                        exec(f"player.end_scoring{num} = {end_tile_score}")
+                        scores.append([self, end_tile_score])
                 else:
                     print(
                         f"{player.faction.name}, how many structures that are "
@@ -272,16 +254,83 @@ class Scoring:
                         else:
                             break
 
-                    end_tile_goals.append([player, end_tile_score])
+                    exec(f"player.end_scoring{num} = {end_tile_score}")
+                    scores.append([self, end_tile_score])
+
+            place123 = False
+            place12 = False
+            place1 = False
+            place23 = False
+            place2 = False
+            place3 = False
 
             neutral_score = end_tile.neutral
-            end_tile_goals.append(["Neutral", neutral_score])
+            scores.append(["Neutral", neutral_score])
 
-            # Sort by score.
-            end_tile_goals.sort(key=lambda result: result[1])
+            # Sort by score
+            scores.sort(key=lambda score: score[1])
 
-            # Check if there are any duplicate scores.
+            if scores[0][1] == scores[1][1] == scores[2][1]:
+                place123 = scores
+            elif scores[0][1] == scores[1][1]:
+                place12 = scores[:2]
+            else:
+                place1 = scores[0]
 
+            if scores[1][1] == scores[2][1]:
+                place23 = scores[1:]
+            else:
+                place2 = scores[1]
+                place3 = scores[2]
+
+            i = 0
+            while i < 3:
+                player = scores[i][0]
+                if player == "Neutral":
+                    scores.pop(i)
+                    i += 1
+                    continue
+
+                if place123:
+                    player.vp += 12
+                    print(
+                        f"{player.faction.name} has gained 12 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+                elif place12 and i != 2:
+                    player.vp += 15
+                    print(
+                        f"{player.faction.name} has gained 15 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+                elif place1 and i == 0:
+                    player.vp += 18
+                    print(
+                        f"{player.faction.name} has gained 18 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+
+                if place23 and i > 0:
+                    player.vp += 9
+                    print(
+                        f"{player.faction.name} has gained 9 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+                elif place2 and i == 1:
+                    player.vp += 12
+                    print(
+                        f"{player.faction.name} has gained 12 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+                elif place3 and i == 2:
+                    player.vp += 6
+                    print(
+                        f"{player.faction.name} has gained 6 Victory "
+                        f"Points for the {end_tile.goal} end scoring tile."
+                    )
+
+                scores.pop(i)
+                i += 1
 
             print(f"Result for scoring {end_tile.name}:")
 

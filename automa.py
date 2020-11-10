@@ -33,6 +33,9 @@ class Automa:
 
         self.passed = False  # whether or not the automa has passed.
 
+        self.end_scoring1 = False  # Used in end scoring for the top tile.
+        self.end_scoring2 = False  # Used in end scoring for the bottom tile.
+
     def start_mine(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the Automa place its {count.upper()} mine?\n"
