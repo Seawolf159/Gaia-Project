@@ -60,9 +60,6 @@ class Player:
 
         self.passed = False  # whether or not the player has passed.
 
-        self.end_scoring1 = False  # Used in end scoring for the top tile.
-        self.end_scoring2 = False  # Used in end scoring for the bottom tile.
-
         # TODO CRITICAL remove when game is done.
         # Initiate testing parameters
         self.faction._testing()
@@ -1295,7 +1292,7 @@ class Player:
         while True:
             chosen_planet = input("--> ")
             if chosen_planet in [str(n + 1) for n in range(i)]:
-                planet_to_upgrade = self.empire[int(chosen_planet) - 1]
+                planet_to_upgrade = planets[int(chosen_planet) - 1]
                 break
             elif chosen_planet == f"{i + 1}":
                 raise e.BackToActionSelection
@@ -2180,7 +2177,8 @@ class Player:
         # TODO CRITICAL check if points are rewarded by the booster for passing
         if old_booster.vp:
             old_booster.resolve_effect(self)
-        print(f"Your new booster is {self.booster}.")
+        if round_number != 6:
+            print(f"Your new booster is {self.booster}.")
 
         #   Check if the player has any advanced technology tiles that awards
         #   points when passing.
@@ -2193,10 +2191,11 @@ class Player:
         #   to pass than [3, 1, 2, 4] the player order is messed up.
         # TODO MINOR instead of "You" make it faction.name starts first...??
         # If player passed first, he/she starts first next round.
-        if gp.passed == 1:
-            gp.players.remove(self)
-            gp.players.insert(0, self)
-            print("You start first next round.")
+        if round_number != 6:
+            if gp.passed == 1:
+                gp.players.remove(self)
+                gp.players.insert(0, self)
+                print("You start first next round.")
 
     def free(self):
         """Function for exchanging resources as a free action.

@@ -225,9 +225,12 @@ class Scoring:
 
     def end_game_scoring(self, gp):
         # TODO MORE PLAYERS CRITICAL Only works while playing against Automa.
-        for num, end_tile in enumerate(self.end_scoring, start=1):
-            # TODO score points from research and for the human, also score 1
-            #   point for every 3 resources.
+        # TODO MINOR pretty print end scoring tile names.
+
+        print("\nEnd Scoring.")
+        # Score points from end scoring tiles.
+        for end_tile in self.end_scoring:
+            print(f"Now scoring {end_tile.goal}:")
 
             # Used for determining the winner and for shared places.
             scores = []
@@ -235,14 +238,66 @@ class Scoring:
                 if end_tile.goal == "structures_federation":
                     if type(player).__name__ == "Automa":
                         end_tile_score = len(player.empire) - 1
-                        exec(f"player.end_scoring{num} = {end_tile_score}")
-                        scores.append([self, end_tile_score])
-                else:
-                    print(
-                        f"{player.faction.name}, how many structures that are "
-                        "part of a Federation do you have?"
-                    )
+                        scores.append([player, end_tile_score])
+                    else:
+                        print(
+                            f"{player.faction.name}, how many structures that "
+                            "are part of a Federation do you have?"
+                        )
 
+                        while True:
+                            end_tile_score = input("--> ")
+
+                            try:
+                                end_tile_score = int(end_tile_score)
+                            except ValueError:
+                                print("Please only type a number.")
+                                continue
+                            else:
+                                break
+
+                        scores.append([player, end_tile_score])
+
+                elif end_tile.goal == "structures":
+                    end_tile_score = len(player.empire)
+                    scores.append([player, end_tile_score])
+
+                elif end_tile.goal == "planet_types":
+                    end_tile_score = len(
+                        {planet.type for planet in player.empire}
+                    )
+                    scores.append([player, end_tile_score])
+
+                elif end_tile.goal == "gaia_planets":
+                    end_tile_score = len(
+                        [
+                            planet for planet in player.empire
+                                if planet.type == "Gaia"
+                                # TODO CRITICAL test that it doesn't include
+                                # planets with gaiaformers.
+                                and planet.strucure != "gaiaformer"
+                        ]
+                    )
+                    scores.append([player, end_tile_score])
+
+                elif end_tile.goal == "sectors":
+                    end_tile_score = len(
+                        {planet.sector for planet in player.empire}
+                    )
+                    scores.append([player, end_tile_score])
+
+                elif end_tile.goal == "satellites":
+                    if type(player).__name__ == "Automa":
+                        message = (
+                            "How many satellites does the Automa have?"
+                        )
+                    else:
+                        message = (
+                            f"{player.faction.name}, how many satellites do "
+                            "you have?"
+                        )
+
+                    print(message)
                     while True:
                         end_tile_score = input("--> ")
 
@@ -253,9 +308,7 @@ class Scoring:
                             continue
                         else:
                             break
-
-                    exec(f"player.end_scoring{num} = {end_tile_score}")
-                    scores.append([self, end_tile_score])
+                    scores.append([player, end_tile_score])
 
             place123 = False
             place12 = False
@@ -267,9 +320,10 @@ class Scoring:
             neutral_score = end_tile.neutral
             scores.append(["Neutral", neutral_score])
 
-            # Sort by score
-            scores.sort(key=lambda score: score[1])
+            # Sort by score reverse for highest to lowest.
+            scores.sort(key=lambda score: score[1], reverse=True)
 
+            # All players are tied.
             if scores[0][1] == scores[1][1] == scores[2][1]:
                 place123 = scores
             elif scores[0][1] == scores[1][1]:
@@ -277,6 +331,7 @@ class Scoring:
             else:
                 place1 = scores[0]
 
+            # Players 2 and 3 are tied
             if scores[1][1] == scores[2][1]:
                 place23 = scores[1:]
             else:
@@ -287,59 +342,155 @@ class Scoring:
             while i < 3:
                 player = scores[i][0]
                 if player == "Neutral":
-                    scores.pop(i)
                     i += 1
                     continue
+
+                if type(player).__name__ == "Automa":
+                    description = "Automa"
+                else:
+                    description = player.faction.name
 
                 if place123:
                     player.vp += 12
                     print(
-                        f"{player.faction.name} has gained 12 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 12 Victory "
+                        f"Points."
                     )
                 elif place12 and i != 2:
                     player.vp += 15
                     print(
-                        f"{player.faction.name} has gained 15 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 15 Victory "
+                        f"Points."
                     )
                 elif place1 and i == 0:
                     player.vp += 18
                     print(
-                        f"{player.faction.name} has gained 18 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 18 Victory "
+                        f"Points."
                     )
 
                 if place23 and i > 0:
                     player.vp += 9
                     print(
-                        f"{player.faction.name} has gained 9 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 9 Victory "
+                        f"Points."
                     )
                 elif place2 and i == 1:
                     player.vp += 12
                     print(
-                        f"{player.faction.name} has gained 12 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 12 Victory "
+                        f"Points."
                     )
                 elif place3 and i == 2:
                     player.vp += 6
                     print(
-                        f"{player.faction.name} has gained 6 Victory "
-                        f"Points for the {end_tile.goal} end scoring tile."
+                        f"+ {description} has gained 6 Victory "
+                        f"Points."
                     )
 
-                scores.pop(i)
                 i += 1
 
-            print(f"Result for scoring {end_tile.name}:")
+            # Just an empty print for white space between end scoring tiles.
+            print()
 
-                # print(
-                #     f"{player.faction.name} gained {end_tile_points} "
-                #     f"Victory Points when scoring the {end_tile.goal} "
-                #     "end scoring tile."
-                # )
+        # Score points for research track progress and resources.
+        print(
+            "Now scoring Research track progress and resources. For every "
+            "step past level 2 on a research track you get 4 Victory Points.\n"
+            "For every 3 Credits, Knowledge, or Ore in any combination, you "
+            "get 1 Victory Point."
+        )
+        for player in gp.players:
+            print(
+                "\nResearch track progress and resource victory points for "
+                f"{player.faction.name}:"
+            )
+            # If this flag is never set to True, a message telling the player
+            # that no points were gained this way will be displayed.
+            research_progress = False
+            if int(player.terraforming.name[-1]) > 2:
+                score = (int(player.terraforming.name[-1]) - 2) * 4
+                player.vp += score
+                print(f"+ {score} Victory Points from the Terraforming track.")
+                research_progress = True
 
+            if int(player.navigation.name[-1]) > 2:
+                score = (int(player.navigation.name[-1]) - 2) * 4
+                player.vp += score
+                print(f"+ {score} Victory Points from the Navigation track.")
+                research_progress = True
+
+            if int(player.a_i.name[-1]) > 2:
+                score = (int(player.a_i.name[-1]) - 2) * 4
+                player.vp += score
+                print(
+                    f"+ {score} Victory Points from the Artificial "
+                    "Intelligence track."
+                )
+                research_progress = True
+
+            if int(player.gaia_project.name[-1]) > 2:
+                score = (int(player.gaia_project.name[-1]) - 2) * 4
+                player.vp += score
+                print(f"+ {score} Victory Points from the Gaia Project track.")
+                research_progress = True
+
+            if int(player.economy.name[-1]) > 2:
+                score = (int(player.economy.name[-1]) - 2) * 4
+                player.vp += score
+                print(f"+ {score} Victory Points from the Economy track.")
+                research_progress = True
+
+            if int(player.science.name[-1]) > 2:
+                score = (int(player.science.name[-1]) - 2) * 4
+                player.vp += score
+                print(f"+ {score} Victory Points from the Science track.")
+                research_progress = True
+
+            if not research_progress:
+                print(
+                    "No Victory Points were gained through Research progress."
+                )
+
+            # Scoring points for resources.
+            if type(player).__name__ != "Automa":
+                # Check if the player has any resources left to be scored.
+                total_resources = player.faction.credits \
+                    + player.faction.ore \
+                    + player.faction.knowledge
+                if total_resources >= 3:
+                    score = total_resources // 3
+                    player.vp += score
+                    print(
+                        f"+ {score} Victory Points were gained through "
+                        "Resources."
+                    )
+                else:
+                    print(
+                        "No Victory Points were gained through Resources."
+                    )
+
+            # Just an empty print for white space between player scoring.
+            print()
+
+        total_score = []
+        for player in gp.players:
+            total_score.append([player, player.vp])
+        # Sort by victory points in reverse for highest to lowest.
+        total_score.sort(key=lambda total: player.vp, reverse=True)
+
+        # TODO more players. This only works when playing against Automa.
+        if total_score[0][1] == total_score[1][1]:
+            print(
+                f"It's a draw! You both got {total_score [0][1]} Victory "
+                "Points."
+            )
+        else:
+            print(
+                f"{total_score[0][0].faction.name} finished first with "
+                f"{total_score[0][0].vp} and {total_score[1][0].faction.name}."
+                f" finished second with {total_score[1][0].vp}."
+            )
 
     def __str__(self):
         boosters = []

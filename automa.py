@@ -33,9 +33,6 @@ class Automa:
 
         self.passed = False  # whether or not the automa has passed.
 
-        self.end_scoring1 = False  # Used in end scoring for the top tile.
-        self.end_scoring2 = False  # Used in end scoring for the bottom tile.
-
     def start_mine(self, count, universe):
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the Automa place its {count.upper()} mine?\n"
@@ -787,21 +784,22 @@ class Automa:
         self.vp += scored_vp
         print(f"The Automa scored {scored_vp} VP for passing.")
 
-        print(
-            "\nTake the discard pile, any cards remaining in the deck, the "
-            "current action and support cards,\nand the top card of the "
-            "set-aside pile and shuffle them together facedown without "
-            "looking at them to create a new Automa deck.\nAnd don't forget to"
-            " rotate the 3 bottom cards perpendicular to the rest of the deck "
-            "to see when the Automa could pass."
-        )
-        input("Press enter when you are ready to continue.\n--> ")
+        if round_number != 6:
+            print(
+                "\nTake the discard pile, any cards remaining in the deck, the "
+                "current action and support cards,\nand the top card of the "
+                "set-aside pile and shuffle them together facedown without "
+                "looking at them to create a new Automa deck.\nAnd don't forget to"
+                " rotate the 3 bottom cards perpendicular to the rest of the deck "
+                "to see when the Automa could pass."
+            )
+            input("Press enter when you are ready to continue.\n--> ")
 
-        # If automa passed first, it starts first next round.
-        if gp.passed == 1:
-            gp.players.remove(self)
-            gp.players.insert(0, self)
-            print("Automa starts first next round.")
+            # If automa passed first, it starts first next round.
+            if gp.passed == 1:
+                gp.players.remove(self)
+                gp.players.insert(0, self)
+                print("Automa starts first next round.")
 
     def clean_up(self):
         # Automa has no clean up to do.

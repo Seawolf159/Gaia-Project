@@ -109,7 +109,7 @@ class GaiaProject:
         # CIRITICAL TODO uncomment line below when finished. Commented because
         #   it kept changing the img file which is not necessary right now.
         # Load the setup into an image to see it more easily as a human.
-        # self.visual_setup()
+        self.visual_setup()
 
         # TODO Let player choose faction after seeing setup.
         # Start of the game:
@@ -328,6 +328,8 @@ class GaiaProject:
         # TODO Announce what bonus points can be gained in current round?
         for rnd in self.scoring_board.rounds:
             # TODO CRITICAL for testing only
+            self.scoring_board.rounds.clear()
+            continue
             print(
                 ' | '.join([str(x).upper() for x in self.scoring_board.rounds])
             )
