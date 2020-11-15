@@ -274,8 +274,6 @@ class GaiaVp(AdvancedTechnology):
             [
                 planet for planet in player.empire
                     if planet.type == "Gaia"
-                    # TODO CRITICAL test that it doesn't include planets with
-                    #   gaiaformers.
                     and planet.strucure != "gaiaformer"
             ]
         )

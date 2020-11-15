@@ -273,8 +273,6 @@ class Scoring:
                         [
                             planet for planet in player.empire
                                 if planet.type == "Gaia"
-                                # TODO CRITICAL test that it doesn't include
-                                # planets with gaiaformers.
                                 and planet.strucure != "gaiaformer"
                         ]
                     )
@@ -325,18 +323,19 @@ class Scoring:
 
             # All players are tied.
             if scores[0][1] == scores[1][1] == scores[2][1]:
-                place123 = scores
+                place123 = True
             elif scores[0][1] == scores[1][1]:
-                place12 = scores[:2]
+                place12 = True
+                place3 = True
             else:
-                place1 = scores[0]
+                place1 = True
 
-            # Players 2 and 3 are tied
-            if scores[1][1] == scores[2][1]:
-                place23 = scores[1:]
-            else:
-                place2 = scores[1]
-                place3 = scores[2]
+                # Players 2 and 3 are tied
+                if scores[1][1] == scores[2][1]:
+                    place23 = True
+                else:
+                    place2 = True
+                    place3 = True
 
             i = 0
             while i < 3:
@@ -397,12 +396,16 @@ class Scoring:
         print(
             "Now scoring Research track progress and resources. For every "
             "step past level 2 on a research track you get 4 Victory Points.\n"
-            "For every 3 Credits, Knowledge, or Ore in any combination, you "
+            "For every 3 Credits, Knowledge, and Ore in any combination, you "
             "get 1 Victory Point."
         )
+
+        # Just an empty print for white space between player scoring.
+        print()
+
         for player in gp.players:
             print(
-                "\nResearch track progress and resource victory points for "
+                "Research track progress and resource victory points for "
                 f"{player.faction.name}:"
             )
             # If this flag is never set to True, a message telling the player
@@ -466,9 +469,9 @@ class Scoring:
                         "Resources."
                     )
                 else:
-                    print(
-                        "No Victory Points were gained through Resources."
-                    )
+                    print("No Victory Points were gained through Resources.")
+            else:
+                print("The Automa doesn't score points for resources.")
 
             # Just an empty print for white space between player scoring.
             print()
@@ -487,9 +490,9 @@ class Scoring:
             )
         else:
             print(
-                f"{total_score[0][0].faction.name} finished first with "
-                f"{total_score[0][0].vp} and {total_score[1][0].faction.name}."
-                f" finished second with {total_score[1][0].vp}."
+                f"{total_score[0][0].faction.name} finished FIRST with "
+                f"{total_score[0][0].vp} and {total_score[1][0].faction.name} "
+                f"finished SECOND with {total_score[1][0].vp}."
             )
 
     def __str__(self):

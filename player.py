@@ -567,84 +567,20 @@ class Player:
                 )
                 continue
 
-            # Check if the player is within range of the target planet.
-            all_distances = []
-            not_enough_range = False
-            for owned_planet in self.empire:
-                startx = owned_planet.location[0]
-                starty = owned_planet.location[1]
-
-                targetx = planet.location[0]
-                targety = planet.location[1]
-
-                distance = universe.distance(startx, starty, targetx, targety)
-                all_distances.append(distance)
-
-                # If the distance of the planet to one of the players planets
-                # is ever smaller or equal to the amount of range the player
-                # has, the planet is close enough.
-                if distance <= available_range:
-                    break
-            else:
-                distance = min(all_distances)
-                not_enough_range = True
+            # Check if the player has enough range.
+            not_enough_range, distance = self.within_range(
+                universe, planet, available_range
+            )
 
             if not_enough_range:
-                extra_range_needed = distance - available_range
-                qic_needed = ceil(extra_range_needed / 2)
-
-                # Check if player has the required amount of qic needed to
-                # increase the range enough.
-                if qic_needed > self.faction.qic:
-                    print(
-                        "You don't have enough range "
-                       f"({available_range}) to build on your chosen "
-                        "planet and you don't have enough Q.I.C. "
-                       f"({self.faction.qic}) to increase your range."
-                    )
-                    continue
-
-                # Check if the player is building on a gaia planet and if
-                # he/she has enough qic to increase the range AND pay a qic for
-                # building on a gaia planet type.
-                if planet.type == "Gaia" and not self.faction.qic > qic_needed:
-                    print(
-                       f"You don't have enough QIC ({self.faction.qic}) to "
-                       "increase your range AND build on a gaia planet. "
-                       "Please choose a different planet."
-                    )
-                    continue
-
-                if qic_needed == 1:
-                    QIC = "Q.I.C."
-                else:
-                    QIC = "Q.I.C.'s"
-                print(
-                    "Your nearest planet is not within range of your chosen "
-                    f"planet. Do you want to spend {qic_needed} {QIC} to "
-                    f"increase your range by {qic_needed * 2}? (Y/N)"
+                pay_range_qic = self.ask_pay_for_range(
+                    planet,
+                    distance,
+                    available_range,
+                    p_chosen
                 )
-
-                dont_increase_range = False
-                while True:
-                    increase_range = input("--> ").lower()
-
-                    if not increase_range in ['y', 'n']:
-                        print("Please type Y for yes or N for no.")
-                        continue
-                    elif increase_range == 'n':
-                        if p_chosen:
-                            raise e.ExtraRangeError
-                        dont_increase_range = True
-                        break
-                    else:
-                        break
-
-                if dont_increase_range:
+                if not pay_range_qic:
                     continue
-
-                # Player wants to pay QIC.
-                pay_range_qic = qic_needed
 
             if planet.type == "Gaia":
                 # TODO faction compatibility this function doesn't work for the
@@ -660,10 +596,6 @@ class Player:
                     )
                     continue
 
-                if qic_storage == 1:
-                    QIC = "Q.I.C."
-                else:
-                    QIC = "Q.I.C.'s"
                 print(
                     "To build a mine on this planet, you need to pay 1 Q.I.C. "
                     "spend 1 Q.I.C.? (Y/N)"
@@ -692,9 +624,9 @@ class Player:
 
             elif planet.type == "Trans-dim":
                 print(
-                    "To build a mine on this planet, you first need turn this "
-                    "planet into a Gaia planet with the Gaia Project action. "
-                    "Please choose a different type of planet."
+                    "To build a mine on this planet, you first need to turn "
+                    "this planet into a Gaia planet with the Gaia Project "
+                    "action. Please choose a different type of planet."
                 )
                 continue
 
@@ -899,6 +831,107 @@ class Player:
                 else:
                     print("Please only type one of the available numbers.")
                     continue
+
+    def within_range(self, universe, target_hex, available_range):
+        """Check if the player is within range of the target hex.
+
+        Args:
+            universe: The universe object used in the main GaiaProject class.
+            target_hex: Object of the hex to be checked. (Planet or Space).
+            available_range (int): The amount of range the player has.
+
+        Returns:
+            Tuple: [True, False], distance
+                True if player is within range and False if player isn't.
+                distance is the amount of distance to the closest planet the
+                player has to the target_hex.
+        """
+
+        all_distances = []
+        for owned_planet in self.empire:
+            startx = owned_planet.location[0]
+            starty = owned_planet.location[1]
+
+            targetx = target_hex.location[0]
+            targety = target_hex.location[1]
+
+            distance = universe.distance(startx, starty, targetx, targety)
+            all_distances.append(distance)
+
+            # If the distance of the planet to one of the players planets
+            # is ever smaller or equal to the amount of range the player
+            # has, the planet is close enough.
+            if distance <= available_range:
+                return True, distance
+        else:
+            distance = min(all_distances)
+            return False, distance
+
+    def ask_pay_for_range(self,
+                          target_hex,
+                          distance,
+                          available_range,
+                          p_chosen=False,
+                          lost_planet=True):
+        """Ask the player if they want to pay for extra range.
+
+        Args:
+            target_hex: Object of the hex to be checked. (Planet or Space).
+            distance (int): The distance to the hex.
+            available_range (int): The amount of range the player has.
+            p_chosen: Planet object. Only used in scoring.ExtraRange class.
+        """
+
+        extra_range_needed = distance - available_range
+        qic_needed = ceil(extra_range_needed / 2)
+
+        # Check if player has the required amount of qic needed to
+        # increase the range enough.
+        hex_ = "planet"
+        if lost_planet:
+            hex_ = "space"
+        if qic_needed > self.faction.qic:
+            print(
+                f"You don't have enough range to build on your chosen {hex_} "
+                "and you don't have enough Q.I.C. to increase your range."
+            )
+            return False
+
+        # Check if the player is building on a gaia planet and if
+        # he/she has enough qic to increase the range AND pay a qic for
+        # building on a gaia planet type.
+        if target_hex.type == "Gaia" and not self.faction.qic > qic_needed:
+            print(
+                f"You don't have enough Q.I.C. to increase your range AND "
+                "build on a gaia planet. Please choose a different planet."
+            )
+            return False
+
+        if qic_needed == 1:
+            QIC = "Q.I.C."
+        else:
+            QIC = "Q.I.C.'s"
+        print(
+            "Your nearest planet is not within range of your chosen "
+            f"{hex_}. Do you want to spend {qic_needed} {QIC} to "
+            f"increase your range by {qic_needed * 2}? (Y/N)"
+        )
+
+        while True:
+            increase_range = input("--> ").lower()
+
+            if not increase_range in ['y', 'n']:
+                print("Please type Y for yes or N for no.")
+                continue
+            elif increase_range == 'n':
+                if p_chosen:
+                    raise e.ExtraRangeError
+                return False
+            else:
+                break
+
+        # Player wants to pay QIC.
+        return qic_needed
 
     def gaia(self, universe, p_chosen=False, action="gaia", extra_range=0):
         """Function for starting a Gaia Project.

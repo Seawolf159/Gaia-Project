@@ -17,6 +17,7 @@ class Space:
         self.sector = sector  # Number of the sector this space is in.
         self.location = location  # (x, y) on universe grid.
         self.num = num  # Number inside the sector (1-19).
+        self.type = "Space"
 
         # TODO Check how to handle the ivits space station.
         # Verify if that works in Universe.valid_spaces to exclude spaces with
@@ -70,6 +71,9 @@ class LostPlanet:
         # TODO CRITICAL placing the Lost Planet requires the player to be
         #   within range. The player can pay Q.I.C. during placement as well.
         #   enforce the range limit of 4 + any Q.I.C.
+
+        available_range = player.navigation.active
+
         print(
             "You have received the Lost Planet. Where would you like to place "
             "it? You can't choose a space that contains a Planet, Satellite "
@@ -118,12 +122,33 @@ class LostPlanet:
                     else:
                         print("Please only type one of the available numbers.")
                         continue
+
             if not chosen_space:
                 continue
-            else:
-                break
 
-        # Turn the Space object into the Lost Planet object.
+            # Check if the player has enough range.
+            not_enough_range, distance = player.within_range(
+                universe, chosen_space, 4
+            )
+
+            if not_enough_range:
+                pay_range_qic = player.ask_pay_for_range(
+                    chosen_space,
+                    distance,
+                    4,
+                    lost_planet=True
+                )
+
+                if not pay_range_qic:
+                    continue
+                else:
+                    # Pay the qic
+                    player.resolve_cost(f"qic{pay_range_qic}")
+
+            break
+
+        # Turn the Space object into the Lost Planet object. Find the chosen
+        # Hex inside the Universe.sector.hexes list.
         found = False
         old_space = chosen_space
         for i, circle in enumerate(eval(f"universe.sector{sector_choice}"

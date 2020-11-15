@@ -328,8 +328,6 @@ class GaiaProject:
         # TODO Announce what bonus points can be gained in current round?
         for rnd in self.scoring_board.rounds:
             # TODO CRITICAL for testing only
-            self.scoring_board.rounds.clear()
-            continue
             print(
                 ' | '.join([str(x).upper() for x in self.scoring_board.rounds])
             )
@@ -347,7 +345,7 @@ class GaiaProject:
                     if not player.passed:
                         player.action_phase(self, rnd)
 
-            # 4. Clean up phase
+            # 4. Clean up phase7
             # TODO set the used property of tiles with special actions to False
             for x in range(1, 11):
                 self.research_board.pq_actions[x] = True
