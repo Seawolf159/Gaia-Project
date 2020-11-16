@@ -49,7 +49,7 @@ class GoBackToSectorSelection(Exception):
 class NoValidMinePlanetsError(Exception):
     def __init__(self, types, action):
         print(
-            "There are no valid planets in the sector to build a mine on. "
+            "! There are no valid planets in the sector to build a mine on. "
             "Please choose a sector with one of these planet types available:"
             f"\n| {' | '.join(types)} |"
         )
@@ -58,7 +58,7 @@ class NoValidMinePlanetsError(Exception):
 class NoValidSpacesError(Exception):
     def __init__(self):
         print(
-            "There are no valid spaces in the sector to build a mine on. "
+            "! There are no valid spaces in the sector to build a mine on. "
             "Please choose a different sector."
         )
 

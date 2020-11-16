@@ -384,12 +384,12 @@ class Automa:
                 # If nothing was upgradable, the Automa does nothing.
                 if faction_action:
                     print(
-                        "\nNo structure can be Upgraded. The Automa skips "
+                        "\n! No structure can be Upgraded. The Automa skips "
                         "this action."
                     )
                 else:
                     print(
-                        "\nNo structure can be Upgraded. The Automa does "
+                        "\n! No structure can be Upgraded. The Automa does "
                         "nothing this turn. The Automa DOES score points "
                         "though!"
                     )
@@ -633,7 +633,7 @@ class Automa:
         # Check if there are any Power/Q.I.C. actions still open
         if not any(research_board.pq_actions.values()):
             print(
-                "\nThere are no available Power/Q.I.C. Actions left. "
+                "\n! There are no available Power/Q.I.C. Actions left. "
                 "The Automa does nothing this turn. the Automa DOES score "
                 "points though!"
             )

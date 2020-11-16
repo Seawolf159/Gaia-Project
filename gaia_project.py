@@ -321,14 +321,9 @@ class GaiaProject:
     def play(self):
         """This function will setup and allow you to start playing a game."""
 
-        # TODO generate the board and show some sort of summary of the current
-        # board?
-
         # During 6 rounds, cycle through the 4 phases of the game.
-        # TODO Announce what bonus points can be gained in current round?
-        print(' | '.join([str(x).upper() for x in self.scoring_board.rounds]))
         for rnd in self.scoring_board.rounds:
-            print(f"Current round {str(rnd).upper()}.")
+            print(f"\nCurrent round {str(rnd).upper()}.")
             self.passed = 0
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
@@ -342,8 +337,8 @@ class GaiaProject:
                     if not player.passed:
                         player.action_phase(self, rnd)
 
-            # 4. Clean up phase7
-            # TODO set the used property of tiles with special actions to False
+            # 4. Clean up phase
+            # Reset Power/Q.I.C. actions.
             for x in range(1, 11):
                 self.research_board.pq_actions[x] = True
 

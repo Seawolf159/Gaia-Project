@@ -207,61 +207,172 @@ class Player:
         if not reason:
             text = "You have gained "
 
-        # TODO CRITICAL reimplement this function using the re module and print
-        # Power gains only once.
+        # TODO CRITICAL print Power gains only once.
         # Add up all of the types of income. "knowledge, vp, powertoken" etc.
         # and add them at the same time to keep the output clean.
         types_of_gain = {}
+        pattern = re.compile(r"(\D+)(\d+)")
         for gain in gains:
-            if gain.startswith("power"):
+            split_up = pattern.search(gain)
+            cost_type = split_up.group(1)
+            amount = int(split_up.group(2))
+
+            if cost_type.startswith("power"):
                 power_order.append(gain)
-                print(f"+ {reason}{text}{gain[-1]} {gain[:-1].capitalize()}.")
-            elif gain.startswith("vp"):
-                # Had to do this because if a double digit integer was rewarded
-                # like vp12 for example, it would break my [-1] functionality.
-                if not "vp" in types_of_gain:
-                    types_of_gain["vp"] = int(gain.lstrip("vp"))
-                else:
-                    types_of_gain["vp"] += int(gain.lstrip("vp"))
-            elif not gain[:-1] in types_of_gain:
-                types_of_gain[gain[:-1]] = int(gain[-1])
+
+            if not cost_type in types_of_gain:
+                types_of_gain[cost_type] = int(amount)
             else:
-                types_of_gain[gain[:-1]] += int(gain[-1])
+                types_of_gain[cost_type] += int(amount)
 
         for added_up_gain, amount in types_of_gain.items():
-            if added_up_gain == "vp":
+            capped = False
+            limited = False
+            # Check if adding the Credits, Ore or Knowledge, doesn't make
+            # the player go over the limit.
+            if added_up_gain == "credits":
+                if self.faction.credits == self.faction.credits_max:
+                    capped = True
+
+                if self.faction.credits \
+                        + amount > self.faction.credits_max:
+                    new_amount = self.faction.credits_max \
+                        - self.faction.credits
+                    limited = True
+
+            elif added_up_gain == "ore":
+                if self.faction.ore == self.faction.ore_max:
+                    capped = True
+
+                if self.faction.ore + amount > self.faction.ore_max:
+                    new_amount = self.faction.ore_max - self.faction.ore
+                    limited = True
+
+            elif added_up_gain == "knowledge":
+                if self.faction.knowledge == self.faction.knowledge_max:
+                    capped = True
+
+                if self.faction.knowledge + amount \
+                        > self.faction.knowledge_max:
+                    new_amount = self.faction.knowledge_max \
+                        - self.faction.knowledge
+                    limited = True
+
+            # Stuff for making the output prettier.
+            if added_up_gain == "powertoken":
+                resource = "Power Token"
+            elif added_up_gain == "vp":
+                resource = "Victory Point"
+            else:
+                resource = added_up_gain.capitalize()
+
+            if amount > 1 and added_up_gain == "powertoken" \
+                    or added_up_gain == "vp":
+                pretty_print_resource = f"{resource}s"
+            elif amount == 1 and added_up_gain == "credits":
+                pretty_print_resource = f"{resource[:-1]}"
+            else:
+                pretty_print_resource = resource
+
+            if capped:
+                maximum_of_resource = eval(
+                    f"self.faction.{added_up_gain}_max"
+                )
+                print(
+                    f"! {reason}{text}{amount} "
+                    f"{pretty_print_resource}, but no "
+                    f"{pretty_print_resource} could be added because "
+                    "you are already at the maximum of "
+                    f"{maximum_of_resource}."
+                )
+                continue
+            elif added_up_gain == "vp":
                 exec(f"self.{added_up_gain} += {amount}")
             else:
-                # Check if adding the Credits, Ore or Knowledge, doesn't make
-                # the player go over the limit.
-                if added_up_gain == "credits":
-                    if self.faction.credits \
-                        + amount > self.faction.credits_max:
-                        if self.faction.credits > self.faction.credits_max:
-                            continue
-                        amount = self.faction.credits_max \
-                            - self.faction.credits
-                elif added_up_gain == "ore":
-                    if self.faction.ore + amount > self.faction.ore_max:
-                        if self.faction.ore > self.faction.ore_max:
-                            continue
-                        amount = self.faction.ore_max - self.faction.ore
-                elif added_up_gain == "knowledge":
-                    if self.faction.knowledge + amount \
-                            > self.faction.knowledge_max:
-                        if self.faction.knowledge > self.faction.knowledge_max:
-                            continue
-                        amount = self.faction.knowledge_max \
-                            - self.faction.knowledge
-                exec(f"self.faction.{added_up_gain} += {amount}")
-            if not amount == 0:
+                if not added_up_gain.startswith("power"):
+                    exec(f"self.faction.{added_up_gain} += {amount}")
+
+            if limited:
                 print(
-                    f"+ {reason}{text}{amount} "
-                    f"{added_up_gain.capitalize()}."
+                    f"!+ {reason}{text}{amount} {pretty_print_resource}, "
+                    f"but only {new_amount} could be added."
+                )
+            else:
+                print(
+                    f"+ {reason}{text}{amount} {pretty_print_resource}."
                 )
 
         if power_order:
             self.resolve_power_order(power_order)
+
+    def resolve_cost(self, cost):
+        """Subtract the cost of stuff.
+
+        Args:
+            cost (str): 1 cost to be payed by the player. Looks like:
+                "power1", "vp2", "knowledge4"
+
+        Returns:
+            True: If the player was able to pay.
+            False: If the player was unable to pay.
+
+        TODO:
+            print that something couldn't be payed?? "! not enough of "
+                "{resource}"??
+        """
+
+        pattern = r"(\D+)(\d+)"
+        split_up = re.search(pattern, cost)
+        cost_type = split_up.group(1)
+        amount = int(split_up.group(2))
+
+        if cost_type == "power":
+            # Check if the player has enough power to spend.
+            if self.faction.bowl3 >= amount:
+                for _ in range(amount):
+                    self.faction.bowl3 -= 1
+                    self.faction.bowl1 += 1
+            else:
+                return False
+        elif cost_type == "powertoken":
+            if not self.faction.count_powertokens() >= amount:
+                return False
+            for _ in range(amount):
+                # Prioritise taking from the lowest bowl as i don't see why it
+                # would ever be better to not do that.
+                if self.faction.bowl1 > 0:
+                    self.faction.bowl1 -= 1
+                elif self.faction.bowl2 > 0:
+                    self.faction.bowl2 -= 1
+                elif self.faction.bowl3 > 0:
+                    self.faction.bowl3 -= 1
+        elif cost_type == "vp":
+            if not self.vp >= amount:
+                return False
+            exec(f"self.{cost_type} -= {amount}")
+        else:
+            if not eval(f"self.faction.{cost_type}") >= amount:
+                return False
+            exec(f"self.faction.{cost_type} -= {amount}")
+
+        # Stuff for making the output prettier.
+        if cost_type == "powertoken":
+            resource = "Power Token"
+        elif cost_type == "vp":
+            resource = "Victory Point"
+        else:
+            resource = cost_type.capitalize()
+
+        if amount > 1 and cost_type == "powertoken" \
+                or cost_type == "vp":
+            pretty_print_cost_type = f"{resource}s"
+        elif amount == 1 and cost_type == "credits":
+            pretty_print_cost_type = f"{resource[:-1]}"
+        else:
+            pretty_print_cost_type = resource
+
+        print(f"- You have spent {amount} {pretty_print_cost_type}.")
+        return True
 
     def resolve_power_order(self, power_order):
         if len(power_order) > 1:
@@ -361,14 +472,13 @@ class Player:
                 break
             amount -= 1
             charged += 1
-        print(f"+ {charged} Power has been charged.")
 
-    def use_power(self, amount):
-        for _ in range(amount):
-            self.faction.bowl3 -= 1
-            self.faction.bowl1 += 1
-
-        print(f"- You have spent {amount} power.")
+        if amount == 0:
+            print(f"+ {charged} Power has been charged.")
+        elif charged == 0:
+            print("! No Power could be charged.")
+        else:
+            print(f"!+ Only {charged} power could be charged.")
 
     def gaia_phase(self):
         # TODO Faction incompatibility. Might not work with faction Itars,
@@ -381,11 +491,15 @@ class Player:
                 # as the gaia project is now completed.
                 self.gaia_forming.pop().type = "Gaia"
 
-            print("Your Trans-dimensional planets are now Gaia planets.")
-            print(f"Power in gaia bowl: {self.faction.gaia_bowl}")
-            print(f"Power in bowl 1: {self.faction.bowl1}")
-            print(f"Power in bowl 2: {self.faction.bowl2}")
-            print(f"Power in bowl 3: {self.faction.bowl3}")
+            print(
+                "\nGaia phase:\nYour Trans-dimensional planets are now Gaia "
+                "planets."
+            )
+            # Error is corrected at runtime so i can ignore this.
+            # pylint: disable=no-member
+            print(
+                f"{self.gaia_project.active} Power has been returned to you."
+            )
 
     def action_phase(self, gp, rnd, choice=False):
         """Functions for delegating to action functions.
@@ -434,7 +548,7 @@ class Player:
             ore = f"Ore: {self.faction.ore}"
             knowledge = f"Knowledge: {self.faction.knowledge}"
             qic = f"Q.I.C.: {self.faction.qic}"
-            g_formers = f"Gaia formers: {self.faction.gaiaformer}"
+            g_formers = f"Gaiaformers: {self.faction.gaiaformer}"
             power_1 = f"Power in bowl 1: {self.faction.bowl1}"
             power_2 = f"Power in bowl 2: {self.faction.bowl2}"
             power_3 = f"Power in bowl 3: {self.faction.bowl3}"
@@ -521,15 +635,15 @@ class Player:
         # Check if the player has any mines left.
         if self.faction.mine_built == self.faction.mine_max:
             print(
-                "You don't have any more mines left to build. Please choose a "
-                "different action."
+                "! You don't have any more mines left to build. Please choose "
+                "a different action."
             )
             raise e.BackToActionSelection
 
         # Check if the player has enough resources to pay for the mine.
         if not self.faction.credits >= 2 and not self.faction.ore >= 1:
             print(
-                f"You don't have enough credits ({self.faction.credits}) "
+                f"! You don't have enough credits ({self.faction.credits}) "
                 f"or ore ({self.faction.ore}) to build a mine. Building a mine"
                 " costs 2 credits and 1 ore."
             )
@@ -591,7 +705,7 @@ class Player:
 
                 if not qic_storage > 0:
                     print(
-                        "You don't have a Q.I.C. to build on a Gaia planet. "
+                        "! You don't have a Q.I.C. to build on a Gaia planet. "
                         "Please choose a different type of planet."
                     )
                     continue
@@ -666,10 +780,9 @@ class Player:
                     # be payed in addition to the ore cost of the mine.
                     if self.faction.ore - 1 < terraform_cost:
                         print(
-                            "You don't have enough ore to pay the "
-                            "terraforming cost needed to terraform this planet"
-                            f" ({terraform_cost} ore). "
-                            "Please choose a different type of planet."
+                            "! You don't have enough ore to pay the "
+                            "terraforming cost needed to terraform this "
+                            "planet. Please choose a different type of planet."
                         )
                         continue
 
@@ -678,8 +791,7 @@ class Player:
                     print(
                         "To build a mine on this planet, you need to terraform"
                         f" it first. Terraforming will cost {terraform_cost} "
-                        f"ore. You now have {self.faction.ore} ore. Do you "
-                        f"want to pay {terraform_cost} ore? (Y/N)"
+                        f"ore. Do you want to pay {terraform_cost} ore? (Y/N)"
                     )
 
                     while True:
@@ -716,18 +828,22 @@ class Player:
 
         # Apply the various payment options.
         if pay_range_qic:
-            self.faction.qic -= pay_range_qic
+            self.resolve_cost(f"qic{pay_range_qic}")
         if pay_gaia_qic:
-            self.faction.qic -= 1
+            self.resolve_cost(f"qic{1}")
         if pay_terraform_ore:
             # Error is corrected at runtime so i can ignore this.
             # pylint: disable=no-member
-            self.faction.ore -= self.terraforming.active \
-                * (difficulty - terraform_steps)
+            self.resolve_cost("ore"
+                f"{self.terraforming.active * (difficulty - terraform_steps)}"
+            )
 
         if planet.type == "Gaia":
             if planet.structure == "gaiaformer":
-                self.faction.gaiaformer += 1
+                self.resolve_gain(
+                    f"gaiaformer1", "Because you built a mine on a planet "
+                    "with a Gaiaformer"
+                )
 
             # Check if the current round awards points for building a mine
             # on a Gaia planet.
@@ -745,8 +861,8 @@ class Player:
 
         planet.owner = self.faction.name
         planet.structure = "Mine"
-        self.faction.credits -= 2
-        self.faction.ore -= 1
+        self.resolve_cost("credits2")
+        self.resolve_cost("ore1")
         self.faction.mine_built += 1
         self.empire.append(planet)
 
@@ -892,8 +1008,8 @@ class Player:
             hex_ = "space"
         if qic_needed > self.faction.qic:
             print(
-                f"You don't have enough range to build on your chosen {hex_} "
-                "and you don't have enough Q.I.C. to increase your range."
+                f"! You don't have enough range to build on your chosen {hex_}"
+                " and you don't have enough Q.I.C. to increase your range."
             )
             return False
 
@@ -902,7 +1018,7 @@ class Player:
         # building on a gaia planet type.
         if target_hex.type == "Gaia" and not self.faction.qic > qic_needed:
             print(
-                f"You don't have enough Q.I.C. to increase your range AND "
+                f"! You don't have enough Q.I.C. to increase your range AND "
                 "build on a gaia planet. Please choose a different planet."
             )
             return False
@@ -960,7 +1076,7 @@ class Player:
         # Check if the player has enough powertokens to do a gaia project.
         if not self.faction.count_powertokens() >= self.gaia_project.active:
             raise e.NotEnoughPowerTokensError(
-                "You don't have enough power tokens to do this "
+                "! You don't have enough power tokens to do this "
                 "action. Please pick a different action."
             )
 
@@ -1011,12 +1127,12 @@ class Player:
 
         # Apply paying for range if applicable.
         if pay_range_qic:
-            self.faction.qic -= pay_range_qic
+            self.resolve_cost(f"qic{pay_range_qic}")
 
         planet.owner = self.faction.name
         planet.structure = "gaiaformer"
         self.gaia_forming.append(planet)
-        self.faction.gaiaformer -= 1
+        self.resolve_cost("gaiaformer1")
 
     def resolve_technology_tile(self, research_board, rnd, universe, pq=False):
         available = []
@@ -1299,14 +1415,14 @@ class Player:
             # structure.
             if self.faction.credits < credit_cost or self.faction.ore < 2:
                 print(
-                    "You don't have enough credits or ore to upgrade this "
+                    "! You don't have enough credits or ore to upgrade this "
                     "Mine into a Trading Station. Please choose a different "
                     "structure."
                 )
                 raise e.BackToActionSelection("3")
 
-            self.faction.credits -= credit_cost
-            self.faction.ore -= 2
+            self.resolve_cost(f"credits{credit_cost}")
+            self.resolve_cost(f"ore2")
             planet_to_upgrade.structure = upgrade_options["Mine"]
             self.faction.mine_built -= 1
             self.faction.trading_station_built += 1
@@ -1369,7 +1485,7 @@ class Player:
                 # structure into a Planetary Institute.
                 if self.faction.credits < 6 or self.faction.ore < 4:
                     print(
-                        "You don't have enough credits or ore to upgrade this "
+                        "! You don't have enough credits or ore to upgrade this "
                         "Trading Station into a Planetary Institute. "
                         "Please choose a different structure."
                     )
@@ -1378,8 +1494,8 @@ class Player:
                 # TODO CRITICAL get points if the current round gives points
                 # for upgrading to Planetary Institute.
 
-                self.faction.credits -= 6
-                self.faction.ore -= 4
+                self.resolve_cost("credits6")
+                self.resolve_cost("ore4")
                 planet_to_upgrade.structure = (
                     upgrade_options["Trading Station"][0]
                 )
@@ -1415,7 +1531,7 @@ class Player:
                 # structure into a Research Lab.
                 if self.faction.credits < 5 or self.faction.ore < 3:
                     print(
-                        "You don't have enough credits or ore to upgrade this "
+                        "! You don't have enough credits or ore to upgrade this "
                         "Trading Station into a Research Lab. "
                         "Please choose a different structure."
                     )
@@ -1427,8 +1543,8 @@ class Player:
                     gp.research_board, rnd, gp.universe
                 )
 
-                self.faction.credits -= 5
-                self.faction.ore -= 3
+                self.resolve_cost("credits5")
+                self.resolve_cost("ore3")
                 planet_to_upgrade.structure = (
                     upgrade_options["Trading Station"][1]
                 )
@@ -1454,7 +1570,7 @@ class Player:
             # structure.
             if self.faction.credits < 6 or self.faction.ore < 6:
                 print(
-                    "You don't have enough credits or ore to upgrade this "
+                    "! You don't have enough credits or ore to upgrade this "
                     "Research Lab. Please choose a different structure."
                 )
                 raise e.BackToActionSelection("3")
@@ -1493,8 +1609,8 @@ class Player:
 
             # Set the built property of the chosen academy to true.
             chosen_academy[0] = True
-            self.faction.credits -= 6
-            self.faction.ore -= 6
+            self.resolve_cost("credits6")
+            self.resolve_cost("ore6")
             planet_to_upgrade.structure = upgrade_options["Research Lab"]
             self.faction.research_lab_built -= 1
             self.faction.academy_built += 1
@@ -1548,8 +1664,9 @@ class Player:
 
             if not self.resolve_cost(f"powertoken{amount}"):
                 print(
-                    "You don't have enough Power Tokens to make that "
-                    "Federation."
+                    "! You don't have enough Power Tokens to make that "
+                    "Federation. Please make a Federation that requires less "
+                    "satellites."
                 )
                 continue
             break
@@ -1619,7 +1736,7 @@ class Player:
         # Researching costs 4 knowledge.
         if not self.faction.knowledge > 3 and not tech_tile:
             raise e.InsufficientKnowledgeError(
-                "You don't have enough knowledge to research. You "
+                "! You don't have enough knowledge to research. You "
                 f"currently have {self.faction.knowledge} knowledge. "
                 "Please choose a different action."
             )
@@ -1705,7 +1822,7 @@ class Player:
 
         if not tech_tile:
             # Pay research cost.
-            self.faction.knowledge -= 4
+            self.resolve_cost("knowledge4")
         print(research_board)
         print(
             f"You have researched "
@@ -1735,7 +1852,6 @@ class Player:
         TODO:
             Perhaps make the power/qic cost text summary more readable.
             Show which actions are still available this round??
-            Show the resources on the right just like in action phases??
             If the player wants to take for example the 5. Gain 2 Knowledge
                 for 4 Power action, but is already at max (15 knowledge) or
                 unable to receive the full amount of 2 (if he/she is at 14)
@@ -1748,21 +1864,21 @@ class Player:
             "number of your action."
         )
         power = "Power actions:"
-        knowledge3 = "1. Gain 3 Knowledge for 7 Power."
-        terraform2 = "2. Gain 2 Terraforming steps for 5 Power."
-        ore2 = "3. Gain 2 Ore for 4 Power."
-        credits7 = "4. Gain 7 Credits for 4 Power."
-        knowledge2 = "5. Gain 2 Knowledge for 4 Power."
-        terraform1 = "6. Gain 1 Terraforming step for 3 Power."
-        powertoken2 = "7. Gain 2 Power Tokens for 3 Power."
+        knowledge3 = "1. For 7 Power gain 3 Knowledge."
+        terraform2 = "2. For 5 Power gain 2 Terraforming steps."
+        ore2 = "3. For 4 Power gain 2 Ore."
+        credits7 = "4. For 4 Power gain 7 Credits."
+        knowledge2 = "5. For 4 Power gain 2 Knowledge."
+        terraform1 = "6. For 3 Power gain 1 Terraforming step."
+        powertoken2 = "7. For 3 Power gain 2 Power Tokens."
         qic_action = "Q.I.C. actions:"
-        tech_tile = "8. Gain a technology tile for 4 Q.I.C."
+        tech_tile = "8. For 4 Q.I.C. gain a technology tile."
         score_fed_token = (
-            "9. Score one of your Federation Tokens again for 3 Q.I.C."
+            "9. For 3 Q.I.C. score one of your Federation Tokens again."
         )
         vp_for_ptypes = (
-            "10. Gain 3 VP and 1 VP for every different planet type "
-            "for 2 Q.I.C."
+            "10. For 2 Q.I.C. gain 3 VP and 1 VP for every different planet "
+            "type."
         )
         cancel = "11. Go back to action selection."
 
@@ -1827,7 +1943,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(7)
+                self.resolve_cost(f"power{7}")
                 self.resolve_gain("knowledge3")
 
             elif action == "2":
@@ -1843,7 +1959,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(5)
+                self.resolve_cost(f"power{5}")
 
             elif action == "3":
                 # Gain 2 ore for 4 power.
@@ -1859,7 +1975,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(4)
+                self.resolve_cost(f"power{4}")
                 self.resolve_gain("ore2")
 
             elif action == "4":
@@ -1876,7 +1992,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(4)
+                self.resolve_cost(f"power{4}")
                 self.resolve_gain("credits7")
 
             elif action == "5":
@@ -1893,7 +2009,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(4)
+                self.resolve_cost(f"power{4}")
                 self.resolve_gain("knowledge2")
 
             elif action == "6":
@@ -1909,7 +2025,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(3)
+                self.resolve_cost(f"power{3}")
 
             elif action == "7":
                 # Gain 2 powertokens for 3 power.
@@ -1918,7 +2034,7 @@ class Player:
                     continue
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.use_power(3)
+                self.resolve_cost(f"power{3}")
                 self.resolve_gain("powertokens2")
 
             elif action == "8":
@@ -1934,7 +2050,7 @@ class Player:
                 )
 
                 gp.research_board.pq_actions[int(action)] = False
-                self.faction.qic -= 4
+                self.resolve_cost("qic4")
 
             elif action == "9":
                 # Re-score a federation token in the players possession.
@@ -1944,7 +2060,7 @@ class Player:
 
                 if not self.federations:
                     print(
-                        "You don't have any federation tiles to score again. "
+                        "! You don't have any federation tiles to score again. "
                         "Please choose a different action."
                     )
                     continue
@@ -1978,7 +2094,7 @@ class Player:
                     self.federations[int(chosen_token) - 1].reward,
                     "Because of the Federation token"
                 )
-                self.faction.qic -= 3
+                self.resolve_cost("qic3")
 
             elif action == "10":
                 # Gain 3 vp immediately and 1 point for every unique planet
@@ -1990,7 +2106,7 @@ class Player:
                 types = len({planet.type for planet in self.empire})
 
                 self.resolve_gain(f"vp{3 + types}")
-                self.faction.qic -= 2
+                self.resolve_cost("qic2")
 
             return
 
@@ -1998,7 +2114,7 @@ class Player:
         # Check if there is enough power in bowl 3.
         if not self.faction.bowl3 >= amount:
             print(
-                "You don't have enough power to do this action. "
+                "! You don't have enough power to do this action. "
                 "Please choose a different Power/Q.I.C. Action."
             )
             return False
@@ -2008,7 +2124,7 @@ class Player:
         # Check the player has enough qic's
         if not self.faction.qic >= amount:
             print(
-                "You don't have enough Q.I.C.'s to do this action. "
+                "! You don't have enough Q.I.C.'s to do this action. "
                 "Please choose a different Power/Q.I.C. Action."
             )
             return False
@@ -2053,7 +2169,7 @@ class Player:
 
         if not special_actions:
             print(
-                "You don't have any Special (Orange) actions available. "
+                "! You don't have any Special (Orange) actions available. "
                 "Please choose a different action."
             )
             raise e.BackToActionSelection
@@ -2293,61 +2409,7 @@ class Player:
                 if self.faction.bowl2 > 1:
                     cost_exchange()
                 else:
-                    print("You don't have enough Power Tokens in bowl 2.")
-
-    def resolve_cost(self, cost):
-        """Subtract the cost of stuff.
-
-        Args:
-            cost (str): 1 cost to be payed by the player. Looks like:
-                "power1", "vp2", "knowledge4"
-
-        Returns:
-            True: If the player was able to pay.
-            False: If the player was unable to pay.
-
-        TODO:
-            Turn this into the main cost resolving function for all costs or
-                figure something out that works to use for everything??
-            print that something couldn't be payed?? "! not enough of "
-                	"{resource}"??
-        """
-
-        pattern = r"(\D+)(\d+)"
-        split_up = re.search(pattern, cost)
-        cost_type = split_up.group(1)
-        amount = int(split_up.group(2))
-
-        if cost_type == "power":
-            # Check if the player has enough power to spend.
-            if self.faction.bowl3 >= amount:
-                self.use_power(amount)
-                return True
-            else:
-                return False
-        elif cost_type == "powertoken":
-            if not self.faction.count_powertokens() >= amount:
-                return False
-            for _ in range(amount):
-                # Prioritise taking from the lowest bowl as i don't see why it
-                # would ever be better to not do that.
-                if self.faction.bowl1 > 0:
-                    self.faction.bowl1 -= 1
-                elif self.faction.bowl2 > 0:
-                    self.faction.bowl2 -= 1
-                elif self.faction.bowl3 > 0:
-                    self.faction.bowl3 -= 1
-        elif cost_type == "vp":
-            if not self.vp >= amount:
-                return False
-            exec(f"self.{cost_type} -= {amount}")
-        else:
-            if not eval(f"self.faction.{cost_type}") >= amount:
-                return False
-            exec(f"self.faction.{cost_type} -= {amount}")
-
-        print(f"- You have spent {amount} {cost_type.capitalize()}.")
-        return True
+                    print("! You don't have enough Power Tokens in bowl 2.")
 
     def clean_up(self):
         # Reset all the Special actions. For simplicity do this whether it was
