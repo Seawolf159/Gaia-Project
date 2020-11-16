@@ -326,11 +326,8 @@ class GaiaProject:
 
         # During 6 rounds, cycle through the 4 phases of the game.
         # TODO Announce what bonus points can be gained in current round?
+        print(' | '.join([str(x).upper() for x in self.scoring_board.rounds]))
         for rnd in self.scoring_board.rounds:
-            # TODO CRITICAL for testing only
-            print(
-                ' | '.join([str(x).upper() for x in self.scoring_board.rounds])
-            )
             print(f"Current round {str(rnd).upper()}.")
             self.passed = 0
             # 1. Income phase followed by # 2. Gaia phase.

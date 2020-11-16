@@ -568,11 +568,11 @@ class Player:
                 continue
 
             # Check if the player has enough range.
-            not_enough_range, distance = self.within_range(
+            enough_range, distance = self.within_range(
                 universe, planet, available_range
             )
 
-            if not_enough_range:
+            if not enough_range:
                 pay_range_qic = self.ask_pay_for_range(
                     planet,
                     distance,
@@ -975,87 +975,19 @@ class Player:
                 planet = p_chosen
 
             # Check if the player is within range of the target planet.
-            not_enough_range = False
-            all_distances = []
-            for owned_planet in self.empire:
-                startx = owned_planet.location[0]
-                starty = owned_planet.location[1]
+            enough_range, distance = self.within_range(
+                universe, planet, available_range
+            )
 
-                targetx = planet.location[0]
-                targety = planet.location[1]
-
-                distance = universe.distance(startx, starty, targetx, targety)
-                all_distances.append(distance)
-
-                # If the distance of the planet to one of the players planets
-                # is ever smaller or equal to the amount of range the player
-                # has, the planet is close enough.
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                if distance <= available_range:
-                    break
-            else:
-                distance = min(all_distances)
-                not_enough_range = True
-
-            if not_enough_range:
-                # Error is corrected at runtime so i can ignore this.
-                # pylint: disable=no-member
-                extra_range_needed = distance - available_range
-                qic_needed = ceil(extra_range_needed / 2)
-
-                # Check if player has the required amount of qic needed to
-                # increase the range enough.
-                if qic_needed > self.faction.qic:
-                    print(
-                        "You don't have enough range "
-                        f"({available_range}) to build on your chosen "
-                        "planet and you don't have enough Q.I.C. to increase "
-                        "your range."
-                    )
-                    continue
-
-                # Check if the player is building on a gaia planet and if
-                # he/she has enough qic to increase the range AND pay a qic for
-                # building on a gaia planet type.
-                if planet.type == "Gaia" and not self.faction.qic > qic_needed:
-                    print(
-                        f"You don't have enough QIC ({self.faction.qic}) to "
-                        "increase your range AND build on a gaia planet. "
-                        "Please choose a different planet."
-                    )
-                    continue
-
-                if qic_needed == 1:
-                    QIC = "Q.I.C."
-                else:
-                    QIC = "Q.I.C.'s"
-                print(
-                    "Your nearest planet is not within range of your chosen "
-                    f"planet. Do you want to spend {qic_needed} {QIC} to "
-                    f"increase your range by {qic_needed * 2}? (Y/N)"
+            if not enough_range:
+                pay_range_qic = self.ask_pay_for_range(
+                    planet,
+                    distance,
+                    available_range,
+                    p_chosen
                 )
-
-                dont_increase_range = False
-                while True:
-                    increase_range = input("--> ").lower()
-
-                    if not increase_range in ['y', 'n']:
-                        print("Please type Y for yes or N for no.")
-                        continue
-                    elif increase_range == 'n':
-                        if p_chosen:
-                            raise e.ExtraRangeError
-                        dont_increase_range = True
-                        break
-                    else:
-                        break
-
-                if dont_increase_range:
+                if not pay_range_qic:
                     continue
-
-                # Player wants to pay QIC.
-                pay_range_qic = qic_needed
             break
 
         # Deduct the power and put it in the gaia_bowl

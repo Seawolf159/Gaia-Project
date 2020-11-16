@@ -480,7 +480,7 @@ class Scoring:
         for player in gp.players:
             total_score.append([player, player.vp])
         # Sort by victory points in reverse for highest to lowest.
-        total_score.sort(key=lambda total: player.vp, reverse=True)
+        total_score.sort(key=lambda total: total[1], reverse=True)
 
         # TODO more players. This only works when playing against Automa.
         if total_score[0][1] == total_score[1][1]:

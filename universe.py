@@ -72,12 +72,10 @@ class LostPlanet:
         #   within range. The player can pay Q.I.C. during placement as well.
         #   enforce the range limit of 4 + any Q.I.C.
 
-        available_range = player.navigation.active
-
         print(
-            "You have received the Lost Planet. Where would you like to place "
-            "it? You can't choose a space that contains a Planet, Satellite "
-            "or Space Station."
+            "\nYou have received the Lost Planet. Where would you like to "
+            "place it? You can't choose a space that contains a Planet, "
+            "Satellite or Space Station."
         )
 
         # TODO more players only for 2p right now
@@ -127,11 +125,11 @@ class LostPlanet:
                 continue
 
             # Check if the player has enough range.
-            not_enough_range, distance = player.within_range(
+            enough_range, distance = player.within_range(
                 universe, chosen_space, 4
             )
 
-            if not_enough_range:
+            if not enough_range:
                 pay_range_qic = player.ask_pay_for_range(
                     chosen_space,
                     distance,
@@ -742,7 +740,7 @@ class Universe:
                 if not isinstance(hex_, Space):
                     continue
 
-                # TODO satellites aren't places. Is this step relevant?
+                # TODO satellites aren't placed (yet).
                 if hex_.satellites:
                     continue
                 spaces.append(hex_)
