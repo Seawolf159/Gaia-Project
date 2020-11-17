@@ -60,9 +60,17 @@ class Player:
 
         self.passed = False  # whether or not the player has passed.
 
+        # List with all the free action the player has taken. This is used to
+        # undo the free actions if the player decides that he doesn't want /
+        # can't do an action after all and not doing an action is not allowed
+        # when taking free actions.
+        # append lists with the cost first and what was gained second.
+        # For example: self.free_action.append(["power1", "credits1"])
+        self.free_actions = []
+
         # TESTING parameters.
         # Initiate testing parameters
-        # self.faction._testing()
+        self.faction._testing()
 
     def start_mine(self, count, universe, players):
         """Function for placing the initial mines.
@@ -187,9 +195,9 @@ class Player:
                     total_income.append(level.reward)
 
         # Take all the income and give it to the player.
-        self.resolve_gain(total_income)
+        self.resolve_gain(total_income, income_phase=True)
 
-    def resolve_gain(self, gains, reason=""):
+    def resolve_gain(self, gains, reason="", income_phase=False):
         """Function for resolving all resources that are gained.
 
         Args:
@@ -275,6 +283,8 @@ class Player:
                 resource = "Power Token"
             elif added_up_gain == "vp":
                 resource = "Victory Point"
+            elif added_up_gain == "qic":
+                resource = "Q.I.C."
             else:
                 resource = added_up_gain.capitalize()
 
@@ -297,7 +307,10 @@ class Player:
                     "you are already at the maximum of "
                     f"{maximum_of_resource}."
                 )
-                continue
+                if income_phase:
+                    continue
+                else:
+                    return False
             elif added_up_gain == "vp":
                 exec(f"self.{added_up_gain} += {amount}")
             else:
@@ -372,6 +385,8 @@ class Player:
             resource = "Power Token"
         elif cost_type == "vp":
             resource = "Victory Point"
+        elif cost_type == "qic":
+            resource = "Q.I.C."
         else:
             resource = cost_type.capitalize()
 
@@ -647,6 +662,83 @@ class Player:
                 continue
             else:
                 return
+
+    def undo_free(self):
+        # TODO minor print the totals only and not everything individually??
+
+        pattern = re.compile(r"(\D+)(\d+)")
+
+        # Totals are put into this dictionary for printing the totals prettier.
+        summary = []
+        while self.free_actions:
+            action = self.free_actions.pop()
+
+            cost_match = pattern.match(action[0])
+            cost = cost_match.group(1)
+            cost_amount = int(cost_match.group(2))
+
+            exchange_match = pattern.match(action[1])
+            exchange = exchange_match.group(1)
+            exchange_amount = int(exchange_match.group(2))
+
+            if cost == "discard":
+                self.faction.bowl2 += 2
+                self.faction.bowl3 -= 1
+                summary.append([
+                    "+ You have re-gained 2 Power in Bowl 2",
+                    "- You have lost 1 Power from Bowl 3"
+                ])
+            else:
+                if cost == "power":
+                    self.faction.bowl3 += cost_amount
+                    self.faction.bowl1 -= cost_amount
+                    exec(f"self.faction.{exchange} -= {exchange_amount}")
+                elif exchange == "powertoken":
+                    exec(f"self.faction.{cost} += {cost_amount}")
+                    self.faction.bowl1 -= exchange_amount
+                else:
+                    exec(f"self.faction.{cost} += {cost_amount}")
+                    exec(f"self.faction.{exchange} -= {exchange_amount}")
+
+                # Stuff for making the cost prettier.
+                if cost == "qic":
+                    cost = "Q.I.C."
+                else:
+                    cost = cost.capitalize()
+
+                # Stuff for making the exchange prettier.
+                if exchange == "powertoken":
+                    exchange = "Power Token"
+                elif exchange == "qic":
+                    exchange = "Q.I.C."
+                elif exchange == "credits" and exchange_amount == 1:
+                    exchange = "Credit"
+                else:
+                    exchange = exchange.capitalize()
+
+                if cost == "Power":
+                    summary.append([
+                        f"+ You have re-gained {cost_amount} {cost} in bowl 3",
+                        f"- You have lost {exchange_amount} {exchange}"
+                    ])
+                else:
+                    summary.append([
+                        f"+ You have re-gained {cost_amount} {cost}",
+                        f"- You have lost {exchange_amount} {exchange}"
+                    ])
+
+        # Fill the string from the left with spaces until
+        # it's as long as the longest string in the row
+        # (in this case i chose 70 to hopefully be the longest
+        # string). To line up both columns and add 7 spaces
+        # between columns.
+        filler = (lambda text_left: " " * (38 - len(text_left) + 7))
+
+        print("\nYour free actions have been undone.")
+        for summation in summary:
+            cost = summation[0]
+            exchange = summation[1]
+            print(f"{cost}{filler(cost)}{exchange}")
 
     def mine(self,
              gp,
@@ -1991,7 +2083,7 @@ class Player:
             if action == "1":
                 # Gain 3 knowledge for 7 power.
 
-                if self.faction.knowledge == 15:
+                if self.faction.knowledge == self.faction.knowledge_max:
                     print(
                         "You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
@@ -2023,7 +2115,7 @@ class Player:
             elif action == "3":
                 # Gain 2 ore for 4 power.
 
-                if self.faction.ore == 15:
+                if self.faction.ore == self.faction.ore_max:
                     print(
                         "You are already at the maximum Ore you can have. "
                         "Please choose a different Power/Q.I.C. Action."
@@ -2040,7 +2132,7 @@ class Player:
             elif action == "4":
                 # Gain 7 credits for 4 ore.
 
-                if self.faction.credits == 30:
+                if self.faction.credits == self.faction.credits_max:
                     print(
                         "You are already at the maximum Credits you can have. "
                         "Please choose a different Power/Q.I.C. Action."
@@ -2057,7 +2149,7 @@ class Player:
             elif action == "5":
                 # Gain 2 knowledge for 4 power.
 
-                if self.faction.knowledge == 15:
+                if self.faction.knowledge == self.faction.knowledge:
                     print(
                         "You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
@@ -2274,9 +2366,17 @@ class Player:
 
     def pass_(self, gp, rnd):
         """Function for passing."""
-
         # TODO MINOR allow player to go back to action selection in case of a
         #   miss click and the player doesn't want to pass yet??
+
+        # Check if no free actions have been taken. Player can't pass
+        # if free action have been taken.
+        if self.free_actions:
+            print(
+                "You have taken free actions so you aren't allowed to pass. "
+                "Please undo your free actions if you wish to pass."
+            )
+            raise e.BackToActionSelection()
 
         print("\nYou Pass.")
 
@@ -2354,7 +2454,7 @@ class Player:
             #   having taken the free action as to not get stuck if he can't
             #   do any other action.
             reminder = (
-                "Remember that you can only take a free action if you will "
+                "Remember that you can only take free actions if you will "
                 "do an action!"
             )
 
@@ -2376,9 +2476,7 @@ class Player:
             # bowl 2 to bowl 3." is 77 characters long which is the longest
             # string we need to subtract from to fill the rest to the same
             # length.
-            filler = (
-                lambda text_left: " " * (77 - len(text_left) + 7)
-            )
+            filler = (lambda text_left: " " * (77 - len(text_left) + 7))
 
             summary = [
                 ore,
@@ -2401,14 +2499,14 @@ class Player:
                     )
 
                     # f_c_a is free_cost (payment amount to be done). (1)
-                    f_c_a = f" {free_cost_match.group(2).capitalize()}"
+                    f_c_a = f" {free_cost_match.group(2)}"
 
                     # f_c is free_cost (payment type to be done). (power)
                     f_c = f" {free_cost_match.group(1).capitalize()}"
 
                     # f_e_a free_exchange (resource amount to be received).
                     # (1).
-                    f_e_a = f" {free_exchange_match.group(2).capitalize()}"
+                    f_e_a = f" {free_exchange_match.group(2)}"
 
                     # f_e is free_exchange (resource type to be received).
                     # (credits).
@@ -2416,6 +2514,18 @@ class Player:
 
                     pay = " Pay"
                     for_ = " for"
+
+                    # Stuff for making the cost prettier.
+                    if f_c == " Qic":
+                        f_c = " Q.I.C."
+
+                    # Stuff for making the exchange prettier.
+                    if f_e == " Credits" and f_e_a == " 1":
+                        f_e = " Credit"
+                    elif f_e == " Qic":
+                        f_e = " Q.I.C"
+                    elif f_e == " Powertoken":
+                        f_e = " Power Token"
 
                 # Else the exchanged resource self.move_from_bowl2_to_bowl3
                 # will be done by a function.
@@ -2432,13 +2542,22 @@ class Player:
                     print(f"{total}{filler(total)}{summary[i - 1]}")
                 else:
                     print(f"{total}")
-            print(f"{i + 1}. Go back to action selection.")
+            print(
+                f"{i + 1}. Undo Free actions.\n"
+                f"{i + 2}. Go back to action selection."
+            )
 
             chosen_free = input("--> ")
             if chosen_free in [str(n + 1) for n in range(i)]:
                 cost = list(free_actions.keys())[int(chosen_free) - 1]
                 cost_exchange = free_actions[cost]
             elif chosen_free == f"{i + 1}":
+                if self.free_actions:
+                    self.undo_free()
+                else:
+                    print("You haven't taken any free actions this turn.")
+                continue
+            elif chosen_free == f"{i + 2}":
                 raise e.BackToActionSelection
             else:
                 print("Please only type one of the available numbers.")
@@ -2446,15 +2565,32 @@ class Player:
 
             # Make the exchange.
             if isinstance(cost_exchange, str):
+                # if player is maxed out of the gained resource so i assume
+                # the free action can't be taken.
+                pattern2 = r"\D+"
+                exchange_check = re.search(pattern2, cost_exchange).group(0)
+                if exchange_check in ["knowledge", "ore", "credits"]:
+                    if eval(f"self.faction.{exchange_check} "
+                            f"== self.faction.{exchange_check}_max"):
+                        # Call this function because it will return a nice
+                        # message if the player is full on resources.
+                        self.resolve_gain(cost_exchange)
+                        print(
+                            "Nothing was exchanged. Please choose a "
+                            "different Free action."
+                        )
+                        continue
+
                 if self.resolve_cost(cost):
                     self.resolve_gain(cost_exchange)
+                    self.free_actions.append([cost, cost_exchange])
                 else:
-                    pattern2 = r"\D+"
                     cost_type = re.search(pattern2, cost).group(0).capitalize()
 
                     print(
-                        f"You don't have enough {cost_type}. "
-                        "Please choose a different Free action."
+                        f"! You don't have enough {cost_type}.\n"
+                        "Nothing was exchanged. Please choose a different "
+                        "Free action."
                     )
                     continue
             # The player chose to discard 1 powertoken from bowl 2 to charge
@@ -2464,6 +2600,9 @@ class Player:
                 # action.
                 if self.faction.bowl2 > 1:
                     cost_exchange()
+                    self.free_actions.append(
+                        ["discard1", "power1"]
+                    )
                 else:
                     print("! You don't have enough Power Tokens in bowl 2.")
 
