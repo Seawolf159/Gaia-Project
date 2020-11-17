@@ -33,7 +33,15 @@ class Automa:
 
         self.passed = False  # whether or not the automa has passed.
 
-    def start_mine(self, count, universe):
+    def start_mine(self, count, universe, players):
+        """Function for placing the initial mines.
+
+        Args:
+            count (int): Number of the mine placed.
+            universe: The universe object used in the main GaiaProject class.
+            players: list of the players in the current game.
+        """
+
         faction_name = f"\nAutoma: {self.faction.name}:\n"
         question = f"Where does the Automa place its {count.upper()} mine?\n"
         rules = (
@@ -70,6 +78,11 @@ class Automa:
         planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
+
+        # Check if the mine was placed within range 2 of an opponent.
+        universe.planet_has_neighbours(
+            planet, self, players, neighbour_charge=False
+        )
 
     def choose_booster(self, scoring_board):
         faction_name = f"\n{self.faction.name}:\n"
@@ -309,9 +322,7 @@ class Automa:
         self.faction.mine_available -= 1
         self.empire.append(planet)
 
-        gp.universe.planet_has_neighbours(
-            planet, self, gp.players, neighbour_charge=True
-        )
+        gp.universe.planet_has_neighbours(planet, self, gp.players)
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.

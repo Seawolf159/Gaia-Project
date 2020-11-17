@@ -109,7 +109,7 @@ class GaiaProject:
         # CIRITICAL TODO uncomment line below when finished. Commented because
         #   it kept changing the img file which is not necessary right now.
         # Load the setup into an image to see it more easily as a human.
-        self.visual_setup()
+        # self.visual_setup()
 
         # TODO Let player choose faction after seeing setup.
         # Start of the game:
@@ -155,14 +155,12 @@ class GaiaProject:
                         current_level = levels[i]
                         track.research(current_level, p, i)
 
-        # TODO Final Commented for faster testing. Uncomment code block:
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
-            player.start_mine("first", self.universe)
+            player.start_mine("first", self.universe, self.players)
 
-        # TODO Final Commented for faster testing. Uncomment code block:
         for player in reversed(self.players):
-            player.start_mine("second", self.universe)
+            player.start_mine("second", self.universe, self.players)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):

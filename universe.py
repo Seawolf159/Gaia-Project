@@ -39,9 +39,10 @@ class Planet:
         self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
         self.location = location  # Universe grid (x, y).
         self.num = num  # Number inside the sector (1-19).
-        self.owner = False  # Faction name of owner
-        self.structure = False  # Type of building built
-        self.federation = False  # Part of federation? True or False
+        self.owner = False  # Faction name of owner.
+        self.structure = False  # Type of building built.
+        self.federation = False  # Part of federation? True or False.
+        self.neighbours = []  # List of opponents that are within range 2.
 
     def __str__(self):
         owner = ""
@@ -68,9 +69,6 @@ class LostPlanet:
 
     def place(self, player, universe, rnd):
         # TODO ivits space station check.
-        # TODO CRITICAL placing the Lost Planet requires the player to be
-        #   within range. The player can pay Q.I.C. during placement as well.
-        #   enforce the range limit of 4 + any Q.I.C.
 
         print(
             "\nYou have received the Lost Planet. Where would you like to "
@@ -756,11 +754,13 @@ class Universe:
                               planet_to_check,
                               active_player,
                               players,
-                              neighbour_charge=False):
+                              neighbour_charge=True):
         """Determine if a planet is neighbouring opponents.
 
         An opponent is a neighbour if he is within a range of 2 of the planet
-        in question.
+        in question. This function also delegates to the
+        Universe.charge_neighbour_power function to allow the opponent to
+        charge power.
 
         Args:
             planet_to_check: Planet object of the planet you want to check for
@@ -777,14 +777,21 @@ class Universe:
             False: if no neighbours are found.
 
         TODO:
-            This function returns immediately when a neighbour has been found.
-                It doesn't look at which neighbouring structure has the highest
-                power value.
+            This function doesn't look at which neighbouring structure has the
+                highest power value.
         """
 
+        neighbour = False
         for opponent in players:
             if opponent is active_player:
                 continue
+
+            if opponent in planet_to_check.neighbours:
+                if neighbour_charge:
+                    self.charge_neighbour_power(
+                        active_player, opponent
+                    )
+                return True
 
             for planet in opponent.empire:
                 startx = planet_to_check.location[0]
@@ -795,13 +802,19 @@ class Universe:
 
                 distance = self.distance(startx, starty, targetx, targety)
                 if distance <= 2:
+                    neighbour = True
                     if neighbour_charge:
                         self.charge_neighbour_power(
                             active_player, opponent
                         )
-                    return True
+                    if not active_player in planet.neighbours:
+                        planet.neighbours.append(active_player)
+                    planet_to_check.neighbours.append(opponent)
         else:
-            return False
+            if neighbour:
+                return True
+            else:
+                return False
 
     def charge_neighbour_power(self, trigger_player, charging_player):
         """Function for charging Power due to neighborhood.
@@ -813,6 +826,10 @@ class Universe:
                 charge power.
         """
 
+        # Automa can't charge power.
+        if type(charging_player).__name__ == "Automa":
+            return
+
         # TODO faction compatibility. There is a faction which has a thing that
         #   makes his buildings have more power, so with the technology that
         #   gives the planetary institute and the academy 1 extra power, he can
@@ -820,7 +837,7 @@ class Universe:
         #   only allows input of 1-4.
         # TODO implement this functionality more automatic.
         print(
-            f"\n{charging_player.faction.name} do you want to charge Power for"
+            f"\n{charging_player.faction.name} do you wanst to charge Power for"
             f" being in the neighborhood of {trigger_player.faction.name}?\n"
             "Charging Power costs chargable amount of Power - 1 Victory "
             "Points."
@@ -829,7 +846,10 @@ class Universe:
         print(
             "Please type the amount of your highest Power value structure in "
             "the neighbourhood or 0 if you don't want to charge any Power.\n"
-            f"You have {charging_player.vp} Victory Points."
+            f"You have {charging_player.vp} Victory Points.\n"
+            f"Power in bowl 1: {charging_player.faction.bowl1}\n"
+            f"Power in bowl 2: {charging_player.faction.bowl2}\n"
+            f"Power in bowl 3: {charging_player.faction.bowl3}"
         )
         while True:
             charge_chosen = input("--> ")
@@ -842,7 +862,8 @@ class Universe:
                 if charge_chosen > 4:
                     print(
                         "4 is the maximum you can charge from being in the "
-                        "neighborhood if you have the Standard Technology."
+                        "neighborhood if you have the Standard Technology for "
+                        "it."
                     )
                     continue
                 else:
