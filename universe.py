@@ -776,17 +776,13 @@ class Universe:
             neighbour_charge (Bool): Whether or not to handle neighbour Power
                 charging.
 
-        Returns:
-            True: if a planet is found owned by an opponent within range 2.
-            False: if no neighbours are found.
-
         TODO:
             This function doesn't look at which neighbouring structure has the
                 highest power value.
         """
 
-        neighbour = False
         for opponent in players:
+            neighbour = False
             if opponent is active_player:
                 continue
 
@@ -795,7 +791,7 @@ class Universe:
                     self.charge_neighbour_power(
                         active_player, opponent
                     )
-                return True
+                continue
 
             for planet in opponent.empire:
                 startx = planet_to_check.location[0]
@@ -807,18 +803,17 @@ class Universe:
                 distance = self.distance(startx, starty, targetx, targety)
                 if distance <= 2:
                     neighbour = True
+                    if not active_player in planet.neighbours:
+                        planet.neighbours.append(active_player)
+                    planet_to_check.neighbours.append(opponent)
+            else:
+                # If the opponent was a neighbour, allow him/her
+                # to charge power.
+                if neighbour:
                     if neighbour_charge:
                         self.charge_neighbour_power(
                             active_player, opponent
                         )
-                    if not active_player in planet.neighbours:
-                        planet.neighbours.append(active_player)
-                    planet_to_check.neighbours.append(opponent)
-        else:
-            if neighbour:
-                return True
-            else:
-                return False
 
     def charge_neighbour_power(self, trigger_player, charging_player):
         """Function for charging Power due to neighborhood.
@@ -865,11 +860,28 @@ class Universe:
             else:
                 if charge_chosen > 4:
                     print(
-                        "4 is the maximum you can charge from being in the "
+                        "! 4 is the maximum you can charge from being in the "
                         "neighborhood if you have the Standard Technology for "
                         "it."
                     )
                     continue
+                elif charge_chosen == 4:
+                    # Check if the player has the standard technology to be
+                    # able to charge 4 power from Planetary Institutes and
+                    # Academy's.
+                    for standard_tech in charging_player.standard_technology:
+                        if standard_tech.when == "worth4power":
+                            power_tech = True
+                            break
+                    else:
+                        print(
+                            "! You don't have the standard technology to "
+                            "charge 4 power."
+                        )
+                        continue
+
+                    if power_tech:
+                        break
                 else:
                     break
 
