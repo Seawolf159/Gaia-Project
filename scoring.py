@@ -249,7 +249,7 @@ class Scoring:
                             try:
                                 end_tile_score = int(end_tile_score)
                             except ValueError:
-                                print("Please only type a number.")
+                                print("! Please only type a number.")
                                 continue
                             else:
                                 break
@@ -300,7 +300,7 @@ class Scoring:
                         try:
                             end_tile_score = int(end_tile_score)
                         except ValueError:
-                            print("Please only type a number.")
+                            print("! Please only type a number.")
                             continue
                         else:
                             break

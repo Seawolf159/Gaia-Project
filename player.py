@@ -121,7 +121,7 @@ class Player:
                 print(f"You chose {self.booster}.")
                 return
             else:
-                print("Please only type one of the available numbers.")
+                print(! "Please only type one of the available numbers.")
 
     def income_phase(self):
         print(f"\nDoing income for {self.faction.name}.")
@@ -205,11 +205,6 @@ class Player:
                 ["credits3", "vp2", "knowledge1"]
             reason (str): String specifying why something was gained.
                 f"{reason} you have gained...."
-
-        TODO:
-            print a message like "! Couldn't add full gain because you have "
-                "reached max resources". Do this with charge_power function
-                as well "! Couldn't charge all power"??
         """
 
         # If gains is not a list and therefore a single gain, put that
@@ -251,7 +246,7 @@ class Player:
             # Check if adding the Credits, Ore or Knowledge, doesn't make
             # the player go over the limit.
             if added_up_gain == "credits":
-                if self.faction.credits == self.faction.credits_max:
+                if self.faction.credits >= self.faction.credits_max:
                     capped = True
 
                 if self.faction.credits \
@@ -261,7 +256,7 @@ class Player:
                     limited = True
 
             elif added_up_gain == "ore":
-                if self.faction.ore == self.faction.ore_max:
+                if self.faction.ore >= self.faction.ore_max:
                     capped = True
 
                 if self.faction.ore + amount > self.faction.ore_max:
@@ -269,7 +264,7 @@ class Player:
                     limited = True
 
             elif added_up_gain == "knowledge":
-                if self.faction.knowledge == self.faction.knowledge_max:
+                if self.faction.knowledge >= self.faction.knowledge_max:
                     capped = True
 
                 if self.faction.knowledge + amount \
@@ -296,10 +291,9 @@ class Player:
             else:
                 pretty_print_resource = resource
 
+            # Gain the resources
             if capped:
-                maximum_of_resource = eval(
-                    f"self.faction.{added_up_gain}_max"
-                )
+                maximum_of_resource = eval(f"self.faction.{added_up_gain}_max")
                 print(
                     f"! {reason}{text}{amount} "
                     f"{pretty_print_resource}, but no "
@@ -315,7 +309,12 @@ class Player:
                 exec(f"self.{added_up_gain} += {amount}")
             else:
                 if not added_up_gain.startswith("power"):
-                    exec(f"self.faction.{added_up_gain} += {amount}")
+                    # If the player will be going over the max, add until the
+                    # players resource is full.
+                    if limited:
+                        exec(f"self.faction.{added_up_gain} += {new_amount}")
+                    else:
+                        exec(f"self.faction.{added_up_gain} += {amount}")
 
             if limited:
                 print(
@@ -323,9 +322,7 @@ class Player:
                     f"but only {new_amount} could be added."
                 )
             else:
-                print(
-                    f"+ {reason}{text}{amount} {pretty_print_resource}."
-                )
+                print(f"+ {reason}{text}{amount} {pretty_print_resource}.")
 
         if power_order:
             self.resolve_power_order(power_order)
@@ -488,7 +485,9 @@ class Player:
                                     self.charge_power(power_to_cycle)
                                 power_order.pop()
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
             else:
                 power_to_cycle = 0
@@ -561,10 +560,6 @@ class Player:
         Args:
             gp: GaiaProject main game object.
             rnd: Active Round object.
-
-        TODO:
-            Find consistency in iterating over all the options of something
-            or not printing all the options with every loop.
         """
 
         # Summary of actions
@@ -579,7 +574,7 @@ class Player:
         pq = "6. Power or Q.I.C (Purple/Green) action."
         special = "7. Do a Special (Orange) action."
         pass_ = "8. Pass."
-        free = "9. Exchange resources. (Free action)"
+        free = "9. Free action (exchange resources)."
 
         # Value is a list with the function and the arguments it needs.
         options = {
@@ -587,7 +582,7 @@ class Player:
             "2": [self.gaia, gp.universe],
             "3": [self.upgrade, gp, rnd],
             "4": [self.federation, gp, rnd],
-            "5": [self.research, gp.research_board, rnd, gp.universe],
+            "5": [self.research, gp.research_board, rnd, gp],
             "6": [self.pq, gp, rnd],
             "7": [self.special, gp.universe, rnd],
             "8": [self.pass_, gp, rnd],
@@ -661,6 +656,9 @@ class Player:
                 choice = back.choice
                 continue
             else:
+                # If the player used free actions, reset the list.
+                if self.free_actions:
+                    self.free_actions.clear()
                 return
 
     def undo_free(self):
@@ -806,8 +804,8 @@ class Player:
                 and not planet.type in C.home_types
             ):
                 print(
-                    "When you gain terraform steps, you MUST build a mine on "
-                    "a planet that has to be terraformed. Please choose a "
+                    "! When you gain terraform steps, you MUST build a mine on"
+                    " a planet that has to be terraformed. Please choose a "
                     "different planet type."
                 )
                 continue
@@ -851,7 +849,7 @@ class Player:
                     pay_qic = input("--> ").lower()
 
                     if not pay_qic in ['y', 'n']:
-                        print("Please type Y for yes or N for no.")
+                        print("! Please type Y for yes or N for no.")
                         continue
                     elif pay_qic == 'n':
                         if p_chosen:
@@ -869,7 +867,7 @@ class Player:
 
             elif planet.type == "Trans-dim":
                 print(
-                    "To build a mine on this planet, you first need to turn "
+                    "! To build a mine on this planet, you first need to turn "
                     "this planet into a Gaia planet with the Gaia Project "
                     "action. Please choose a different type of planet."
                 )
@@ -929,7 +927,7 @@ class Player:
                         pay_terraform_cost = input("--> ").lower()
 
                         if not pay_terraform_cost in ['y', 'n']:
-                            print("Please type Y for yes or N for no.")
+                            print("! Please type Y for yes or N for no.")
                             continue
                         elif pay_terraform_cost == 'n':
                             if p_chosen:
@@ -1006,9 +1004,7 @@ class Player:
                         reason = "Because of an advanced technology tile"
                         self.resolve_gain(tile.reward, reason)
 
-        gp.universe.planet_has_neighbours(
-            planet, self, gp.players
-        )
+        gp.universe.planet_has_neighbours(planet, self, gp.players)
 
     def choose_planet(self, universe, action):
         """Function for choosing a planet on the board.
@@ -1046,7 +1042,7 @@ class Player:
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
-                print(f"Please only type {choose_range}.")
+                print(f"! Please only type {choose_range}.")
                 continue
 
             # Choose a planet.
@@ -1075,7 +1071,7 @@ class Player:
                 elif chosen_planet == f"{i + 1}":
                     break
                 else:
-                    print("Please only type one of the available numbers.")
+                    print("! Please only type one of the available numbers.")
                     continue
 
     def within_range(self, universe, target_hex, available_range):
@@ -1167,7 +1163,7 @@ class Player:
             increase_range = input("--> ").lower()
 
             if not increase_range in ['y', 'n']:
-                print("Please type Y for yes or N for no.")
+                print("! Please type Y for yes or N for no.")
                 continue
             elif increase_range == 'n':
                 if p_chosen:
@@ -1197,7 +1193,7 @@ class Player:
         # Check if the player has an available gaiaformer.
         if not self.faction.gaiaformer > 0:
             raise e.NoGaiaFormerError(
-                "You have no available Gaiaformers. Please pick a "
+                "! You have no available Gaiaformers. Please pick a "
                 "different action."
             )
 
@@ -1336,7 +1332,7 @@ class Player:
             elif chosen_planet == f"{i + 1}":
                 raise e.BackToActionSelection
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
                 continue
 
         upgrade_options = {
@@ -1354,7 +1350,7 @@ class Player:
                     == self.faction.trading_station_max
             ):
                 print(
-                    "You have already built all your trading stations. "
+                    "! You have already built all your trading stations. "
                     "Please choose a different structure to upgrade."
                 )
                 raise e.BackToActionSelection("3")
@@ -1422,7 +1418,7 @@ class Player:
                 elif chosen_structure == f"{i + 1}":
                     raise e.BackToActionSelection("3")
                 else:
-                    print("Please only type one of the available numbers.")
+                    print("! Please only type one of the available numbers.")
                     continue
 
             if new_structure == "Planetary Institute":
@@ -1432,7 +1428,7 @@ class Player:
                         == self.faction.planetary_institute_max
                 ):
                     print(
-                        "You have already built your Planetary Institute. "
+                        "! You have already built your Planetary Institute. "
                         "Please choose a different structure to upgrade to."
                     )
                     raise e.BackToActionSelection("3")
@@ -1475,7 +1471,7 @@ class Player:
                         == self.faction.research_lab_max
                 ):
                     print(
-                        "You have already built all of your Research labs. "
+                        "! You have already built all of your Research labs. "
                         "Please choose a different structure to upgrade to."
                     )
                     raise e.BackToActionSelection("3")
@@ -1492,9 +1488,7 @@ class Player:
 
                 # Only if below doesn't raise any exceptions will the player
                 # pay for the structure.
-                self.resolve_technology_tile(
-                    gp.research_board, rnd, gp.universe
-                )
+                self.resolve_technology_tile(gp.research_board, rnd, gp)
 
                 self.resolve_cost("credits5")
                 self.resolve_cost("ore3")
@@ -1514,7 +1508,7 @@ class Player:
                     == self.faction.academy_max
             ):
                 print(
-                    "You have already built all of your Academy's. "
+                    "! You have already built all of your Academy's. "
                     "Please choose a different structure to upgrade to."
                 )
                 raise e.BackToActionSelection("3")
@@ -1548,7 +1542,9 @@ class Player:
                     elif chosen_side == f"{i + 1}":
                         raise e.BackToActionSelection("3")
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
 
             elif not self.faction.academy_income[0]:
@@ -1558,7 +1554,7 @@ class Player:
 
             # Only if below doesn't raise any exceptions will the player pay
             # for the structure.
-            self.resolve_technology_tile(gp.research_board, rnd, gp.universe)
+            self.resolve_technology_tile(gp.research_board, rnd, gp)
 
             # Set the built property of the chosen academy to true.
             chosen_academy[0] = True
@@ -1582,7 +1578,7 @@ class Player:
             if structure == "Planetary Institute":
                 a_an = "a"
             print(
-                f"You can't upgrade {a_an} {structure}. "
+                f"! You can't upgrade {a_an} {structure}. "
                 "Please choose a different structure."
             )
             raise e.BackToActionSelection("3")
@@ -1591,7 +1587,7 @@ class Player:
             f"planet in sector {planet_to_upgrade.sector} to a {new}."
         )
 
-    def resolve_technology_tile(self, research_board, rnd, universe, pq=False):
+    def resolve_technology_tile(self, research_board, rnd, gp, pq=False):
         available = []
         for track in research_board.tech_tracks:
             # Check for available standard technology tiles connected to a
@@ -1644,14 +1640,14 @@ class Player:
                 else:
                     raise e.BackToActionSelection("3")
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
                 continue
 
             if isinstance(selected_tile, AdvancedTechnology):
                 # Check that the player has any standard technology available.
                 if not self.standard_technology:
                     print(
-                        "To take an advanced technology, you need to have a "
+                        "! To take an advanced technology, you need to have a "
                         "standard technology available to place your advanced "
                         "technology tile on. Please choose a different tile."
                     )
@@ -1661,7 +1657,7 @@ class Player:
                 # side up.
                 if not "green" in [fed.state for fed in self.federations]:
                     print(
-                        "You need a federation token with the green side up "
+                        "! You need a federation token with the green side up "
                         "to take an Advanced Technology tile. Please choose a "
                         "different tile."
                     )
@@ -1692,7 +1688,9 @@ class Player:
                         choose_another = True
                         break
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
             else:
                 # Player has chosen a standard technology tile.
@@ -1706,7 +1704,7 @@ class Player:
             # Go up a research track after having chosen a tile.
             if isinstance(selected_tile, AdvancedTechnology):
                 try:
-                    self.research(research_board, rnd, universe, True)
+                    self.research(research_board, rnd, gp, True)
                 except e.BackToActionSelection:
                     # Player changed his/her mind. Go back up to pick another
                     # tile.
@@ -1758,7 +1756,7 @@ class Player:
                     track_num = False
 
                 try:
-                    self.research(research_board, rnd, universe, track_num)
+                    self.research(research_board, rnd, gp, track_num)
                 except e.BackToActionSelection:
                     # Player changed his/her mind. Go back up to pick another
                     # tile.
@@ -1791,6 +1789,10 @@ class Player:
 
     def federation(self, gp, rnd):
         """Function for forming a federation.
+
+        Args:
+            gp: GaiaProject main game object.
+            rnd: Active Round object.
         """
 
         # TODO SOMEDAY this function only gives a federation tile now.
@@ -1811,7 +1813,7 @@ class Player:
             try:
                 amount = int(amount)
             except ValueError:
-                print("Please only type a number.")
+                print("! Please only type a number.")
 
             if not self.resolve_cost(f"powertoken{amount}"):
                 print(
@@ -1845,7 +1847,7 @@ class Player:
             elif fed_token == f"{i + 1}":
                 raise e.BackToActionSelection
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
                 continue
 
         if rnd.goal == "fedtoken":
@@ -1859,12 +1861,13 @@ class Player:
             "Because of the Federation token"
         )
 
-    def research(self, research_board, rnd, universe, tech_tile=False):
+    def research(self, research_board, rnd, gp, tech_tile=False):
         """Function for doing the Research action.
 
         Args:
             research_board: Research object
             rnd: Active Round object
+            gp: GaiaProject main game object.
             tech_tile: Whether or not the player can research because they have
                 taken a technology tile. If they are able to research because
                 of a technology tile, this argument will be a string with the
@@ -1887,9 +1890,8 @@ class Player:
         # Researching costs 4 knowledge.
         if not self.faction.knowledge > 3 and not tech_tile:
             raise e.InsufficientKnowledgeError(
-                "! You don't have enough knowledge to research. You "
-                f"currently have {self.faction.knowledge} knowledge. "
-                "Please choose a different action."
+                "! You don't have enough knowledge to research. Please "
+                "choose a different action."
             )
 
         levels = [
@@ -1918,7 +1920,7 @@ class Player:
             if not track_choice in ["1", "2", "3", "4", "5", "6"]:
                 if track_choice == "7":
                     raise e.BackToActionSelection
-                print("Please only type 1-7")
+                print("! Please only type 1-7")
                 continue
 
             track_choice = int(track_choice)
@@ -1926,12 +1928,12 @@ class Player:
             try:
                 research_board.tech_tracks[track_choice - 1] \
                     .research(
-                        current_level, self, track_choice - 1, universe, rnd
+                        current_level, self, track_choice - 1, gp, rnd
                     )
             except e.NoFederationTokensError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
-                        "You have no federation tokens so you can't advance "
+                        "! You have no federation tokens so you can't advance "
                         "on the "
                         f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
@@ -1941,7 +1943,7 @@ class Player:
             except e.NoFederationGreenError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
-                        "You have no federation token with the green side "
+                        "! You have no federation token with the green side "
                         "up left so you can't advance on the "
                         f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
@@ -1951,7 +1953,7 @@ class Player:
             except e.NoResearchPossibleError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
-                        "You are already at the maximum level of 5 so you "
+                        "! You are already at the maximum level of 5 so you "
                         "can't advance on the "
                         f"{research_board.tech_tracks[track_choice - 1].name} "
                         "track."
@@ -1961,7 +1963,7 @@ class Player:
             except e.Level5IsFullError as ex:
                 if isinstance(tech_tile, str):
                     raise e.ResearchError(
-                        "Another player is already on level 5. Only one "
+                        "! Another player is already on level 5. Only one "
                         "person can go to level 5 so you can't advance on the"
                         f" {research_board.tech_tracks[track_choice - 1].name}"
                         " track."
@@ -2073,7 +2075,7 @@ class Player:
             if action == "11":
                 raise e.BackToActionSelection
             elif not action in [str(act) for act in range(1, 11)]:
-                print("Please type the action's corresponding number.")
+                print("! Please type the action's corresponding number.")
                 continue
 
             # Check if the action is available
@@ -2085,7 +2087,7 @@ class Player:
 
                 if self.faction.knowledge == self.faction.knowledge_max:
                     print(
-                        "You are already at the maximum Knowledge you can "
+                        "! You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
                     )
                     continue
@@ -2117,7 +2119,7 @@ class Player:
 
                 if self.faction.ore == self.faction.ore_max:
                     print(
-                        "You are already at the maximum Ore you can have. "
+                        "! You are already at the maximum Ore you can have. "
                         "Please choose a different Power/Q.I.C. Action."
                     )
                     continue
@@ -2134,8 +2136,8 @@ class Player:
 
                 if self.faction.credits == self.faction.credits_max:
                     print(
-                        "You are already at the maximum Credits you can have. "
-                        "Please choose a different Power/Q.I.C. Action."
+                        "! You are already at the maximum Credits you can "
+                        "have. Please choose a different Power/Q.I.C. Action."
                     )
                     continue
 
@@ -2151,7 +2153,7 @@ class Player:
 
                 if self.faction.knowledge == self.faction.knowledge:
                     print(
-                        "You are already at the maximum Knowledge you can "
+                        "! You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
                     )
                     continue
@@ -2233,7 +2235,9 @@ class Player:
                     elif chosen_token == f"{i + 1}":
                         break
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
 
                 if not chosen:
@@ -2283,7 +2287,7 @@ class Player:
         # Check if the action is still available.
         if not research_board.pq_actions[num]:
             print(
-                "This power action is already used this round. "
+                "! This power action is already used this round. "
                 "Please choose a different Power/Q.I.C. Action."
             )
             return False
@@ -2338,7 +2342,7 @@ class Player:
             elif chosen_special == f"{i + 1}":
                 raise e.BackToActionSelection
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
                 continue
 
         # The special action comes from an Academy.
@@ -2373,7 +2377,7 @@ class Player:
         # if free action have been taken.
         if self.free_actions:
             print(
-                "You have taken free actions so you aren't allowed to pass. "
+                "! You have taken free actions so you aren't allowed to pass. "
                 "Please undo your free actions if you wish to pass."
             )
             raise e.BackToActionSelection()
@@ -2406,7 +2410,7 @@ class Player:
                     )
                     break
                 else:
-                    print("Please only type one of the available numbers.")
+                    print("! Please only type one of the available numbers.")
                     continue
 
         gp.passed += 1
@@ -2540,7 +2544,7 @@ class Player:
                 else:
                     print(f"{total}")
             print(
-                f"{i + 1}. Undo Free actions.\n"
+                f"{i + 1}. Undo all Free actions taken this turn.\n"
                 f"{i + 2}. Go back to action selection."
             )
 
@@ -2557,7 +2561,7 @@ class Player:
             elif chosen_free == f"{i + 2}":
                 raise e.BackToActionSelection
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
                 continue
 
             # Make the exchange.
@@ -2568,7 +2572,7 @@ class Player:
                 exchange_check = re.search(pattern2, cost_exchange).group(0)
                 if exchange_check in ["knowledge", "ore", "credits"]:
                     if eval(f"self.faction.{exchange_check} "
-                            f"== self.faction.{exchange_check}_max"):
+                            f">= self.faction.{exchange_check}_max"):
                         # Call this function because it will return a nice
                         # message if the player is full on resources.
                         self.resolve_gain(cost_exchange)

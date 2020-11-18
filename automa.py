@@ -60,7 +60,7 @@ class Automa:
             sector_choice = input(sector)
 
             if not sector_choice in C.SECTORS_2P:
-                print("Please only type 1-7")
+                print("! Please only type 1-7")
                 continue
 
             try:
@@ -105,7 +105,7 @@ class Automa:
                 print(f"Automa chose {self.booster}.")
                 break
             else:
-                print("Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
 
         # Instruct player to now shuffle the automa deck.
         print(
@@ -224,7 +224,7 @@ class Automa:
             try:
                 points = int(points)
             except ValueError:
-                print("Please only type a number.")
+                print("! Please only type a number.")
             else:
                 self.vp += points
                 return
@@ -266,13 +266,13 @@ class Automa:
 
             if sector_choice == "8":
                 if faction_action:
-                    print("Please only type 1-7")
+                    print("! Please only type 1-7")
                     continue
                 else:
                     raise e.BackToActionSelection
 
             if not sector_choice in C.SECTORS_2P:
-                print("Please only type 1-7")
+                print("! Please only type 1-7")
                 continue
 
             while True:
@@ -303,7 +303,7 @@ class Automa:
                 elif chosen_planet == f"{i + 1}":
                     break
                 else:
-                    print("Please only type one of the available numbers.")
+                    print("! Please only type one of the available numbers.")
                     continue
 
             if planet_chosen:
@@ -461,7 +461,9 @@ class Automa:
                         planet = closest_planets[int(chosen_candidate) - 1]
                         break
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
 
         print(
@@ -587,7 +589,7 @@ class Automa:
             elif choice == "7":
                 raise e.BackToActionSelection
             else:
-                print("Please only type 1-6")
+                print("! Please only type 1-6")
                 continue
 
             if num == 4:
@@ -605,14 +607,14 @@ class Automa:
                     next_level = track.level5
                     if next_level.players:
                         print(
-                            "There is already a player on level 5. The "
+                            "! There is already a player on level 5. The "
                             f"Automa can't research {track.name}. Please "
                             "choose the next technology track."
                         )
                         continue
             elif num == 5:
                 print(
-                    "Automa is already at the maximum level of 5. Please "
+                    "! Automa is already at the maximum level of 5. Please "
                     "choose the next technology track."
                 )
                 continue
@@ -692,8 +694,8 @@ class Automa:
                     break
                 elif not direction in [str(n + 1) for n in range(i)]:
                     print(
-                        "Please type the number of the corresponding direction"
-                        " the arrow is pointing to."
+                        "! Please type the number of the corresponding "
+                        "direction the arrow is pointing to."
                     )
                     continue
                 break
@@ -787,7 +789,7 @@ class Automa:
                 elif booster_choice == "4":
                     raise e.BackToActionSelection
                 else:
-                    print("Please only type one of the available numbers.")
+                    print("! Please only type one of the available numbers.")
                     continue
 
         gp.passed += 1

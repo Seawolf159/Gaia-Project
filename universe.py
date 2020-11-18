@@ -52,7 +52,7 @@ class Planet:
             structure = f"Structure: {self.structure} | "
         return (
             f"Sector: {self.sector} | Type: {self.type} | {owner}{structure}"
-            f"Num: {self.num}"
+            f"Number: {self.num}"
         )
         # f"Federation: {self.federation}"
 
@@ -66,9 +66,10 @@ class LostPlanet:
         self.owner = False  # Faction name of owner
         self.structure = "Mine"  # Type of building built
         self.federation = False  # Part of federation? True or False
+        self.neighbours = []  # List of opponents that are within range 2.
 
-    def place(self, player, universe, rnd):
-        # TODO ivits space station check.
+    def place(self, player, gp, rnd):
+        # TODO faction compatibility ivits space station check.
 
         print(
             "\nYou have received the Lost Planet. Where would you like to "
@@ -88,12 +89,12 @@ class LostPlanet:
             if not sector_choice in C.SECTORS_2P:
                 # More players TODO make this message dynamic to the board.
                 # If playing with more players it would be 1-10 for example.
-                print(f"Please only type {choose_range}.")
+                print(f"! Please only type {choose_range}.")
                 continue
 
             # Choose an empty space.
             try:
-                spaces = universe.valid_spaces(player, int(sector_choice))
+                spaces = gp.universe.valid_spaces(player, int(sector_choice))
             except e.NoValidSpacesError:
                 continue
 
@@ -116,7 +117,9 @@ class LostPlanet:
                     elif space_choice == f"{i + 1}":
                         break
                     else:
-                        print("Please only type one of the available numbers.")
+                        print(
+                            "! Please only type one of the available numbers."
+                        )
                         continue
 
             if not chosen_space:
@@ -124,7 +127,7 @@ class LostPlanet:
 
             # Check if the player has enough range.
             enough_range, distance = player.within_range(
-                universe, chosen_space, 4
+                gp.universe, chosen_space, 4
             )
 
             if not enough_range:
@@ -147,12 +150,12 @@ class LostPlanet:
         # Hex inside the Universe.sector.hexes list.
         found = False
         old_space = chosen_space
-        for i, circle in enumerate(eval(f"universe.sector{sector_choice}"
+        for i, circle in enumerate(eval(f"gp.universe.sector{sector_choice}"
                                         ".hexes")):
             for x, hex_ in enumerate(circle):
                 if hex_ is chosen_space:
                     exec(
-                        f"universe.sector{sector_choice}.hexes[{i}][{x}]"
+                        f"gp.universe.sector{sector_choice}.hexes[{i}][{x}]"
                         f" = self"
                     )
                     found = True
@@ -178,7 +181,8 @@ class LostPlanet:
             reason = "Because of the round"
             player.resolve_gain(f"vp{rnd.vp}", reason)
 
-        # TODO more players CRITIAL check if anyone can charge power.
+        # Neighbour charging.
+        gp.universe.planet_has_neighbours(self, player, gp.players)
 
     def __str__(self):
         owner = f"Owner: {self.owner} | "
@@ -857,7 +861,7 @@ class Universe:
             try:
                 charge_chosen = int(charge_chosen)
             except ValueError:
-                print("Please only type a number.")
+                print("! Please only type a number.")
             else:
                 if charge_chosen > 4:
                     print(

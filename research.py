@@ -44,7 +44,7 @@ class TechTrack:
     def __init__(self, name):
         self.name = name
 
-    def research(self, old_level, player, choice, universe=False, rnd=False):
+    def research(self, old_level, player, choice, gp=False, rnd=False):
         """Function for going up the chosen research track.
 
         Args:
@@ -52,6 +52,8 @@ class TechTrack:
                 researching.
             player: Player object.
             choice (int): Number of the track that will be researched on.
+            gp: GaiaProject main game object. Used for Lost Planet placing.
+            rnd: Active Round object.
         """
 
         # num = Number of the level before completing the research.
@@ -65,8 +67,8 @@ class TechTrack:
             # pylint: disable=no-member
             if self.level5.players:
                 raise e.Level5IsFullError(
-                    "Another player is already on level 5. Only one person can"
-                    " go to level 5. Please choose a different track."
+                    "! Another player is already on level 5. Only one person "
+                    "can go to level 5. Please choose a different track."
                 )
 
             # Check if the player has any federations.
@@ -85,19 +87,19 @@ class TechTrack:
                         break
                 else:
                     raise e.NoFederationGreenError(
-                        "You have no federation token with the green side "
+                        "! You have no federation token with the green side "
                         "up. You can't go up on this track. Please "
                         "choose a different track."
                     )
             else:
                 raise e.NoFederationTokensError(
-                    "You have no federation tokens. You can't go up on this "
+                    "! You have no federation tokens. You can't go up on this "
                     "track. Please choose a different track."
                 )
         elif num == 5:
             raise e.NoResearchPossibleError(
-                    "You are already at the maximum level of 5. Please choose "
-                    "a different track."
+                    "! You are already at the maximum level of 5. Please "
+                    "choose a different track."
                 )
 
         player_level_pos = [
@@ -138,7 +140,7 @@ class TechTrack:
             # Player received the lost planet from going to level 5 on the
             # navigation track.
             elif isinstance(level.reward, LostPlanet):
-                level.reward.place(player, universe, rnd)
+                level.reward.place(player, gp, rnd)
             else:
                 player.resolve_gain(level.reward)
 
