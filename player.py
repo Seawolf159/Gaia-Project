@@ -121,7 +121,7 @@ class Player:
                 print(f"You chose {self.booster}.")
                 return
             else:
-                print(! "Please only type one of the available numbers.")
+                print("! Please only type one of the available numbers.")
 
     def income_phase(self):
         print(f"\nDoing income for {self.faction.name}.")
@@ -2085,7 +2085,7 @@ class Player:
             if action == "1":
                 # Gain 3 knowledge for 7 power.
 
-                if self.faction.knowledge == self.faction.knowledge_max:
+                if self.faction.knowledge >= self.faction.knowledge_max:
                     print(
                         "! You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
@@ -2117,7 +2117,7 @@ class Player:
             elif action == "3":
                 # Gain 2 ore for 4 power.
 
-                if self.faction.ore == self.faction.ore_max:
+                if self.faction.ore >= self.faction.ore_max:
                     print(
                         "! You are already at the maximum Ore you can have. "
                         "Please choose a different Power/Q.I.C. Action."
@@ -2134,7 +2134,7 @@ class Player:
             elif action == "4":
                 # Gain 7 credits for 4 ore.
 
-                if self.faction.credits == self.faction.credits_max:
+                if self.faction.credits >= self.faction.credits_max:
                     print(
                         "! You are already at the maximum Credits you can "
                         "have. Please choose a different Power/Q.I.C. Action."
