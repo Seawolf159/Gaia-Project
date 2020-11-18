@@ -20,16 +20,7 @@ class Player:
                 TODO name all factions and possibly move the options elsewhere
 
         TODO:
-            Implement charging power when opponents builds near me.
-            Make every action choice possible to return to the action selection
-                menu in case of accidentally choosing the wrong action or
-                changing ones mind.
             Make every action print something like ACTION NAME:??
-            in resolve gain and in free actions make 1 credits say 1 credit
-                and make qic say Q.I.C. 2 Power Tokens and 1 Power Token
-                and capitalize all the income. and payments and make use re in
-                resolve gain function as well??
-            Make everything spent go through the Player.resolve_cost function.
         """
 
         self.faction = select_faction(faction.lower())()

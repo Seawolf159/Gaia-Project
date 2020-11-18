@@ -15,60 +15,40 @@ IMAGES = os.path.join(ROOT, "images")
 
 
 class GaiaProject:
-    """Class for combining all the different parts of the game.
-    """
+    """Class for combining all the different parts of the game."""
 
-    def __init__(self, player1, player2,
-                 player3=False, player4=False, automa=False):
+    def __init__(self, player_count, automa=False):
         """Create a new game of GaiaProject
 
         Args:
-            player1-4 (str): Name of the faction the corresonding player is
-                playing.
-            automa (bool): whether or not you are playing against the automa.
+            player_count (int): Amount of players.
+            automa (bool): whether or not the player is playing against the
+                automa.
         """
 
-        # more players TODO federations have 3 of each type in 3+ player games
-        self.federation_tokens = [
-            FederationToken("FEDvps.png", 2, "vp12", "grey"),
-            FederationToken("FEDqic.png", 2, ["vp8", "qic1"], "green"),
-            FederationToken("FEDore.png", 2, ["vp7", "ore2"], "green"),
-            FederationToken("FEDcre.png", 2, ["vp7", "credits6"], "green"),
-            FederationToken("FEDknw.png", 2, ["vp6", "knowledge2"], "green")
-        ]
+        self.player_count = player_count
+        self.automa = automa
+        self.players = []  # A list with all the player objects in turn order.
+        self.board_setup()
 
-        # TODO FINAL FIX THIS MESS. Factions are chosen last during setup.
-        # But this makes the setup faster for testing purposes.
-        self.setup(player1, player2, player3, player4, automa)
+    def board_setup(self):
+        """Setup all the pieces of the game."""
 
-    def setup(self, player1, player2,
-              player3=False, player4=False, automa=False):
-        """Setup all the pieces of the game
-
-        Args:
-            player1-4 (str): Name of the faction the corresonding player is
-                playing.
-        """
-
-        # A list with all the player objects in turn order.
-        self.players = []
-        self.round = 1
-
-        self.player1 = Player(player1)
-        self.players.append(self.player1)
-        if automa:
-            self.player2 = Automa(player2)
-            self.players.append(self.player2)
+        if self.automa:
+            amount = 2
         else:
-            self.player2 = Player(player2)
-            self.players.append(self.player2)
-
-        if player3:
-            self.player3 = Player(player3)
-            self.players.append(self.player3)
-        if player4:
-            self.player4 = Player(player4)
-            self.players.append(self.player4)
+            amount = 3
+        self.federation_tokens = [
+            FederationToken("FEDvps.png", amount, "vp12", "grey"),
+            FederationToken("FEDqic.png", amount, ["vp8", "qic1"], "green"),
+            FederationToken("FEDore.png", amount, ["vp7", "ore2"], "green"),
+            FederationToken(
+                "FEDcre.png", amount, ["vp7", "credits6"], "green"
+            ),
+            FederationToken(
+                "FEDknw.png", amount, ["vp6", "knowledge2"], "green"
+            )
+        ]
 
         self.research_board = Research()
         self.scoring_board = Scoring()
@@ -77,7 +57,6 @@ class GaiaProject:
         # 1. Choose first player (Against the automa, the human goes first).
         # 2. Let the last player assemble the game board (or just some final
         #    rotation of tiles) or just do it together.
-        # TODO generate the universe (first game default universe at first)
         self.create_universe()
 
         # 3. Randomly place the standard and advanced technology tiles.
@@ -94,83 +73,18 @@ class GaiaProject:
         self.scoring_board.randomise_scoring()
 
         # 6. Randomly select {amount of players} + 3 booster tiles.
-        player_count = 0
-        if player1:
-            player_count += 1
-        if player2:
-            player_count += 1
-        if player3:
-            player_count += 1
-        if player4:
-            player_count += 1
-
-        self.scoring_board.randomise_boosters(player_count)
+        self.scoring_board.randomise_boosters(self.player_count)
 
         # TESTING uncomment line below when finished. Commented because
         #   it kept changing the img file which is not necessary right now.
         # Load the setup into an image to see it more easily as a human.
         # self.visual_setup()
 
-        # TODO Let player choose faction after seeing setup.
-        # Start of the game:
-        # Choose faction (start with first player and going clockwise):
-
-        # Place players on level 0 of all research boards and check if they
-        # start on level 1 of any of them. Add the level to the player object
-        # for easy acces and insert the faction name of the player in the level
-        # object for printing.
-        for p in self.players:
-            name = p.faction.name
-
-            p.terraforming = self.research_board.terraforming.level0
-            self.research_board.terraforming.level0.players.append(name)
-
-            p.navigation = self.research_board.navigation.level0
-            self.research_board.navigation.level0.players.append(name)
-
-            p.a_i = self.research_board.a_i.level0
-            self.research_board.a_i.level0.players.append(name)
-
-            p.gaia_project = self.research_board.gaia_project.level0
-            self.research_board.gaia_project.level0.players.append(name)
-
-            p.economy = self.research_board.economy.level0
-            self.research_board.economy.level0.players.append(name)
-
-            p.science = self.research_board.science.level0
-            self.research_board.science.level0.players.append(name)
-
-            start_research = p.faction.start_research
-            if start_research:
-                levels = [
-                    p.terraforming,
-                    p.navigation,
-                    p.a_i,
-                    p.gaia_project,
-                    p.economy,
-                    p.science,
-                ]
-                for i, track in enumerate(self.research_board.tech_tracks):
-                    if track.name == start_research:
-                        current_level = levels[i]
-                        track.research(current_level, p, i)
-
-        # Place first structures (start with first player and going clockwise):
-        for player in self.players:
-            player.start_mine("first", self.universe, self.players)
-
-        for player in reversed(self.players):
-            player.start_mine("second", self.universe, self.players)
-
-        # Choose booster (start with last player and going counter-clockwise):
-        for player in reversed(self.players):
-            player.choose_booster(self.scoring_board)
-
-        # TODO Move the setup function inside the play function instead.
-        self.play()
-
     def visual_setup(self):
-        """Load setup into an image for better human readability of a setup."""
+        """Visualize the board setup.
+
+        Load setup into an image for better human readability.
+        """
 
         # Canvas with technology track backgrounds at the top.
         with Image.open(os.path.join(ROOT,
@@ -314,7 +228,102 @@ class GaiaProject:
             canvas.save("Setup.png", "png")
 
     def create_universe(self):
+        """Function for setting up the universe
+
+        TODO:
+            In the future randomise the universe.
+        """
+
         self.universe = Universe()
+
+    def player_setup(self):
+        """Initialise Player objects."""
+
+        # TODO more players ask for factions here or assign randomly.
+        # Choose faction (start with first player and going clockwise).
+        # See Faction.select_faction for available factions for human and
+        # Automa.select_faction for available factions for the Automa.
+        self.players.append(Player("Hadsch Halla"))
+
+        # If playing against the Automa, ask for the desired difficulty.
+        if self.automa:
+            difficulty_options = [
+                "Automalein",
+                "Automa",
+                "Automachtig",
+                "Ultoma",
+                "Alptrauma"
+            ]
+            print(
+                "What difficulty do you want to set the Automa to? Please type"
+                " the corresponding number."
+            )
+            for i, diff in enumerate(difficulty_options, start=1):
+                print(f"{i}. {diff}.")
+
+            while True:
+                choice = input("--> ")
+
+                if choice in [str(num + 1) for num in range(i)]:
+                    chosen_difficulty = difficulty_options[int(choice) - 1]
+                    break
+                else:
+                    print("! Please only type one of the available numbers.")
+                    continue
+
+            # Set desired difficulty.
+            self.players.append(Automa("Taklons", chosen_difficulty))
+
+        # Place players on level 0 of all research boards and check if they
+        # start on level 1 of any of them. Add the Level object to the Player
+        # object for easy acces and insert the faction name of the player in
+        # the Level.players list.
+        for p in self.players:
+            name = p.faction.name
+
+            p.terraforming = self.research_board.terraforming.level0
+            self.research_board.terraforming.level0.players.append(name)
+
+            p.navigation = self.research_board.navigation.level0
+            self.research_board.navigation.level0.players.append(name)
+
+            p.a_i = self.research_board.a_i.level0
+            self.research_board.a_i.level0.players.append(name)
+
+            p.gaia_project = self.research_board.gaia_project.level0
+            self.research_board.gaia_project.level0.players.append(name)
+
+            p.economy = self.research_board.economy.level0
+            self.research_board.economy.level0.players.append(name)
+
+            p.science = self.research_board.science.level0
+            self.research_board.science.level0.players.append(name)
+
+            start_research = p.faction.start_research
+            if start_research:
+                levels = [
+                    p.terraforming,
+                    p.navigation,
+                    p.a_i,
+                    p.gaia_project,
+                    p.economy,
+                    p.science,
+                ]
+                for i, track in enumerate(self.research_board.tech_tracks):
+                    if track.name == start_research:
+                        current_level = levels[i]
+                        track.research(current_level, p, i)
+
+        # Place first structures (start with first player and going clockwise):
+        for player in self.players:
+            player.start_mine("first", self.universe, self.players)
+
+        for player in reversed(self.players):
+            player.start_mine("second", self.universe, self.players)
+
+        # Choose booster (start with last player and going counter-clockwise):
+        for player in reversed(self.players):
+            player.choose_booster(self.scoring_board)
 
     def play(self):
         """This function will setup and allow you to start playing a game."""
@@ -368,8 +377,15 @@ if __name__ == "__main__":
     # Uncomment if files are opened.
     # open_stuff()
 
-    new_game = GaiaProject("Hadsch Halla", "Taklons", automa=True)
-    # print(new_game.universe.sector4)
-    # print(new_game.universe.sector5)
-
-    # new_game.play()  # Start a game by calling this if convenient.
+    # Start game
+    print("Gaia Project started.\n")
+    while True:
+        # TODO more players ask for amount of players here and if you'll
+        #   play against the automa.
+        player_count = 2
+        automa = True
+        new_game = GaiaProject(player_count, automa=automa)
+        print("The board has been set up. Please choose your factions.")
+        new_game.player_setup()
+        print("Factions have been chosen. The game will now start. Good luck.")
+        new_game.play()
