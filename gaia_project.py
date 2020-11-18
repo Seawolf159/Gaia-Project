@@ -368,6 +368,7 @@ if __name__ == "__main__":
         )
         # Rules
         os.startfile("Gaia Project Rules - EN.pdf")
+        os.startfile("Gaia Project Automa Rules - EN.pdf")
         # 2p map
         os.startfile("default_2p_map.png")
         # Research board

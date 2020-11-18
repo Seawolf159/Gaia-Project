@@ -834,90 +834,114 @@ class Universe:
         #   gives the planetary institute and the academy 1 extra power, he can
         #   get up to 5 power from them for 4 vp and right now this function
         #   only allows input of 1-4.
-        # TODO implement this functionality more automatic.
-        print(
-            f"\n{charging_player.faction.name} do you wanst to charge Power for"
-            f" being in the neighborhood of {trigger_player.faction.name}?\n"
-            "Charging Power costs chargable amount of Power - 1 Victory "
-            "Points."
-        )
 
-        print(
-            "Please type the amount of your highest Power value structure in "
-            "the neighbourhood or 0 if you don't want to charge any Power.\n"
-            f"You have {charging_player.vp} Victory Points.\n"
-            f"Power in bowl 1: {charging_player.faction.bowl1}\n"
-            f"Power in bowl 2: {charging_player.faction.bowl2}\n"
-            f"Power in bowl 3: {charging_player.faction.bowl3}"
-        )
-        while True:
-            charge_chosen = input("--> ")
 
-            try:
-                charge_chosen = int(charge_chosen)
-            except ValueError:
-                print("! Please only type a number.")
-            else:
-                if charge_chosen > 4:
-                    print(
-                        "! 4 is the maximum you can charge from being in the "
-                        "neighborhood if you have the Standard Technology for "
-                        "it."
-                    )
-                    continue
-                elif charge_chosen == 4:
-                    # Check if the player has the standard technology to be
-                    # able to charge 4 power from Planetary Institutes and
-                    # Academy's.
-                    for standard_tech in charging_player.standard_technology:
-                        if standard_tech.when == "worth4power":
-                            power_tech = True
-                            break
-                    else:
-                        print(
-                            "! You don't have the standard technology to "
-                            "charge 4 power."
-                        )
-                        continue
 
-                    if power_tech:
-                        break
-                else:
-                    break
 
-        # If the player is ALLOWED charge 3, but is only ABLE to charge let's
-        # say 2 he/she will only need to pay 1, but is otherwise not able to
-        # charge less than he/she is ALLOWED to do.
-        chargeable_power = charging_player.faction.bowl1 * 2 \
-            + charging_player.faction.bowl2
-        if chargeable_power < charge_chosen:
-            vp_cost = chargeable_power - 1
-        else:
-            vp_cost = charge_chosen - 1
+    # Older imperfect version
+    # def charge_neighbour_power(self, trigger_player, charging_player):
+    #     """Function for charging Power due to neighborhood.
 
-        # Player chose to charge 1 power so he/she pays nothing.
-        if vp_cost == 0:
-            charging_player.charge_power(1)
-            return
-        # Player chose not to charge anything.
-        elif vp_cost == -1:
-            return
+    #     Args:
+    #         trigger_player: The Player object of the player that built a mine
+    #             or upgraded in the neighborhood of the charging player.
+    #         charging_player: The Player object of the player that is able to
+    #             charge power.
+    #     """
 
-        # TODO MINOR if the player isn't able to charge the full amount of the
-        #   power or pay the full amount of VP, let the player know that.
-        # Player chose to charge more than 1 and is able to do so. Charge as
-        # much as the player is able to pay.
-        while vp_cost:
-            if not charging_player.resolve_cost(f"vp{vp_cost}"):
-                vp_cost -= 1
-            else:
-                # Charge one more because you get 1 more power than what you
-                # payed for with VP.
-                charging_player.charge_power(vp_cost + 1)
-                return
-        else:
-            charging_player.charge_power(vp_cost + 1)
-            return
+    #     # Automa can't charge power.
+    #     if type(charging_player).__name__ == "Automa":
+    #         return
+
+    #     # TODO faction compatibility. There is a faction which has a thing that
+    #     #   makes his buildings have more power, so with the technology that
+    #     #   gives the planetary institute and the academy 1 extra power, he can
+    #     #   get up to 5 power from them for 4 vp and right now this function
+    #     #   only allows input of 1-4.
+    #     # TODO implement this functionality more automatic.
+    #     print(
+    #         f"\n{charging_player.faction.name} do you wanst to charge Power for"
+    #         f" being in the neighborhood of {trigger_player.faction.name}?\n"
+    #         "Charging Power costs chargable amount of Power - 1 Victory "
+    #         "Points."
+    #     )
+
+    #     print(
+    #         "Please type the amount of your highest Power value structure in "
+    #         "the neighbourhood or 0 if you don't want to charge any Power.\n"
+    #         f"You have {charging_player.vp} Victory Points.\n"
+    #         f"Power in bowl 1: {charging_player.faction.bowl1}\n"
+    #         f"Power in bowl 2: {charging_player.faction.bowl2}\n"
+    #         f"Power in bowl 3: {charging_player.faction.bowl3}"
+    #     )
+    #     while True:
+    #         charge_chosen = input("--> ")
+
+    #         try:
+    #             charge_chosen = int(charge_chosen)
+    #         except ValueError:
+    #             print("! Please only type a number.")
+    #         else:
+    #             if charge_chosen > 4:
+    #                 print(
+    #                     "! 4 is the maximum you can charge from being in the "
+    #                     "neighborhood if you have the Standard Technology for "
+    #                     "it."
+    #                 )
+    #                 continue
+    #             elif charge_chosen == 4:
+    #                 # Check if the player has the standard technology to be
+    #                 # able to charge 4 power from Planetary Institutes and
+    #                 # Academy's.
+    #                 for standard_tech in charging_player.standard_technology:
+    #                     if standard_tech.when == "worth4power":
+    #                         power_tech = True
+    #                         break
+    #                 else:
+    #                     print(
+    #                         "! You don't have the standard technology to "
+    #                         "charge 4 power."
+    #                     )
+    #                     continue
+
+    #                 if power_tech:
+    #                     break
+    #             else:
+    #                 break
+
+    #     # If the player is ALLOWED charge 3, but is only ABLE to charge let's
+    #     # say 2 he/she will only need to pay 1, but is otherwise not able to
+    #     # charge less than he/she is ALLOWED to do.
+    #     chargeable_power = charging_player.faction.bowl1 * 2 \
+    #         + charging_player.faction.bowl2
+    #     if chargeable_power < charge_chosen:
+    #         vp_cost = chargeable_power - 1
+    #     else:
+    #         vp_cost = charge_chosen - 1
+
+    #     # Player chose to charge 1 power so he/she pays nothing.
+    #     if vp_cost == 0:
+    #         charging_player.charge_power(1)
+    #         return
+    #     # Player chose not to charge anything.
+    #     elif vp_cost == -1:
+    #         return
+
+    #     # TODO MINOR if the player isn't able to charge the full amount of the
+    #     #   power or pay the full amount of VP, let the player know that.
+    #     # Player chose to charge more than 1 and is able to do so. Charge as
+    #     # much as the player is able to pay.
+    #     while vp_cost:
+    #         if not charging_player.resolve_cost(f"vp{vp_cost}"):
+    #             vp_cost -= 1
+    #         else:
+    #             # Charge one more because you get 1 more power than what you
+    #             # payed for with VP.
+    #             charging_player.charge_power(vp_cost + 1)
+    #             return
+    #     else:
+    #         charging_player.charge_power(vp_cost + 1)
+    #         return
 
 
 if __name__ == "__main__":

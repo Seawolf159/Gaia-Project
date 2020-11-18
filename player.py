@@ -328,10 +328,6 @@ class Player:
         Returns:
             True: If the player was able to pay.
             False: If the player was unable to pay.
-
-        TODO:
-            print that something couldn't be payed?? "! not enough of "
-                "{resource}"??
         """
 
         pattern = r"(\D+)(\d+)"
