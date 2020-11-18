@@ -1253,9 +1253,6 @@ class Player:
         Args:
             gp: GaiaProject main game object.
             rnd: Active Round object.
-
-        TODO:
-            Show how much upgrading that building will cost.
         """
 
         print("\nYou want to upgrade a structure.")

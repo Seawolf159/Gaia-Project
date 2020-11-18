@@ -807,8 +807,8 @@ class Universe:
                         planet.neighbours.append(active_player)
                     planet_to_check.neighbours.append(opponent)
             else:
-                # If the opponent was a neighbour, allow him/her
-                # to charge power.
+                # If the opponent was a neighbour, allow him/her to charge
+                # power.
                 if neighbour:
                     if neighbour_charge:
                         self.charge_neighbour_power(
@@ -835,8 +835,81 @@ class Universe:
         #   get up to 5 power from them for 4 vp and right now this function
         #   only allows input of 1-4.
 
+        print(
+            f"\n{charging_player.faction.name} do you wanst to charge Power for"
+            f" being in the neighborhood of {trigger_player.faction.name}?\n"
+            "Charging Power costs chargable amount of Power - 1 Victory "
+            "Points."
+        )
 
+        print(
+            "Please type the amount of your highest Power value structure in "
+            "the neighbourhood or 0 if you don't want to charge any Power.\n"
+            f"You have {charging_player.vp} Victory Points.\n"
+            f"Power in bowl 1: {charging_player.faction.bowl1}\n"
+            f"Power in bowl 2: {charging_player.faction.bowl2}\n"
+            f"Power in bowl 3: {charging_player.faction.bowl3}"
+        )
+        while True:
+            charge_chosen = input("--> ")
 
+            try:
+                charge_chosen = int(charge_chosen)
+            except ValueError:
+                print("! Please only type a number.")
+            else:
+                if charge_chosen > 4:
+                    print(
+                        "! 4 is the maximum you can charge from being in the "
+                        "neighborhood if you have the Standard Technology for "
+                        "it."
+                    )
+                    continue
+                elif charge_chosen == 4:
+                    # Check if the player has the standard technology to be
+                    # able to charge 4 power from Planetary Institutes and
+                    # Academy's.
+                    for standard_tech in charging_player.standard_technology:
+                        if standard_tech.when == "worth4power":
+                            power_tech = True
+                            break
+                    else:
+                        print(
+                            "! You don't have the standard technology to "
+                            "charge 4 power."
+                        )
+                        continue
+
+                    if power_tech:
+                        break
+                else:
+                    break
+
+        vp_cost = charge_chosen - 1
+        chargeable_power = charging_player.faction.bowl1 * 2 \
+            + charging_player.faction.bowl2
+        spendable_vp = charging_player.vp
+
+        # No power could be charged.
+        if chargeable_power == 0:
+            print("! No Power could be charged.")
+        # Charging is free.
+        elif vp_cost == 0:
+            charging_player.resolve_gain("power1")
+
+        # Player is able to pay full vp cost and charge all the power.
+        if spendable_vp >= chargeable_power - 1:
+            charging_player.resolve_cost(f"vp{vp_cost}")
+            charging_player.resolve_gain(f"power{chargeable_power}")
+        else:
+            while True:
+                chargeable_power - 1
+                if spendable_vp >= chargeable_power - 1:
+                    print(
+                        f"! You weren't able to pay {vp_cost} for Power "
+                        f"charging. You spent {spendable_vp} to charge "
+                        f"{chargeable_power} Power."
+                    )
 
     # Older imperfect version
     # def charge_neighbour_power(self, trigger_player, charging_player):
