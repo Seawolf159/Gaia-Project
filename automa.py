@@ -6,14 +6,10 @@ import exceptions as e
 
 class Automa:
 
-    def __init__(self, faction, difficulty="automächtig"):
+    def __init__(self, faction, difficulty):
         self.faction = select_faction(faction.lower())()
-
-        # TODO handle this in a difficulty setup function ??
-        if difficulty.lower() == "Automalein":
-            self.vp = 0
-        else:
-            self.vp = 10
+        self.difficulty = difficulty
+        self.set_difficulty()
 
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
@@ -32,6 +28,12 @@ class Automa:
         self.science = False  # This property is set during setup
 
         self.passed = False  # whether or not the automa has passed.
+
+    def set_difficulty(self):
+        if self.difficulty.lower() == "automalein":
+            self.vp = 0
+        else:
+            self.vp = 10
 
     def start_mine(self, count, universe, players):
         """Function for placing the initial mines.
@@ -329,6 +331,8 @@ class Automa:
         pass
 
     def upgrade(self, gp, faction_action=False):
+        # TODO CRITICAL NUCLEAR Same mine shows up twice when upgrading near
+        #   opponent.
         # 1. Condition: The Automa can resolve an upgrade.
         # 2. Valid Options: The Automa upgrades structures based on the
         #   following priority list (also shown on the “upgrade” icon).
@@ -516,6 +520,8 @@ class Automa:
                     if distance < closest_distance:
                         closest_distance = distance
                         # Can't get lower than 1 so immediately return
+                        # TODO faction compatibility. With lantids, distance
+                        #   can be 0.
                         if closest_distance == 1:
                             return closest_distance
             return closest_distance
@@ -553,6 +559,7 @@ class Automa:
                     )
                     if distance == closest_distance:
                         closest_planets.append(automa_planet)
+                        break
 
             return closest_planets
 
@@ -903,5 +910,5 @@ def select_faction(faction):
 
 
 if __name__ == "__main__":
-    test = Automa("Taklons")
+    test = Automa("Taklons", "Automa")
     print(type(test).__name__)
