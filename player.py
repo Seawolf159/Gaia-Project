@@ -223,7 +223,7 @@ class Player:
             cost_type = split_up.group(1)
             amount = int(split_up.group(2))
 
-            if cost_type.startswith("power"):
+            if cost_type.startswith("power") and income_phase:
                 power_order.append(gain)
 
             if not cost_type in types_of_gain:
@@ -270,7 +270,7 @@ class Player:
             elif added_up_gain == "vp":
                 resource = "Victory Point"
             elif added_up_gain == "qic":
-                resource = "Q.I.C."
+                resource = "Q.I.C"
             else:
                 resource = added_up_gain.capitalize()
 
@@ -298,6 +298,12 @@ class Player:
                     return False
             elif added_up_gain == "vp":
                 exec(f"self.{added_up_gain} += {amount}")
+            elif added_up_gain == "power":
+                if not income_phase:
+                    self.charge_power(amount)
+            elif added_up_gain == "powertoken":
+                if not income_phase:
+                    self.faction.bowl1 += amount
             else:
                 if not added_up_gain.startswith("power"):
                     # If the player will be going over the max, add until the

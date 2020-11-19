@@ -836,15 +836,16 @@ class Universe:
         #   only allows input of 1-4.
 
         print(
-            f"\n{charging_player.faction.name} do you wanst to charge Power for"
+            f"\n{charging_player.faction.name} do you want to charge Power for"
             f" being in the neighborhood of {trigger_player.faction.name}?\n"
-            "Charging Power costs chargable amount of Power - 1 Victory "
-            "Points."
+            "To charge Power for a structure, you spend one fewer Victory "
+            "Point than the power you would charge."
         )
 
         print(
-            "Please type the amount of your highest Power value structure in "
-            "the neighbourhood or 0 if you don't want to charge any Power.\n"
+            "Please type the Power value of the structure in the neighbourhood"
+            " that has the highest Power value or 0 if you don't want to "
+            "charge any Power.\n"
             f"You have {charging_player.vp} Victory Points.\n"
             f"Power in bowl 1: {charging_player.faction.bowl1}\n"
             f"Power in bowl 2: {charging_player.faction.bowl2}\n"
@@ -890,26 +891,42 @@ class Universe:
             + charging_player.faction.bowl2
         spendable_vp = charging_player.vp
 
-        # No power could be charged.
-        if chargeable_power == 0:
-            print("! No Power could be charged.")
+        # Charging was skipped.
+        if charge_chosen == 0:
+            print("! No power was charged.")
+            return
+        # No power to charge.
+        elif chargeable_power == 0:
+            print("! You don't have any Power available for charging.")
+            return
         # Charging is free.
         elif vp_cost == 0:
-            charging_player.resolve_gain("power1")
+            charging_player.charge_power(1)
+            return
+        # No vp to spend.
+        elif spendable_vp == 0:
+            print("! You don't have any Victory Points to pay with.")
+            return
 
-        # Player is able to pay full vp cost and charge all the power.
-        if spendable_vp >= chargeable_power - 1:
+        # Player is able to pay and charge the selected amount.
+        if spendable_vp >= vp_cost \
+                and chargeable_power >= charge_chosen:
             charging_player.resolve_cost(f"vp{vp_cost}")
-            charging_player.resolve_gain(f"power{chargeable_power}")
+            charging_player.charge_power(charge_chosen)
+        # Player is limited by vp.
+        elif spendable_vp < chargeable_power - 1:
+            print(
+                f"! You are only able to charge {spendable_vp + 1} Power "
+                "because your Victory Points are limited."
+            )
+            charging_player.resolve_cost(f"vp{spendable_vp}")
+            charging_player.charge_power(spendable_vp + 1)
+        # Player is limited by power.
         else:
-            while True:
-                chargeable_power - 1
-                if spendable_vp >= chargeable_power - 1:
-                    print(
-                        f"! You weren't able to pay {vp_cost} for Power "
-                        f"charging. You spent {spendable_vp} to charge "
-                        f"{chargeable_power} Power."
-                    )
+            charging_player.resolve_cost(f"vp{chargeable_power - 1}")
+            charging_player.charge_power(charge_chosen)
+        return
+
 
     # Older imperfect version
     # def charge_neighbour_power(self, trigger_player, charging_player):
