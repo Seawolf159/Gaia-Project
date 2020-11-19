@@ -10,7 +10,7 @@ PLANETS = [
     "Gaia",
     "Trans-dim",
 ]
-home_types = [
+HOME_TYPES = [
     "Terra",
     "Oxide",
     "Volcanic",
@@ -19,7 +19,7 @@ home_types = [
     "Titanium",
     "Ice",
 ]
-mine_types = [
+MINE_TYPES = [
     "Terra",
     "Oxide",
     "Volcanic",
@@ -29,3 +29,10 @@ mine_types = [
     "Ice",
     "Gaia"
 ]
+STRUCTURE_POWER_VALUES = {
+    "Mine": 1,
+    "Trading Station": 2,
+    "Research Lab": 2,
+    "Academy": 3,
+    "Planetary Institute": 3
+}
