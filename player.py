@@ -794,7 +794,7 @@ class Player:
             if (
                 terraform_steps
                 and planet.type == self.faction.home_type
-                and not planet.type in C.home_types
+                and not planet.type in C.HOME_TYPES
             ):
                 print(
                     "! When you gain terraform steps, you MUST build a mine on"
@@ -868,7 +868,7 @@ class Player:
 
             # Check if the player needs to first terraform the planet.
             elif self.faction.home_type != planet.type:
-                start = C.home_types.index(self.faction.home_type)
+                start = C.HOME_TYPES.index(self.faction.home_type)
                 target = planet.type
                 i = start + 1
                 # difficulty == amount of total terraform steps needed.
@@ -876,8 +876,8 @@ class Player:
                 for difficulty in range(1, 4):
                     if i > 6:
                         i = 0
-                    if C.home_types[start - difficulty] == target \
-                        or C.home_types[i] == target:
+                    if C.HOME_TYPES[start - difficulty] == target \
+                        or C.HOME_TYPES[i] == target:
                         break
                     i += 1
 

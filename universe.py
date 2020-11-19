@@ -701,11 +701,11 @@ class Universe:
         if action == "start_mine":
             types = [player.faction.home_type]
         elif action == "mine":
-            types = C.mine_types
+            types = C.MINE_TYPES
         elif action == "pq" or action == "boost_terraform":
             # When gaining terraforming steps i think you are not allowed to
             # build on gaia planets so it will be like that.
-            types = C.home_types
+            types = C.HOME_TYPES
         elif action == "automa_mine" or action == "boost_range":
             types = C.PLANETS
         elif action == "upgrade":
@@ -778,7 +778,18 @@ class Universe:
 
         TODO:
             This function doesn't look at which neighbouring structure has the
-                highest power value.
+                highest power value. Possible way to do this badly:
+                Use the C.STRUCTURE_POWER_VALUES dictionary to check
+                the planet.structure for the power value and keep the highest
+                number in a variable called; highest_power_value = 0
+                just above; for planet in opponent.empire:
+                and say;
+                if C.STRUCTURE_POWER_VALUES[planet.structure] > \
+                        highest_power_value:
+                    highest_power_value = C.STRUCTURE_POWER_VALUES[
+                        planet.structure
+                    ]
+
         """
 
         for opponent in players:

@@ -102,7 +102,7 @@ class ExtraRange(Booster):
             planet = player.choose_planet(universe, action)
             try:
                 # Player want to build a mine.
-                if planet.type in C.mine_types:
+                if planet.type in C.MINE_TYPES:
                     player.mine(
                         universe,
                         rnd,
