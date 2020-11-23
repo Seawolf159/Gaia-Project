@@ -61,7 +61,7 @@ class Player:
 
         # TESTING parameters.
         # Initiate testing parameters
-        self.faction._testing()
+        # self.faction._testing()
 
     def start_mine(self, count, universe, players):
         """Function for placing the initial mines.
