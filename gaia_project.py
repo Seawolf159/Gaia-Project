@@ -78,7 +78,7 @@ class GaiaProject:
         # TESTING uncomment line below when finished. Commented because
         #   it kept changing the img file which is not necessary right now.
         # Load the setup into an image to see it more easily as a human.
-        # self.visual_setup()
+        self.visual_setup()
 
     def visual_setup(self):
         """Visualize the board setup.
