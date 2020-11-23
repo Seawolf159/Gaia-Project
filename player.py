@@ -577,7 +577,7 @@ class Player:
             "4": [self.federation, gp, rnd],
             "5": [self.research, gp.research_board, rnd, gp],
             "6": [self.pq, gp, rnd],
-            "7": [self.special, gp.universe, rnd],
+            "7": [self.special, gp, rnd],
             "8": [self.pass_, gp, rnd],
             "9": [self.free]
         }
@@ -1879,6 +1879,7 @@ class Player:
         # Check if the player has enough knowledge to research.
         # Researching costs 4 knowledge.
         if not self.faction.knowledge > 3 and not tech_tile:
+            print(research_board)
             raise e.InsufficientKnowledgeError(
                 "! You don't have enough knowledge to research. Please "
                 "choose a different action."
@@ -2283,8 +2284,13 @@ class Player:
             return False
         return True
 
-    def special(self, universe, rnd):
-        """Function for Special (Orange) actions."""
+    def special(self, gp, rnd):
+        """Function for Special (Orange) actions.
+
+        Args:
+            gp: GaiaProject main game object.
+            rnd: Active Round object.
+        """
 
         # TODO faction compatibility CRITICAL make sure this works with
         #   factions that get a special action when their planetary institute
@@ -2346,7 +2352,7 @@ class Player:
         else:
             if isinstance(special, Booster):
                 try:
-                    special.resolve_effect(self, universe, rnd)
+                    special.resolve_effect(self, gp, rnd)
                 except (
                     e.NoGaiaFormerError,
                     e.NotEnoughPowerTokensError

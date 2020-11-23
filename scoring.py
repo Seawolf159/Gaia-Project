@@ -62,19 +62,19 @@ class Terraform(Booster):
     special action.
     """
 
-    def resolve_effect(self, player, universe, rnd):
+    def resolve_effect(self, player, gp, rnd):
         """Receive the reward from doing this boosters special action.
 
         Args:
             player: Player object of the player that acquired the tile.
-            universe: The universe object used in the main GaiaProject class.
+            gp: GaiaProject main game object.
             rnd: Active Round object.
         """
 
         print(
             "You have gained 1 terraforming step. You must now build a mine."
         )
-        player.mine(universe, rnd, 1, action="boost_terraform")
+        player.mine(gp, rnd, 1, action="boost_terraform")
         self.used = True
 
 
@@ -83,12 +83,12 @@ class ExtraRange(Booster):
     More specific class for the gain 3 extra range booster special action.
     """
 
-    def resolve_effect(self, player, universe, rnd):
+    def resolve_effect(self, player, gp, rnd):
         """Receive the reward from doing this boosters special action.
 
         Args:
             player: Player object of the player that acquired the tile.
-            universe: The universe object used in the main GaiaProject class.
+            gp: GaiaProject main game object.
             rnd: Active Round object.
         """
 
@@ -99,12 +99,12 @@ class ExtraRange(Booster):
         action = "boost_range"
 
         while True:
-            planet = player.choose_planet(universe, action)
+            planet = player.choose_planet(gp.universe, action)
             try:
                 # Player want to build a mine.
                 if planet.type in C.MINE_TYPES:
                     player.mine(
-                        universe,
+                        gp,
                         rnd,
                         extra_range=3,
                         p_chosen=planet,
@@ -113,7 +113,7 @@ class ExtraRange(Booster):
                 # Player wants to start a gaia Project.
                 else:
                     player.gaia(
-                        universe,
+                        gp.universe,
                         p_chosen=planet,
                         action=action,
                         extra_range=3
