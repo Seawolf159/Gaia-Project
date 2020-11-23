@@ -224,6 +224,7 @@ class Sector:
         """Initialising the sector object.
 
         Args:
+            number (int): Number of the hex in the Sector (1-19).
             hexes (dict): Hex number: planet type.
             img (path): Absolute path to the image file.
             universe_grid (list): Location of planets and spaces in the sector.
@@ -456,6 +457,10 @@ class Universe:
             [(3, 4), (3, 6), (3, 8), (4, 9), (5, 10), (6, 9),
              (7, 8), (7, 6), (7, 4), (6, 3), (5, 2), (4, 3)]
         ]
+
+        # Dictionary with all the planets as values to their corresonding
+        # Universe grid coordinate.
+        self.all_planets = {}
 
         self.sector1 = Sector(
             hexes = {
