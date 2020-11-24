@@ -238,101 +238,323 @@ class Automa:
             gp: GaiaProject main game object.
         """
 
+        # 1. Condition: The Automa has at least one mine in.
         if not self.faction.mine_available:
             raise e.NotEnoughMinesError(
-                "Automa doesn't have any mines left. It will upgrade "
+                "! Automa doesn't have any mines left. It will upgrade "
                 "instead."
             )
 
-        question = f"\nWhere does the Automa place its mine?\n"
-        rules = (
-            "Valid Options: Any empty planet (including Trans-dim Planets) "
-            "within the Automa’s range of a planet the Automa has colonized."
-        )
-
-        print(f"{question}{rules}")
-
-        planet_chosen = False
-        if faction_action:
-            sector = (
-                "Please type the number of the sector the chosen planet "
-                "is in.\n--> "
-            )
-        else:
-            sector = (
-                "Please type the number of the sector the chosen planet "
-                "is in. Type 8 if you chose the wrong action.\n--> "
-            )
+        # 2. Valid Options: Any empty planet (including Transdim
+        # Planets) within the Automa’s range of a planet the
+        # Automa has colonized.
+        print("What is the range of the Automa?")
         while True:
-            sector_choice = input(sector)
-
-            if sector_choice == "8":
-                if faction_action:
-                    print("! Please only type 1-7")
-                    continue
-                else:
-                    raise e.BackToActionSelection
-
-            if not sector_choice in C.SECTORS_2P:
-                print("! Please only type 1-7")
+            try:
+                max_range = int(input("--> "))
+            except ValueError:
+                print("! Please only type a number.")
                 continue
-
-            while True:
-                try:
-                    planets = gp.universe.valid_planets(
-                        self, int(sector_choice), "automa_mine"
-                    )
-                except e.NoValidMinePlanetsError:
-                    break
-
-                # If there is only one valid planet, return that planet.
-                if len(planets) == 1:
-                    planet = planets[0]
-                    planet_chosen = True
-                    break
-
-                # If there are multiple valid planets, choose one.
-                print("Please type your chosen planet's corresponding number.")
-                for i, pt in enumerate(planets, start=1):
-                    print(f"{i}. {pt}")
-                print(f"{i + 1}. Go back to sector selection.")
-
-                chosen_planet = input("--> ")
-                if chosen_planet in [str(n + 1) for n in range(i)]:
-                    planet = planets[int(chosen_planet) - 1]
-                    planet_chosen = True
-                    break
-                elif chosen_planet == f"{i + 1}":
-                    break
-                else:
-                    print("! Please only type one of the available numbers.")
-                    continue
-
-            if planet_chosen:
+            else:
                 break
 
-        print(
-           f"The Automa has built a mine in sector {sector_choice} on the "
-           f"{planet.type} planet. Don't forget to place a satellite if "
-           "applicable."
-        )
+        valid_options = self.mine_valid_options(gp, max_range)
 
+        # 3. Tiebreaker.
+        # 3a. Faction action tiebreaker, if built by a faction action.
+        if faction_action:
+            pass
+
+        # 3b. See the final scoring tile tiebreaker table if applicable.
+        # Check if there are end scoring tiles that could be used for
+        # breaking ties.
+        relevant_tiles = ["sectors", "planet_types", "gaia_planets"]
+        end_scoring = False
+        for end_scoring in gp.scoring.end_scoring:
+            if end_scoring.goal in relevant_tiles:
+                end_scoring = True
+                break
+
+        if end_scoring:
+            print(
+                "Does the Automa check the final scoring tiles for a "
+                "tiebreaker? Please type the corresponding number."
+            )
+
+            print(
+                "1. Top tile\n"
+                "2. Bottom tile\n"
+                "3. Final scoring tiles tile aren't used."
+            )
+            while True:
+                tile_choice = input("--> ")
+
+                if not tile_choice in ['1', '2', '3']:
+                    print("! Please only type one of the available numbers.")
+                    continue
+                else:
+                    break
+
+            if tile_choice == '1':
+                top_tile = gp.scoring.end_scoring[0]
+                if top_tile.goal in relevant_tiles:
+                    if top_tile.goal == "sectors":
+
+                    elif top_tile.goal == "planet_types":
+
+                    elif top_tile.goal == "gaia_planets":
+
+
+
+        print(
+            f"The Automa has built a mine in sector {sector_choice} on the "
+            f"{planet.type} planet. Don't forget to place a satellite if "
+            "applicable. (The satellite matters only for the "
+            " 'Most Satellites' final scoring tile.)"
+        )
         planet.owner = self.faction.name
         if planet.type == "Trans-dim":
             planet.type = "Gaia"
         planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
-
         gp.universe.planet_has_neighbours(planet, self, gp.players)
+
+
+    def mine_valid_options(self, gp, max_range):
+        """Find all planets within max_range of the Automa
+
+        Args:
+            gp: GaiaProject main game object.
+            max_range (int): Maximum distance the Automa can go.
+
+        Returns:
+            A list with all the found planets.
+        """
+
+        valid_options = []
+        for planet in self.empire:
+            start_x = planet.location[0]
+            start_y = planet.location[1]
+            coords_to_check = self.coords_to_check(
+                start_x, start_y, max_range
+            )
+
+            for location in coords_to_check:
+                # Coordinate is a Space or is outside of the universe.
+                if not location in gp.universe.planets:
+                    continue
+
+                planet = gp.universe.planets[location]
+
+                # Already found planet.
+                if planet in valid_options:
+                    continue
+
+                # Planet is already owned.
+                if planet.owner:
+                    continue
+                else:
+                    valid_options.append(planet)
+
+        return valid_options
+
+    def coords_to_check(self, start_x, start_y, max_range):
+        """
+        Provide a list of coordinates that need to be checked
+        with a given range.
+
+        Args:
+            start_x (int): x coord of Planet
+            start_y (int): y coord of Planet
+            max_range (int): Maximum distance the Automa can go.
+
+        """
+        # Coordinates to check.
+        range2 = [
+            # First ring.
+            (start_x, start_y - 2),
+            (start_x - 1, start_y - 1),
+            (start_x - 1, start_y + 1),
+            (start_x, start_y + 2),
+            (start_x + 1, start_y + 1),
+            (start_x + 1, start_y - 1),
+
+            # Second ring.
+            (start_x, start_y - 4),
+            (start_x - 1, start_y - 3),
+            (start_x - 2, start_y - 2),
+            (start_x - 2, start_y),
+            (start_x - 2, start_y + 2),
+            (start_x - 1, start_y + 3),
+            (start_x, start_y + 4),
+            (start_x + 1, start_y + 3),
+            (start_x + 2, start_y + 2),
+            (start_x + 2, start_y),
+            (start_x + 2, start_y - 2),
+            (start_x + 1, start_y - 3),
+        ]
+
+        range3 = [
+            # Third ring.
+            (start_x, start_y - 6),
+            (start_x - 1, start_y - 5),
+            (start_x - 2, start_y - 4),
+            (start_x - 3, start_y - 3),
+            (start_x - 3, start_y - 1),
+            (start_x - 3, start_y + 1),
+            (start_x - 3, start_y + 3),
+            (start_x - 2, start_y + 4),
+            (start_x - 1, start_y + 5),
+            (start_x, start_y + 6),
+            (start_x + 1, start_y + 5),
+            (start_x + 2, start_y + 4),
+            (start_x + 3, start_y + 3),
+            (start_x + 3, start_y + 1),
+            (start_x + 3, start_y - 1),
+            (start_x + 3, start_y - 3),
+            (start_x + 2, start_y - 4),
+            (start_x + 1, start_y - 5),
+        ]
+
+        range4 = [
+            # Fourth ring.
+            (start_x, start_y - 8),
+            (start_x - 1, start_y - 7),
+            (start_x - 2, start_y - 6),
+            (start_x - 3, start_y - 5),
+            (start_x - 4, start_y - 4),
+            (start_x - 4, start_y - 2),
+            (start_x - 4, start_y),
+            (start_x - 4, start_y + 2),
+            (start_x - 4, start_y + 4),
+            (start_x - 3, start_y + 5),
+            (start_x - 2, start_y + 6),
+            (start_x - 1, start_y + 7),
+            (start_x, start_y + 8),
+            (start_x + 1, start_y + 7),
+            (start_x + 2, start_y + 6),
+            (start_x + 3, start_y + 5),
+            (start_x + 4, start_y + 4),
+            (start_x + 4, start_y + 2),
+            (start_x + 4, start_y),
+            (start_x + 4, start_y - 2),
+            (start_x + 4, start_y - 4),
+            (start_x + 3, start_y - 5),
+            (start_x + 2, start_y - 6),
+            (start_x + 1, start_y - 7),
+        ]
+
+        if max_range == 2:
+            coords_to_check = range2
+        elif max_range == 3:
+            coords_to_check = range2 + range3
+        else:
+            coords_to_check = range2 + range3 + range4
+
+        return coords_to_check
+
+    # Old version
+    # def mine(self, gp, faction_action=False):
+    #     """Place a mine for the Automa.
+
+    #     Args:
+    #         gp: GaiaProject main game object.
+    #     """
+
+    #     if not self.faction.mine_available:
+    #         raise e.NotEnoughMinesError(
+    #             "Automa doesn't have any mines left. It will upgrade "
+    #             "instead."
+    #         )
+
+    #     question = f"\nWhere does the Automa place its mine?\n"
+    #     rules = (
+    #         "Valid Options: Any empty planet (including Trans-dim Planets) "
+    #         "within the Automa’s range of a planet the Automa has colonized."
+    #     )
+
+    #     print(f"{question}{rules}")
+
+    #     planet_chosen = False
+    #     if faction_action:
+    #         sector = (
+    #             "Please type the number of the sector the chosen planet "
+    #             "is in.\n--> "
+    #         )
+    #     else:
+    #         sector = (
+    #             "Please type the number of the sector the chosen planet "
+    #             "is in. Type 8 if you chose the wrong action.\n--> "
+    #         )
+    #     while True:
+    #         sector_choice = input(sector)
+
+    #         if sector_choice == "8":
+    #             if faction_action:
+    #                 print("! Please only type 1-7")
+    #                 continue
+    #             else:
+    #                 raise e.BackToActionSelection
+
+    #         if not sector_choice in C.SECTORS_2P:
+    #             print("! Please only type 1-7")
+    #             continue
+
+    #         while True:
+    #             try:
+    #                 planets = gp.universe.valid_planets(
+    #                     self, int(sector_choice), "automa_mine"
+    #                 )
+    #             except e.NoValidMinePlanetsError:
+    #                 break
+
+    #             # If there is only one valid planet, return that planet.
+    #             if len(planets) == 1:
+    #                 planet = planets[0]
+    #                 planet_chosen = True
+    #                 break
+
+    #             # If there are multiple valid planets, choose one.
+    #             print("Please type your chosen planet's corresponding number.")
+    #             for i, pt in enumerate(planets, start=1):
+    #                 print(f"{i}. {pt}")
+    #             print(f"{i + 1}. Go back to sector selection.")
+
+    #             chosen_planet = input("--> ")
+    #             if chosen_planet in [str(n + 1) for n in range(i)]:
+    #                 planet = planets[int(chosen_planet) - 1]
+    #                 planet_chosen = True
+    #                 break
+    #             elif chosen_planet == f"{i + 1}":
+    #                 break
+    #             else:
+    #                 print("! Please only type one of the available numbers.")
+    #                 continue
+
+    #         if planet_chosen:
+    #             break
+
+    #     print(
+    #        f"The Automa has built a mine in sector {sector_choice} on the "
+    #        f"{planet.type} planet. Don't forget to place a satellite if "
+    #        "applicable."
+    #     )
+
+    #     planet.owner = self.faction.name
+    #     if planet.type == "Trans-dim":
+    #         planet.type = "Gaia"
+    #     planet.structure = "Mine"
+    #     self.faction.mine_available -= 1
+    #     self.empire.append(planet)
+
+    #     gp.universe.planet_has_neighbours(planet, self, gp.players)
 
     def gaia(self, universe):
         # Automa can't do a Gaia Project action.
         pass
 
     def upgrade(self, gp, faction_action=False):
-        # TODO CRITICAL NUCLEAR Same mine shows up twice when upgrading near
-        #   opponent.
         # 1. Condition: The Automa can resolve an upgrade.
         # 2. Valid Options: The Automa upgrades structures based on the
         #   following priority list (also shown on the “upgrade” icon).
@@ -414,8 +636,7 @@ class Automa:
 
         # 3. Tiebreaker:
         #   a. Closest to any of your planets.
-        #   # TODO someday handle Directional selection automatically.
-        #   b. Directional selection. Let the player handle this for now.
+        #   b. Directional selection.
 
         # If the candidate list is only 1 long, there must only be 1 upgradable
         # structure so just upgrade it.
@@ -447,28 +668,36 @@ class Automa:
             else:
                 print(
                     "\nThere are multiple planets that are equally closest "
-                    "to you.\nPlease use directional selection to select "
-                    "one of the candidates. Type the number of the planet "
-                    "that was chosen this way."
+                    "to you.\nPlease type the number of the corresponding "
+                    "direction the arrow of the Directional Selection is "
+                    "pointing to."
                 )
 
-                # Sort on sector and then on planet num.
-                closest_planets.sort(
-                    key=lambda planet: (planet.sector, planet.num)
-                )
-                for i, candidate in enumerate(closest_planets, start=1):
-                    print(f"{i}. {candidate}")
+                for i, direct in enumerate(["<--", "-->"], start=1):
+                    print(f"{i}. {direct}")
 
                 while True:
-                    chosen_candidate = input("--> ")
-                    if chosen_candidate in [str(n + 1) for n in range(i)]:
-                        planet = closest_planets[int(chosen_candidate) - 1]
-                        break
-                    else:
+                    direction = input("--> ")
+                    if not direction in [str(n + 1) for n in range(i)]:
                         print(
-                            "! Please only type one of the available numbers."
+                            "! Please type the number of the corresponding "
+                            "direction the arrow is pointing to."
                         )
                         continue
+                    else:
+                        break
+
+                if direction == '1':
+                    reverse = True
+                else:
+                    reverse = False
+
+                for _, selection_planet in sorted(
+                    gp.universe.planets.items(), reverse=reverse
+                ):
+                    if selection_planet in closest_planets:
+                        planet = selection_planet
+                        break
 
         print(
             f"The Automa has upgraded Planet: {planet} and placed a "
@@ -478,14 +707,7 @@ class Automa:
 
         # Let opponent charge power.
         if closest_distance < 3:
-            for player in gp.players:
-                if player is self:
-                    continue
-                opponent = player
-
-            gp.universe.charge_neighbour_power(
-                self, opponent
-            )
+            gp.universe.planet_has_neighbours(planet, self, gp.players)
 
     def closest_distance_to_opponent(self, gp, candidates):
         """Function for determining the closest distance to the opponent.

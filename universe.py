@@ -19,7 +19,8 @@ class Space:
         self.num = num  # Number inside the sector (1-19).
         self.type = "Space"
 
-        # TODO Check how to handle the ivits space station.
+        # TODO factin compatibility. Check how to handle the ivits space
+        #   station.
         # Verify if that works in Universe.valid_spaces to exclude spaces with
         # a space station.
         # Home world of each player that has a sattelite here.
@@ -171,6 +172,9 @@ class LostPlanet:
         player.empire.append(self)
         player.lost_planet = True
 
+        # Put the Lost Planet into the Universe.planets dictionary.
+        gp.universe.sort_planets(self)
+
         print(
             f"You have placed the Lost Planet in sector "
             f"{self.sector} on number {self.num}."
@@ -181,13 +185,18 @@ class LostPlanet:
             reason = "Because of the round"
             player.resolve_gain(f"vp{rnd.vp}", reason)
 
-        # Neighbour charging.
+        # Allow Neighbour charging.
         gp.universe.planet_has_neighbours(self, player, gp.players)
 
     def __str__(self):
-        owner = f"Owner: {self.owner} | "
-        structure = f"Structure: Mine | "
-        return f"Type: {self.type} | {owner}{structure}"
+        owner = ""
+        structure = f"Structure: {self.structure} | "
+        if self.owner:
+            owner = f"Owner: {self.owner} | "
+        return (
+            f"Sector: {self.sector} | Type: {self.type} | {owner}{structure}"
+            f"Number: {self.num}"
+        )
         # f"Federation: {self.federation}"
 
 
@@ -220,7 +229,13 @@ class Sector:
             ]
     """
 
-    def __init__(self, number, hexes, img, universe_grid, rotation):
+    def __init__(self,
+                 number,
+                 hexes,
+                 img,
+                 universe_grid,
+                 rotation,
+                 planet_list):
         """Initialising the sector object.
 
         Args:
@@ -229,6 +244,7 @@ class Sector:
             img (path): Absolute path to the image file.
             universe_grid (list): Location of planets and spaces in the sector.
             rotation (int): Rotated amount. Can be 1-5.
+            planet_list (List): All the planets in the Universe.
 
         TODO:
             Right now the rotation does nothing really.
@@ -266,6 +282,7 @@ class Sector:
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
+                planet_list.append(new_planet)
             else:
                 self.inner.append(Space(sector=self.number,
                                         location=location,
@@ -286,6 +303,7 @@ class Sector:
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
+                planet_list.append(new_planet)
             else:
                 self.outer.append(Space(sector=self.number,
                                         location=location,
@@ -401,6 +419,9 @@ class Universe:
                 rotation can be 0-5.
         """
 
+        # List with [[(x, y), Planet], [(x, y), Planet]]
+        self.planet_list = []
+
         # Universe grid tables (left ruler (x), top ruler (y))
         # Center
         self.c = [
@@ -458,10 +479,6 @@ class Universe:
              (7, 8), (7, 6), (7, 4), (6, 3), (5, 2), (4, 3)]
         ]
 
-        # Dictionary with all the planets as values to their corresonding
-        # Universe grid coordinate.
-        self.all_planets = {}
-
         self.sector1 = Sector(
             hexes = {
             4: "Desert",
@@ -474,7 +491,8 @@ class Universe:
             number=1,
             img=os.path.join(IMAGES, "sector1.png"),
             universe_grid=eval(f"self.{sector1[0]}"),
-            rotation = sector1[1]
+            rotation=sector1[1],
+            planet_list=self.planet_list
         )
 
         self.sector2 = Sector(
@@ -490,7 +508,8 @@ class Universe:
             number=2,
             img=os.path.join(IMAGES, "sector2.png"),
             universe_grid=eval(f"self.{sector2[0]}"),
-            rotation=sector2[1]
+            rotation=sector2[1],
+            planet_list=self.planet_list
         )
 
         self.sector3 = Sector(
@@ -505,7 +524,8 @@ class Universe:
             number=3,
             img=os.path.join(IMAGES, "sector3.png"),
             universe_grid=eval(f"self.{sector3[0]}"),
-            rotation=sector3[1]
+            rotation=sector3[1],
+            planet_list=self.planet_list
         )
 
         self.sector4 = Sector(
@@ -520,7 +540,8 @@ class Universe:
             number=4,
             img=os.path.join(IMAGES, "sector4.png"),
             universe_grid=eval(f"self.{sector4[0]}"),
-            rotation=sector4[1]
+            rotation=sector4[1],
+            planet_list=self.planet_list
         )
 
         # CAREFUL THESE ARE THE BACK SIDE!! Possible solution something like
@@ -537,7 +558,8 @@ class Universe:
             number=5,
             img=os.path.join(IMAGES, "sector5b.png"),
             universe_grid=eval(f"self.{sector5[0]}"),
-            rotation=sector5[1]
+            rotation=sector5[1],
+            planet_list=self.planet_list
         )
 
         # else:
@@ -552,7 +574,8 @@ class Universe:
         # number="sector5",
         # img=os.path.join(IMAGES, "sector5.png"),
         #     universe_grid=eval(f"self.{sector5[0]}"),
-        #     rotation=sector5[1]
+        #     rotation=sector5[1],
+        #     planet_list=self.planet_list
         # )
 
         # CAREFUL THESE ARE THE BACK SIDE!!
@@ -567,7 +590,8 @@ class Universe:
             number=6,
             img=os.path.join(IMAGES, "sector6b.png"),
             universe_grid=eval(f"self.{sector6[0]}"),
-            rotation=sector6[1]
+            rotation=sector6[1],
+            planet_list=self.planet_list
         )
 
         # CAREFUL THESE ARE THE BACK SIDE!!
@@ -582,8 +606,24 @@ class Universe:
             number=7,
             img=os.path.join(IMAGES, "sector7b.png"),
             universe_grid=eval(f"self.{sector7[0]}"),
-            rotation=sector7[1]
+            rotation=sector7[1],
+            planet_list=self.planet_list
         )
+
+        self.sort_planets()
+
+    def sort_planets(self, lost_planet=False):
+        if lost_planet:
+            self.planet_list.append(lost_planet)
+
+        # Sort the planet_list in order of x and than y.
+        self.planet_list.sort(
+            key=lambda planet: (planet.location[0], planet.location[1])
+        )
+
+        # In a dictionary insertion order is guarenteed so now that the planets
+        # are sorted, insert them in order for directional selection.
+        self.planets = {planet.location: planet for planet in self.planet_list}
 
     def generate(self):
         self.universe = "default_2p_map"
@@ -767,9 +807,8 @@ class Universe:
         """Determine if a planet is neighbouring opponents.
 
         An opponent is a neighbour if he is within a range of 2 of the planet
-        in question. This function also delegates to the
-        Universe.charge_neighbour_power function to allow the opponent to
-        charge power.
+        in question. If a neighbour is found, look at the structure with the
+        highest power value and allow the player to charge power.
 
         Args:
             planet_to_check: Planet object of the planet you want to check for
@@ -781,57 +820,82 @@ class Universe:
             neighbour_charge (Bool): Whether or not to handle neighbour Power
                 charging.
 
-        TODO:
-            This function doesn't look at which neighbouring structure has the
-                highest power value. Possible way to do this badly:
-                Use the C.STRUCTURE_POWER_VALUES dictionary to check
-                the planet.structure for the power value and keep the highest
-                number in a variable called; highest_power_value = 0
-                just above; for planet in opponent.empire:
-                and say;
-                if C.STRUCTURE_POWER_VALUES[planet.structure] > \
-                        highest_power_value:
-                    highest_power_value = C.STRUCTURE_POWER_VALUES[
-                        planet.structure
-                    ]
-
         """
 
-        for opponent in players:
-            neighbour = False
-            if opponent is active_player:
+        # Dictionary with opponents that are found to be neighbours and the
+        # highest power value they may charge.
+        neighbours = {}
+
+        start_x = planet_to_check.location[0]
+        start_y = planet_to_check.location[1]
+
+        # Coordinates to check.
+        coords = [
+            # First ring.
+            (start_x, start_y - 2),
+            (start_x - 1, start_y - 1),
+            (start_x - 1, start_y + 1),
+            (start_x, start_y + 2),
+            (start_x + 1, start_y + 1),
+            (start_x + 1, start_y - 1),
+
+            # Second ring.
+            (start_x, start_y - 4),
+            (start_x - 1, start_y - 3),
+            (start_x - 2, start_y - 2),
+            (start_x - 2, start_y),
+            (start_x - 2, start_y + 2),
+            (start_x - 1, start_y + 3),
+            (start_x, start_y + 4),
+            (start_x + 1, start_y + 3),
+            (start_x + 2, start_y + 2),
+            (start_x + 2, start_y),
+            (start_x + 2, start_y - 2),
+            (start_x + 1, start_y - 3),
+        ]
+
+        for location in coords:
+            # Coordinate is a Space or is outside of the universe.
+            if not location in self.planets:
                 continue
 
-            if opponent in planet_to_check.neighbours:
-                if neighbour_charge:
-                    self.charge_neighbour_power(
-                        active_player, opponent
-                    )
+            # Planet belongs to no one or to the active player.
+            if not self.planets[location].owner \
+                    or self.planets[location].owner \
+                        == active_player.faction.name:
                 continue
 
-            for planet in opponent.empire:
-                startx = planet_to_check.location[0]
-                starty = planet_to_check.location[1]
+            # Opponent that is a neighbour is found.
+            planet = self.planets[location]
 
-                targetx = planet.location[0]
-                targety = planet.location[1]
+            # Add the active player to the list of neighbours of the planet.
+            if not active_player in planet.neighbours:
+                planet.neighbours.append(active_player)
 
-                distance = self.distance(startx, starty, targetx, targety)
-                if distance <= 2:
-                    neighbour = True
-                    if not active_player in planet.neighbours:
-                        planet.neighbours.append(active_player)
-                    planet_to_check.neighbours.append(opponent)
+            planet_power_value = C.STRUCTURE_POWER_VALUES[planet.structure]
+            if planet.owner in neighbours:
+                if planet_power_value > neighbours[planet.owner]:
+                    neighbours[planet.owner] = planet_power_value
             else:
-                # If the opponent was a neighbour, allow him/her to charge
-                # power.
-                if neighbour:
-                    if neighbour_charge:
-                        self.charge_neighbour_power(
-                            active_player, opponent
-                        )
+                neighbours[planet.owner] = planet_power_value
 
-    def charge_neighbour_power(self, trigger_player, charging_player):
+        # No neighbours were found.
+        if not neighbours:
+            return
+
+        # Allow the found neighbours to charge power.
+        for opponent in players:
+            if not opponent.faction.name in neighbours:
+                continue
+
+            # Add the neighbour to the planet_to_check's list of neighbours.
+            planet_to_check.neighbours.append(opponent)
+
+            if neighbour_charge:
+                p_value = neighbours[opponent.faction.name]
+                self.charge_neighbour_power(active_player, opponent, p_value)
+
+    def charge_neighbour_power(self, trigger_player, charging_player, p_value):
         """Function for charging Power due to neighborhood.
 
         Args:
@@ -839,80 +903,52 @@ class Universe:
                 or upgraded in the neighborhood of the charging player.
             charging_player: The Player object of the player that is able to
                 charge power.
+            p_value (int): The amount of power that can be charge by the
+                charging_player.
         """
 
         # Automa can't charge power.
         if type(charging_player).__name__ == "Automa":
             return
 
-        # TODO faction compatibility. There is a faction which has a thing that
-        #   makes his buildings have more power, so with the technology that
-        #   gives the planetary institute and the academy 1 extra power, he can
-        #   get up to 5 power from them for 4 vp and right now this function
-        #   only allows input of 1-4.
+        for standard_tech in charging_player.standard_technology:
+            if standard_tech.when == "worth4power":
+                if p_value == 3:
+                    p_value += 1
 
         print(
             f"\n{charging_player.faction.name} do you want to charge Power for"
             f" being in the neighborhood of {trigger_player.faction.name}?\n"
-            "To charge Power for a structure, you spend one fewer Victory "
-            "Point than the power you would charge."
+            f"At maximum you could charge {p_value} Power for {p_value - 1} "
+            "Victory Points. (Y/N)"
         )
 
         print(
-            "Please type the Power value of the structure in the neighbourhood"
-            " that has the highest Power value or 0 if you don't want to "
-            "charge any Power.\n"
             f"You have {charging_player.vp} Victory Points.\n"
             f"Power in bowl 1: {charging_player.faction.bowl1}\n"
             f"Power in bowl 2: {charging_player.faction.bowl2}\n"
             f"Power in bowl 3: {charging_player.faction.bowl3}"
         )
         while True:
-            charge_chosen = input("--> ")
+            charge_chosen = input("--> ").lower()
 
-            try:
-                charge_chosen = int(charge_chosen)
-            except ValueError:
-                print("! Please only type a number.")
+            if not charge_chosen in ['y', 'n']:
+                print("! Please type Y for yes or N for no.")
+                continue
+            elif charge_chosen == 'n':
+                print("! No power was charged.")
+                return
             else:
-                if charge_chosen > 4:
-                    print(
-                        "! 4 is the maximum you can charge from being in the "
-                        "neighborhood if you have the Standard Technology for "
-                        "it."
-                    )
-                    continue
-                elif charge_chosen == 4:
-                    # Check if the player has the standard technology to be
-                    # able to charge 4 power from Planetary Institutes and
-                    # Academy's.
-                    for standard_tech in charging_player.standard_technology:
-                        if standard_tech.when == "worth4power":
-                            power_tech = True
-                            break
-                    else:
-                        print(
-                            "! You don't have the standard technology to "
-                            "charge 4 power."
-                        )
-                        continue
-
-                    if power_tech:
-                        break
-                else:
-                    break
+                charge_chosen = p_value
+                break
 
         vp_cost = charge_chosen - 1
         chargeable_power = charging_player.faction.bowl1 * 2 \
             + charging_player.faction.bowl2
         spendable_vp = charging_player.vp
 
-        # Charging was skipped.
-        if charge_chosen == 0:
-            print("! No power was charged.")
-            return
         # No power to charge.
-        elif chargeable_power == 0:
+        if chargeable_power == 0:
             print("! You don't have any Power available for charging.")
             return
         # Charging is free.
@@ -944,113 +980,7 @@ class Universe:
         return
 
 
-    # Older imperfect version
-    # def charge_neighbour_power(self, trigger_player, charging_player):
-    #     """Function for charging Power due to neighborhood.
-
-    #     Args:
-    #         trigger_player: The Player object of the player that built a mine
-    #             or upgraded in the neighborhood of the charging player.
-    #         charging_player: The Player object of the player that is able to
-    #             charge power.
-    #     """
-
-    #     # Automa can't charge power.
-    #     if type(charging_player).__name__ == "Automa":
-    #         return
-
-    #     # TODO faction compatibility. There is a faction which has a thing that
-    #     #   makes his buildings have more power, so with the technology that
-    #     #   gives the planetary institute and the academy 1 extra power, he can
-    #     #   get up to 5 power from them for 4 vp and right now this function
-    #     #   only allows input of 1-4.
-    #     # TODO implement this functionality more automatic.
-    #     print(
-    #         f"\n{charging_player.faction.name} do you wanst to charge Power for"
-    #         f" being in the neighborhood of {trigger_player.faction.name}?\n"
-    #         "Charging Power costs chargable amount of Power - 1 Victory "
-    #         "Points."
-    #     )
-
-    #     print(
-    #         "Please type the amount of your highest Power value structure in "
-    #         "the neighbourhood or 0 if you don't want to charge any Power.\n"
-    #         f"You have {charging_player.vp} Victory Points.\n"
-    #         f"Power in bowl 1: {charging_player.faction.bowl1}\n"
-    #         f"Power in bowl 2: {charging_player.faction.bowl2}\n"
-    #         f"Power in bowl 3: {charging_player.faction.bowl3}"
-    #     )
-    #     while True:
-    #         charge_chosen = input("--> ")
-
-    #         try:
-    #             charge_chosen = int(charge_chosen)
-    #         except ValueError:
-    #             print("! Please only type a number.")
-    #         else:
-    #             if charge_chosen > 4:
-    #                 print(
-    #                     "! 4 is the maximum you can charge from being in the "
-    #                     "neighborhood if you have the Standard Technology for "
-    #                     "it."
-    #                 )
-    #                 continue
-    #             elif charge_chosen == 4:
-    #                 # Check if the player has the standard technology to be
-    #                 # able to charge 4 power from Planetary Institutes and
-    #                 # Academy's.
-    #                 for standard_tech in charging_player.standard_technology:
-    #                     if standard_tech.when == "worth4power":
-    #                         power_tech = True
-    #                         break
-    #                 else:
-    #                     print(
-    #                         "! You don't have the standard technology to "
-    #                         "charge 4 power."
-    #                     )
-    #                     continue
-
-    #                 if power_tech:
-    #                     break
-    #             else:
-    #                 break
-
-    #     # If the player is ALLOWED charge 3, but is only ABLE to charge let's
-    #     # say 2 he/she will only need to pay 1, but is otherwise not able to
-    #     # charge less than he/she is ALLOWED to do.
-    #     chargeable_power = charging_player.faction.bowl1 * 2 \
-    #         + charging_player.faction.bowl2
-    #     if chargeable_power < charge_chosen:
-    #         vp_cost = chargeable_power - 1
-    #     else:
-    #         vp_cost = charge_chosen - 1
-
-    #     # Player chose to charge 1 power so he/she pays nothing.
-    #     if vp_cost == 0:
-    #         charging_player.charge_power(1)
-    #         return
-    #     # Player chose not to charge anything.
-    #     elif vp_cost == -1:
-    #         return
-
-    #     # TODO MINOR if the player isn't able to charge the full amount of the
-    #     #   power or pay the full amount of VP, let the player know that.
-    #     # Player chose to charge more than 1 and is able to do so. Charge as
-    #     # much as the player is able to pay.
-    #     while vp_cost:
-    #         if not charging_player.resolve_cost(f"vp{vp_cost}"):
-    #             vp_cost -= 1
-    #         else:
-    #             # Charge one more because you get 1 more power than what you
-    #             # payed for with VP.
-    #             charging_player.charge_power(vp_cost + 1)
-    #             return
-    #     else:
-    #         charging_player.charge_power(vp_cost + 1)
-    #         return
-
-
 if __name__ == "__main__":
     test = Universe()
-    for planet in test.sector6.planets:
-        print(planet)
+    for _, planet in sorted(test.planets.items(), reverse=True):
+        print(f"{planet}")

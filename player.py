@@ -61,7 +61,7 @@ class Player:
 
         # TESTING parameters.
         # Initiate testing parameters
-        # self.faction._testing()
+        self.faction._testing()
 
     def start_mine(self, count, universe, players):
         """Function for placing the initial mines.
@@ -388,6 +388,8 @@ class Player:
         else:
             pretty_print_cost_type = resource
 
+        if amount == 0:
+            return True
         print(f"- You have spent {amount} {pretty_print_cost_type}.")
         return True
 
@@ -1589,7 +1591,7 @@ class Player:
                 available.append(track.standard)
 
             # TODO MINOR filter out the advanced tiles if the player has no
-            # federation tokens with the green side up left. ??
+            #   federation tokens with the green side up left. ??
             # Check if the player is able to go for any advanced technology
             # tiles.
             if (
@@ -1654,7 +1656,7 @@ class Player:
                     continue
 
                 # TODO MINOR if only one standard technology is available,
-                #   use that immediately??
+                #   take that immediately??
                 # Player must choose which standard technology tile to cover up
                 # with the advanced technology tile.
                 print(
@@ -1743,7 +1745,7 @@ class Player:
                     # If the tile isn't under any research tracks it must be a
                     # standard tile that allows the user to go up any track
                     # they like.
-                    track_num = False
+                    track_num = True
 
                 try:
                     self.research(research_board, rnd, gp, track_num)
@@ -1804,6 +1806,7 @@ class Player:
                 amount = int(amount)
             except ValueError:
                 print("! Please only type a number.")
+                continue
 
             if not self.resolve_cost(f"powertoken{amount}"):
                 print(
@@ -2190,7 +2193,7 @@ class Player:
                 # Only if below doesn't raise any exceptions will the player
                 # pay for the action.
                 self.resolve_technology_tile(
-                    gp.research_board, rnd, gp.universe, pq=True
+                    gp.research_board, rnd, gp, pq=True
                 )
 
                 gp.research_board.pq_actions[int(action)] = False
