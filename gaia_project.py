@@ -373,6 +373,8 @@ if __name__ == "__main__":
         os.startfile("default_2p_map.png")
         # Research board
         os.startfile(r".\images\structures\research_board.png")
+        # Visual Setup
+        os.startfile("Setup.png")
 
 
     # Uncomment if files are opened.

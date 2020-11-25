@@ -1,12 +1,12 @@
 SECTORS_2P = ["1", "2", "3", "4", "5", "6", "7"]
 PLANETS = [
+    "Terra",
+    "Oxide",
+    "Volcanic",
     "Desert",
     "Swamp",
-    "Terra",
-    "Volcanic",
-    "Oxide",
-    "Ice",
     "Titanium",
+    "Ice",
     "Gaia",
     "Trans-dim",
 ]

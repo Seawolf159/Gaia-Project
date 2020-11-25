@@ -67,7 +67,7 @@ class Player:
         """Function for placing the initial mines.
 
         Args:
-            count (int): Number of the mine placed.
+            count (str): Number of the mine placed.
             universe: The universe object used in the main GaiaProject class.
             players: list of the players in the current game.
         """
@@ -82,8 +82,7 @@ class Player:
         planet = self.choose_planet(universe, "start_mine")
 
         print(
-            f"You have built a mine in sector {planet.sector} on the "
-            f"{planet.type} planet."
+            f"You have built a mine on the planet in {planet}."
         )
         planet.owner = self.faction.name
         planet.structure = "Mine"
@@ -943,10 +942,7 @@ class Player:
                     self.resolve_gain(f"vp{rnd.vp * difficulty}", reason)
             break
 
-        print(
-            f"You have built a mine in sector {planet.sector} on the "
-            f"{planet.type} planet."
-        )
+        print(f"You have built a mine on the planet in {planet}.")
 
         # Apply the various payment options.
         if pay_range_qic or pay_gaia_qic:
@@ -1574,6 +1570,7 @@ class Player:
                 "Please choose a different structure."
             )
             raise e.BackToActionSelection("3")
+
         print(
             f"You have upgraded your {old} on the {planet_to_upgrade.type} "
             f"planet in sector {planet_to_upgrade.sector} to a {new}."

@@ -316,8 +316,12 @@ class Scoring:
             neutral_score = end_tile.neutral
             scores.append(["Neutral", neutral_score])
 
-            # Sort by score reverse for highest to lowest.
+            # Sort by score in reverse for highest to lowest.
             scores.sort(key=lambda score: score[1], reverse=True)
+
+            # TODO MEDIUM print out a summary of what each player got. So don't
+            #   just print out the end result, but print out how many different
+            #   planet types everyone got and how many gaia planets etc.
 
             # All players are tied.
             if scores[0][1] == scores[1][1] == scores[2][1]:
