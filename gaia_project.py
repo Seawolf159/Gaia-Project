@@ -372,7 +372,7 @@ if __name__ == "__main__":
         # 2p map
         os.startfile("default_2p_map.png")
         # Research board
-        os.startfile(r".\images\structures\research_board.png")
+        os.startfile("research_board.png")
         # Visual Setup
         os.startfile("Setup.png")
 
@@ -392,3 +392,7 @@ if __name__ == "__main__":
         new_game.player_setup()
         print("Factions have been chosen. The game will now start. Good luck.")
         new_game.play()
+
+        # To stop the program to let the player recap a bit about the results.
+        input("Type enter if you are done playing the game.\n")
+        break

@@ -1238,8 +1238,7 @@ class Player:
                 self.faction.gaia_bowl += 1
 
         print(
-            "You have started a gaia project in sector "
-            f"{planet.sector} on the {planet.type} planet."
+            f"You have started a Gaia Project on the planet in {planet}."
         )
 
         # Apply paying for range if applicable.
@@ -1329,6 +1328,7 @@ class Player:
             "Research Lab": "Academy"
         }
 
+        a_an = "a"
         if planet_to_upgrade.structure == "Mine":
             old = "Mine"
 
@@ -1552,6 +1552,7 @@ class Player:
             self.faction.research_lab_built -= 1
             self.faction.academy_built += 1
             new = "Academy"
+            a_an = "an"
 
             # Check if the current round awards points for upgrading to an
             # Academy.
@@ -1561,10 +1562,7 @@ class Player:
 
         else:
             # A Planetary Institute and an Academy can't be upgraded
-            a_an = "an"
             structure = planet_to_upgrade.structure
-            if structure == "Planetary Institute":
-                a_an = "a"
             print(
                 f"! You can't upgrade {a_an} {structure}. "
                 "Please choose a different structure."
@@ -1572,8 +1570,9 @@ class Player:
             raise e.BackToActionSelection("3")
 
         print(
-            f"You have upgraded your {old} on the {planet_to_upgrade.type} "
-            f"planet in sector {planet_to_upgrade.sector} to a {new}."
+            f"You have upgraded the {old} of the planet in Sector: "
+            f"{planet.sector} | Type: {planet.type} | Number: {planet.num} "
+            f"to {a_an} {new}."
         )
 
     def resolve_technology_tile(self, research_board, rnd, gp, pq=False):

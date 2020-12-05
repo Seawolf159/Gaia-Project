@@ -284,6 +284,10 @@ class Automa:
                 print("! Please only type a number.")
             else:
                 self.vp += points
+                point_points = "Points"
+                if points == 1:
+                    point_points = "Point"
+                print(f"+ Automa has gained {points} Victory {point_points}.")
                 return
 
     def mine(self, gp, faction_action=False):
@@ -737,7 +741,6 @@ class Automa:
     	# Check for availability of all the structures.
         trade_available = self.faction.trading_station_available != 0
         institute_available = self.faction.planetary_institute_available != 0
-        mine_available = self.faction.mine_available != 0
         research_available = self.faction.research_lab_available != 0
         academy_available = self.faction.academy_available != 0
 
@@ -867,9 +870,12 @@ class Automa:
                         planet = selection_planet
                         break
 
+        a_an = "a"
+        if structure_upgrade == "Academy":
+            a_an = "an"
         print(
-            f"The Automa has upgraded Planet: {planet} and placed a "
-            f"{structure_upgrade} there."
+            f"The Automa has upgraded the structure of the planet in {planet} "
+            f"and placed {a_an} {structure_upgrade} there."
         )
         planet.structure = structure_upgrade
 
@@ -1308,7 +1314,7 @@ class Taklons(Faction):
             automa.upgrade(gp)
         automa.pq(gp.research_board, faction_action=True)
         automa.vp += 2
-        print("Automa has gained 2 Victory Points.")
+        print("+ Automa has gained 2 Victory Points.")
 
     def mine_tiebreaker(self, gp, valid_options, automa):
         # From the valid_options, find out what the shortest distance
