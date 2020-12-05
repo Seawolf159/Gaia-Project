@@ -378,7 +378,7 @@ if __name__ == "__main__":
 
 
     # Uncomment if files are opened.
-    open_stuff()
+    # open_stuff()
 
     # Start game
     print("Gaia Project started.\n")
