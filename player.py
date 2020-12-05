@@ -2142,7 +2142,7 @@ class Player:
             elif action == "5":
                 # Gain 2 knowledge for 4 power.
 
-                if self.faction.knowledge == self.faction.knowledge:
+                if self.faction.knowledge >= self.faction.knowledge_max:
                     print(
                         "! You are already at the maximum Knowledge you can "
                         "have. Please choose a different Power/Q.I.C. Action."
