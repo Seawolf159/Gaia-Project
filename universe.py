@@ -859,10 +859,12 @@ class Universe:
             if not location in self.planets:
                 continue
 
-            # Planet belongs to no one or to the active player.
+            # Planet belongs to no one or to the active player or has a
+            # gaiaformer on it.
             if not self.planets[location].owner \
                     or self.planets[location].owner \
-                        == active_player.faction.name:
+                        == active_player.faction.name \
+                    or self.planets[location].structure == "gaiaformer":
                 continue
 
             # Opponent that is a neighbour is found.
@@ -910,6 +912,8 @@ class Universe:
         # Automa can't charge power.
         if type(charging_player).__name__ == "Automa":
             return
+
+        # TODO Minor If nothing can be charged, don't ask the player anything.
 
         for standard_tech in charging_player.standard_technology:
             if standard_tech.when == "worth4power":

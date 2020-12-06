@@ -8,4 +8,4 @@ class FederationToken:
 
     def __str__(self):
         # TODO make printing this better.
-        return f"{self.reward}"
+        return f"Reward: {self.reward} | Side: {self.state}"

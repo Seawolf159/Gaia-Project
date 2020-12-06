@@ -1,0 +1,1 @@
+During game #3 a random False appeared in the list when selecting a technology tile.

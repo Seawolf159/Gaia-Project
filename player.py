@@ -61,7 +61,7 @@ class Player:
 
         # TESTING parameters.
         # Initiate testing parameters
-        # self.faction._testing()
+        self.faction._testing()
 
     def start_mine(self, count, universe, players):
         """Function for placing the initial mines.
@@ -1284,8 +1284,8 @@ class Player:
         planets = [
             planet for planet in self.empire
                 if planet.type != "Lost Planet"
-                and planet.structure != "Planetary Institute"
-                and planet.structure != "Academy"
+                    and planet.structure != "Planetary Institute"
+                    and planet.structure != "Academy"
         ]
         # Sort on sector and then on planet num.
         planets.sort(key=lambda planet: (planet.sector, planet.num))
@@ -1571,7 +1571,8 @@ class Player:
 
         print(
             f"You have upgraded the {old} of the planet in Sector: "
-            f"{planet.sector} | Type: {planet.type} | Number: {planet.num} "
+            f"{planet_to_upgrade.sector} | Type: {planet_to_upgrade.type} "
+            f"| Number: {planet_to_upgrade.num} "
             f"to {a_an} {new}."
         )
 
@@ -1766,9 +1767,7 @@ class Player:
                         # because if a player can't go up on the corresponding
                         # research track, the player can still get the standard
                         # technology tile.
-                        self.standard_technology.append(
-                            available[int(chosen_tile) - 1]
-                        )
+                        self.standard_technology.append(selected_tile)
 
                         # Check if the tile awards anything right away.
                         if selected_tile.when == "direct":
@@ -1804,14 +1803,15 @@ class Player:
                 print("! Please only type a number.")
                 continue
 
-            if not self.resolve_cost(f"powertoken{amount}"):
+            if not self.faction.count_powertokens() >= amount:
                 print(
                     "! You don't have enough Power Tokens to make that "
                     "Federation. Please make a Federation that requires less "
                     "satellites."
                 )
                 continue
-            break
+            else:
+                break
 
         print(
             "\nPlease type your chosen Federation token's corresponding "
@@ -1839,16 +1839,17 @@ class Player:
                 print("! Please only type one of the available numbers.")
                 continue
 
-        if rnd.goal == "fedtoken":
-            reason = "Because of the round"
-            self.resolve_gain(f"vp{rnd.vp}", reason)
-
+        self.resolve_cost(f"powertoken{amount}")
         self.federations.append(chosen_fed_token)
         chosen_fed_token.count -= 1
         self.resolve_gain(
             chosen_fed_token.reward,
             "Because of the Federation token"
         )
+
+        if rnd.goal == "fedtoken":
+            reason = "Because of the round"
+            self.resolve_gain(f"vp{rnd.vp}", reason)
 
     def research(self, research_board, rnd, gp, tech_tile=False):
         """Function for doing the Research action.
@@ -1994,7 +1995,9 @@ class Player:
 
         TODO:
             Perhaps make the power/qic cost text summary more readable.
-            Show which actions are still available this round??
+            Don't show unavailable pq actions.
+
+        Question:
             If the player wants to take for example the 5. Gain 2 Knowledge
                 for 4 Power action, but is already at max (15 knowledge) or
                 unable to receive the full amount of 2 (if he/she is at 14)
@@ -2233,6 +2236,7 @@ class Player:
                 if not chosen:
                     continue
 
+                gp.research_board.pq_actions[int(action)] = False
                 self.resolve_gain(
                     self.federations[int(chosen_token) - 1].reward,
                     "Because of the Federation token"
@@ -2248,6 +2252,7 @@ class Player:
 
                 types = len({planet.type for planet in self.empire})
 
+                gp.research_board.pq_actions[int(action)] = False
                 self.resolve_gain(f"vp{3 + types}")
                 self.resolve_cost("qic2")
 
