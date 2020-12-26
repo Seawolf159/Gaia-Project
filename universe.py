@@ -175,6 +175,26 @@ class LostPlanet:
         self.location = old_space.location
         self.num = old_space.num
         self.owner = player.faction.name
+        self.pixel_x = old_space.pixel_x
+        self.pixel_y = old_space.pixel_y
+
+        # Place the lost planet on the screen.
+        img_dir = os.path.join(IMAGES, "Miscellaneous")
+        img_path = os.path.join(img_dir, "Lost Planet.png")
+
+        structure = pygame.image.load(img_path).convert_alpha()
+        x = self.pixel_x - C.PLACE["Lost Planet"][0] // 2
+        y = self.pixel_y - C.PLACE["Lost Planet"][1] // 2
+
+        gp.screen.blit(structure, (x, y))
+
+        gp.universe.place_structure(
+            gp.screen,
+            self,
+            player.faction.home_type,
+            "Mine"
+        )
+
         player.empire.append(self)
         player.lost_planet = True
 
@@ -698,6 +718,11 @@ class Universe:
         background = pygame.image.load("default_2p_map.png").convert_alpha()
         screen.blit(background, (0, 0))
 
+        # Draw a colour wheel in the bottom left as a reminder.
+        # color_wheel = pygame.image.load("default_2p_map.png").convert_alpha()
+        # screen.blit(color_wheel, (0, 0))
+
+
     def sort_planets(self, lost_planet=False):
         if lost_planet:
             self.planet_list.append(lost_planet)
@@ -1123,9 +1148,3 @@ class Universe:
             charging_player.resolve_cost(f"vp{chargeable_power - 1}")
             charging_player.charge_power(charge_chosen)
         return
-
-
-if __name__ == "__main__":
-    test = Universe()
-    for _, planet in sorted(test.planets.items(), reverse=True):
-        print(f"{planet}")

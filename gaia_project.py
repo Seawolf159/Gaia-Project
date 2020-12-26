@@ -411,8 +411,6 @@ if __name__ == "__main__":
     pygame.display.set_caption("Gaia Project Universe")
 
     CLOCK = pygame.time.Clock()
-    # background = pygame.image.load("default_2p_map.png").convert_alpha()
-    # screen.blit(background, (0, 0))
 
     game = Thread(target=start_game, args=(screen,), daemon=True)
     game.start()

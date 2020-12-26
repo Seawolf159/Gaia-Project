@@ -43,6 +43,6 @@ PLACE = {
     "Planetary Institute":  (71, 69),
     "Academy": (63, 61),
     "Gaiaformer": (60, 36),
-    "Satellite": (37, 36)
-    # TODO gaia planet
+    "Satellite": (37, 36),
+    "Lost Planet": (59, 61)
 }
