@@ -1,8 +1,13 @@
 import os
 import random
+import sys
+from threading import Thread
 
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 from PIL import Image
 
+import constants as C
 from automa import Automa
 from federation import FederationToken
 from player import Player
@@ -17,7 +22,7 @@ IMAGES = os.path.join(ROOT, "images")
 class GaiaProject:
     """Class for combining all the different parts of the game."""
 
-    def __init__(self, player_count, automa=False):
+    def __init__(self, player_count, screen, automa=False):
         """Create a new game of GaiaProject
 
         Args:
@@ -27,6 +32,7 @@ class GaiaProject:
         """
 
         self.player_count = player_count
+        self.screen = screen  # Pygame Universe representation.
         self.automa = automa
         self.players = []  # A list with all the player objects in turn order.
         self.board_setup()
@@ -234,7 +240,7 @@ class GaiaProject:
             In the future randomise the universe.
         """
 
-        self.universe = Universe()
+        self.universe = Universe(self.screen)
 
     def player_setup(self):
         """Initialise Player objects."""
@@ -316,10 +322,10 @@ class GaiaProject:
 
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
-            player.start_mine("first", self.universe, self.players)
+            player.start_mine("first", self, self.players)
 
         for player in reversed(self.players):
-            player.start_mine("second", self.universe, self.players)
+            player.start_mine("second", self, self.players)
 
         # Choose booster (start with last player and going counter-clockwise):
         for player in reversed(self.players):
@@ -358,6 +364,24 @@ class GaiaProject:
             self.scoring_board.end_game_scoring(self)
 
 
+def start_game(screen):
+    print("Gaia Project started.\n")
+    while True:
+        # TODO more players ask for amount of players here and if you'll
+        #   play against the automa.
+        player_count = 2
+        automa = True
+        new_game = GaiaProject(player_count, screen, automa=automa)
+        print("The board has been set up. Please choose your factions.")
+        new_game.player_setup()
+        print("Factions have been chosen. The game will now start. Good luck.")
+        new_game.play()
+
+        # To stop the program to let the player recap a bit about the results.
+        input("Type enter if you are done playing the game.\n")
+        break
+
+
 if __name__ == "__main__":
     # TODO for testing only
     # Open everything i need for testing the game.
@@ -381,18 +405,22 @@ if __name__ == "__main__":
     # open_stuff()
 
     # Start game
-    print("Gaia Project started.\n")
-    while True:
-        # TODO more players ask for amount of players here and if you'll
-        #   play against the automa.
-        player_count = 2
-        automa = True
-        new_game = GaiaProject(player_count, automa=automa)
-        print("The board has been set up. Please choose your factions.")
-        new_game.player_setup()
-        print("Factions have been chosen. The game will now start. Good luck.")
-        new_game.play()
+    pygame.init()
+    size = (978, 1000)
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("Gaia Project Universe")
 
-        # To stop the program to let the player recap a bit about the results.
-        input("Type enter if you are done playing the game.\n")
-        break
+    CLOCK = pygame.time.Clock()
+    # background = pygame.image.load("default_2p_map.png").convert_alpha()
+    # screen.blit(background, (0, 0))
+
+    game = Thread(target=start_game, args=(screen,), daemon=True)
+    game.start()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+        pygame.display.update()
+        CLOCK.tick(2)

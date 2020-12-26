@@ -63,12 +63,12 @@ class Player:
         # Initiate testing parameters
         self.faction._testing()
 
-    def start_mine(self, count, universe, players):
+    def start_mine(self, count, gp, players):
         """Function for placing the initial mines.
 
         Args:
             count (str): Number of the mine placed.
-            universe: The universe object used in the main GaiaProject class.
+            gp: GaiaProject main game object.
             players: list of the players in the current game.
         """
 
@@ -79,18 +79,23 @@ class Player:
         )
         print(f"{faction_name}{question}")
 
-        planet = self.choose_planet(universe, "start_mine")
+        planet = self.choose_planet(gp.universe, "start_mine")
 
         print(
             f"You have built a mine on the planet in {planet}."
         )
+
+        gp.universe.place_structure(
+            gp.screen, planet, self.faction.home_type, "Mine"
+        )
+
         planet.owner = self.faction.name
         planet.structure = "Mine"
         self.faction.mine_built += 1
         self.empire.append(planet)
 
         # Check if the mine was placed within range 2 of an opponent.
-        universe.planet_has_neighbours(
+        gp.universe.planet_has_neighbours(
             planet, self, players, neighbour_charge=False
         )
 
@@ -954,7 +959,10 @@ class Player:
         else:
             self.resolve_cost("ore1")
 
-        # Place the mine.
+        gp.universe.place_structure(
+            gp.screen, planet, self.faction.home_type, "Mine"
+        )
+
         planet.owner = self.faction.name
         planet.structure = "Mine"
         self.faction.mine_built += 1
@@ -1363,6 +1371,14 @@ class Player:
 
             self.resolve_cost(f"credits{credit_cost}")
             self.resolve_cost(f"ore2")
+
+            gp.universe.place_structure(
+                gp.screen,
+                planet_to_upgrade,
+                self.faction.home_type,
+                "Trading Station"
+            )
+
             planet_to_upgrade.structure = upgrade_options["Mine"]
             self.faction.mine_built -= 1
             self.faction.trading_station_built += 1
@@ -1433,6 +1449,14 @@ class Player:
 
                 self.resolve_cost("credits6")
                 self.resolve_cost("ore4")
+
+                gp.universe.place_structure(
+                    gp.screen,
+                    planet_to_upgrade,
+                    self.faction.home_type,
+                    "Planetary Institute"
+                )
+
                 planet_to_upgrade.structure = (
                     upgrade_options["Trading Station"][0]
                 )
@@ -1480,6 +1504,14 @@ class Player:
 
                 self.resolve_cost("credits5")
                 self.resolve_cost("ore3")
+
+                gp.universe.place_structure(
+                    gp.screen,
+                    planet_to_upgrade,
+                    self.faction.home_type,
+                    "Research Lab"
+                )
+
                 planet_to_upgrade.structure = (
                     upgrade_options["Trading Station"][1]
                 )
@@ -1548,6 +1580,14 @@ class Player:
             chosen_academy[0] = True
             self.resolve_cost("credits6")
             self.resolve_cost("ore6")
+
+            gp.universe.place_structure(
+                gp.screen,
+                planet_to_upgrade,
+                self.faction.home_type,
+                "Academy"
+            )
+
             planet_to_upgrade.structure = upgrade_options["Research Lab"]
             self.faction.research_lab_built -= 1
             self.faction.academy_built += 1

@@ -1,5 +1,7 @@
 import random
 
+import pygame
+
 import constants as C
 import exceptions as e
 
@@ -35,12 +37,12 @@ class Automa:
         else:
             self.vp = 10
 
-    def start_mine(self, count, universe, players):
+    def start_mine(self, count, gp, players):
         """Function for placing the initial mines.
 
         Args:
             count (str): Number of the mine placed.
-            universe: The universe object used in the main GaiaProject class.
+            gp: GaiaProject main game object.
             players: list of the players in the current game.
         """
 
@@ -50,7 +52,7 @@ class Automa:
         # Automa places a mine on a home type that is closest to the center
         # space of the board.
         valid_options = [
-            planet for planet in universe.planets.values()
+            planet for planet in gp.universe.planets.values()
                 if planet.type == self.faction.home_type
                     and planet not in self.empire
         ]
@@ -67,7 +69,7 @@ class Automa:
             targetx = center_x
             targety = center_y
 
-            distance = universe.distance(startx, starty, targetx, targety)
+            distance = gp.universe.distance(startx, starty, targetx, targety)
             if distance < closest_distance:
                 closest_distance = distance
 
@@ -85,7 +87,7 @@ class Automa:
             targetx = center_x
             targety = center_y
 
-            distance = universe.distance(startx, starty, targetx, targety)
+            distance = gp.universe.distance(startx, starty, targetx, targety)
             if distance == closest_distance:
                 temp_options.append(planet)
 
@@ -119,7 +121,7 @@ class Automa:
                 reverse = False
 
             for _, selection_planet in sorted(
-                universe.planets.items(), reverse=reverse
+                gp.universe.planets.items(), reverse=reverse
             ):
                 if selection_planet in valid_options:
                     planet = selection_planet
@@ -131,13 +133,18 @@ class Automa:
            f"The Automa has built it's {count.upper()} mine on the planet in "
            f"{planet}."
         )
+
+        gp.universe.place_structure(
+            gp.screen, planet, self.faction.home_type, "Mine"
+        )
+
         planet.owner = self.faction.name
         planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
 
         # Check if the mine was placed within range 2 of an opponent.
-        universe.planet_has_neighbours(
+        gp.universe.planet_has_neighbours(
             planet, self, players, neighbour_charge=False
         )
 
@@ -485,6 +492,11 @@ class Automa:
             "forget to place a satellite if applicable. (The satellite matters"
             " only for the 'Most Satellites' final scoring tile.)"
         )
+
+        gp.universe.place_structure(
+            gp.screen, planet, self.faction.home_type, "Mine"
+        )
+
         planet.owner = self.faction.name
         if planet.type == "Trans-dim":
             planet.type = "Gaia"
@@ -781,6 +793,14 @@ class Automa:
             f"The Automa has upgraded the structure of the planet in {planet} "
             f"and placed {a_an} {structure_upgrade} there."
         )
+
+        gp.universe.place_structure(
+            gp.screen,
+            planet,
+            self.faction.home_type,
+            structure_upgrade
+        )
+
         planet.structure = structure_upgrade
 
         # Let opponent charge power.

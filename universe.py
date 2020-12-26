@@ -1,5 +1,6 @@
 import os
 
+import pygame
 from PIL import Image
 
 import constants as C
@@ -13,10 +14,12 @@ class Space:
     """Empty spaces on the sector tiles.
     """
 
-    def __init__(self, sector, location, num):
+    def __init__(self, sector, location, num, pixel_x, pixel_y):
         self.sector = sector  # Number of the sector this space is in.
         self.location = location  # (x, y) on universe grid.
         self.num = num  # Number inside the sector (1-19).
+        self.pixel_x = pixel_x  # Space x coordinate in pixels for the screen.
+        self.pixel_y = pixel_y  # Space y coordinate in pixels for the screen.
         self.type = "Space"
 
         # TODO factin compatibility. Check how to handle the ivits space
@@ -35,11 +38,14 @@ class Space:
 class Planet:
     """Planet inside a sector."""
 
-    def __init__(self, sector, type_, location, num):
+    def __init__(self, sector, type_, location, num, pixel_x, pixel_y):
         self.sector = sector  # Number of the sector this planet is in.
         self.type = type_  # Oxide, Desert, Gaia, Trans-dim etc.
         self.location = location  # Universe grid (x, y).
         self.num = num  # Number inside the sector (1-19).
+        self.pixel_x = pixel_x  # Planet x coordinate in pixels for the screen.
+        self.pixel_y = pixel_y  # Planet y coordinate in pixels for the screen.
+
         self.owner = False  # Faction name of owner.
         self.structure = False  # Type of building built.
         self.federation = False  # Part of federation? True or False.
@@ -235,7 +241,9 @@ class Sector:
                  img,
                  universe_grid,
                  rotation,
-                 planet_list):
+                 planet_list,
+                 pixel_x,
+                 pixel_y):
         """Initialising the sector object.
 
         Args:
@@ -245,19 +253,49 @@ class Sector:
             universe_grid (list): Location of planets and spaces in the sector.
             rotation (int): Rotated amount. Can be 1-5.
             planet_list (List): All the planets in the Universe.
+            pixel_x (Tuple): x coordinate in pixels of the center.
+            pixel_y (Tuple): y coordinate in pixels of the center.
 
         TODO:
             Right now the rotation does nothing really.
         """
 
+        # All middle points in pixels of all the 19 hexes relative to the
+        # center.
+        pixel_coords = {
+            1: (pixel_x - 75, pixel_y - 66 * 2),
+            2: (pixel_x, pixel_y - 66 * 2),
+            3: (pixel_x + 75, pixel_y - 66 * 2),
+            4: (pixel_x - 75 / 2 - 75, pixel_y - 66),
+            5: (pixel_x - 75 / 2, pixel_y - 66),
+            6: (pixel_x + 75 / 2, pixel_y - 66),
+            7: (pixel_x + 75 / 2 + 75, pixel_y - 66),
+            8: (pixel_x - 75 * 2, pixel_y),
+            9: (pixel_x - 75, pixel_y),
+            10: (pixel_x, pixel_y),
+            11: (pixel_x + 75, pixel_y),
+            12: (pixel_x + 75 * 2, pixel_y),
+            13: (pixel_x - 75 / 2 - 75, pixel_y + 66),
+            14: (pixel_x - 75 / 2, pixel_y + 66),
+            15: (pixel_x + 75 / 2, pixel_y + 66),
+            16: (pixel_x + 75 / 2 + 75, pixel_y + 66),
+            17: (pixel_x - 75, pixel_y + 66 * 2),
+            18: (pixel_x, pixel_y + 66 * 2),
+            19: (pixel_x + 75, pixel_y + 66 * 2),
+        }
+
         self.number = number
         self.hexes = [[hexes.get(10, Space(sector=self.number,
-                                           location=universe_grid[0][0],
-                                           num=10))]]
+            location=universe_grid[0][0],
+            num=10,
+            pixel_x=pixel_coords[10][0],
+            pixel_y=pixel_coords[10][1]
+            ))]]
 
         self.planets = []  # List of all planets in the sector
 
-        # TODO open image here or somewhere else?
+
+        # TODO FINAL open image here or somewhere else?
         # self.img = Image.open(img)
         self.img = img
 
@@ -278,15 +316,21 @@ class Sector:
                     sector=self.number,
                     type_=hexes[num],
                     location=location,
-                    num=num
+                    num=num,
+                    pixel_x=pixel_coords[num][0],
+                    pixel_y=pixel_coords[num][1]
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
                 planet_list.append(new_planet)
             else:
-                self.inner.append(Space(sector=self.number,
-                                        location=location,
-                                        num=num))
+                self.inner.append(Space(
+                    sector=self.number,
+                    location=location,
+                    num=num,
+                    pixel_x=pixel_coords[num][0],
+                    pixel_y=pixel_coords[num][1])
+                )
 
         outer = [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]
         for i, num in enumerate(outer):
@@ -299,15 +343,21 @@ class Sector:
                     sector=self.number,
                     type_=hexes[num],
                     location=location,
-                    num=num
+                    num=num,
+                    pixel_x=pixel_coords[num][0],
+                    pixel_y=pixel_coords[num][1]
                 )
                 self.inner.append(new_planet)
                 self.planets.append(new_planet)
                 planet_list.append(new_planet)
             else:
-                self.outer.append(Space(sector=self.number,
-                                        location=location,
-                                        num=num))
+                self.outer.append(Space(
+                    sector=self.number,
+                    location=location,
+                    num=num,
+                    pixel_x=pixel_coords[num][0],
+                    pixel_y=pixel_coords[num][1]
+                ))
 
         # Sort the list of planets by num.
         self.planets.sort(key=lambda planet: planet.num)
@@ -322,50 +372,52 @@ class Sector:
         TODO:
             If i ever use rotation, rotate first before creating planet and
             empty space instances.
+
+        Example:
+
+             1     2     3
+
+          4     5     6     7
+
+        8    9     10    11    12
+
+          13    14    15    16
+
+             17    18    19
+
+        hex_nums = [
+            [10],  # Center
+            [5, 6, 11, 15, 14, 9],  # Inner circle
+            [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
+        ]
+
+        universe grid mapping = center sector = [
+            [(8, 13)],
+            [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
+            [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
+            (10, 15), (10, 13), (10, 11), (9, 10), (8, 9), (7, 10)]
+        ]
+
+        Moving the last number of the inner circle to the beginning and
+        moving the last 2 numbers of the outer circle to the beginning,
+        completes a rotation.
+
+        hex_nums = [
+            [10],  # Center
+            [9, 5, 6, 11, 15, 14],  # Inner circle
+            [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
+        ]
+
+              8     4     1
+
+           13    9    5     2
+
+        17    14    10    6     3
+
+           18    15    11    7
+
+              19    16    12
         """
-
-        #      1     2     3
-
-        #   4     5     6     7
-
-        # 8    9     10    11    12
-
-        #   13    14    15    16
-
-        #      17    18    19
-
-        # hex_nums = [
-        #     [10],  # Center
-        #     [5, 6, 11, 15, 14, 9],  # Inner circle
-        #     [1, 2, 3, 7, 12, 16, 19, 18, 17, 13, 8, 4]  # Outer circle
-        # ]
-
-        # universe grid mapping = center sector = [
-        #     [(8, 13)],
-        #     [(7, 12), (7, 14), (8, 15), (9, 14), (9, 12), (8, 11)],
-        #     [(6, 11), (6, 13), (6, 15), (7, 16), (8, 17), (9, 16),
-        #     (10, 15), (10, 13), (10, 11), (9, 10), (8, 9), (7, 10)]
-        # ]
-
-        # Moving the last number of the inner circle to the beginning and
-        # moving the last 2 numbers of the outer circle to the beginning,
-        # completes a rotation.
-
-        # hex_nums = [
-        #     [10],  # Center
-        #     [9, 5, 6, 11, 15, 14],  # Inner circle
-        #     [8, 4, 1, 2, 3, 7, 12, 16, 19, 18, 17, 13]  # Outer circle
-        # ]
-
-        #       8     4     1
-
-        #    13    9    5     2
-
-        # 17    14    10    6     3
-
-        #    18    15    11    7
-
-        #       19    16    12
 
         for _ in range(x):
             self.hexes[1] = self.hexes[1][-1:] + self.hexes[1][:-1]
@@ -400,6 +452,7 @@ class Sector:
 class Universe:
 
     def __init__(self,
+                 screen,
                  sector1=('n', 0),
                  sector2=('nw', 0),
                  sector3=('c', 0),
@@ -479,6 +532,18 @@ class Universe:
              (7, 8), (7, 6), (7, 4), (6, 3), (5, 2), (4, 3)]
         ]
 
+        # The center x and y pixel of the sector region for the screen that
+        # displays the universe.
+        self.center_pixels = {
+            'n': (527, 174),
+            'nw': (226, 304),
+            'c': (489, 500),
+            'sw': (189, 630),
+            'ne': (789, 369),
+            'se': (752, 695),
+            's': (451, 826),
+        }
+
         self.sector1 = Sector(
             hexes = {
             4: "Desert",
@@ -492,7 +557,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector1.png"),
             universe_grid=eval(f"self.{sector1[0]}"),
             rotation=sector1[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector1[0]][0],
+            pixel_y = self.center_pixels[sector1[0]][1]
         )
 
         self.sector2 = Sector(
@@ -509,7 +576,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector2.png"),
             universe_grid=eval(f"self.{sector2[0]}"),
             rotation=sector2[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector2[0]][0],
+            pixel_y = self.center_pixels[sector2[0]][1]
         )
 
         self.sector3 = Sector(
@@ -525,7 +594,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector3.png"),
             universe_grid=eval(f"self.{sector3[0]}"),
             rotation=sector3[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector3[0]][0],
+            pixel_y = self.center_pixels[sector3[0]][1]
         )
 
         self.sector4 = Sector(
@@ -541,7 +612,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector4.png"),
             universe_grid=eval(f"self.{sector4[0]}"),
             rotation=sector4[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector4[0]][0],
+            pixel_y = self.center_pixels[sector4[0]][1]
         )
 
         # CAREFUL THESE ARE THE BACK SIDE!! Possible solution something like
@@ -559,7 +632,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector5b.png"),
             universe_grid=eval(f"self.{sector5[0]}"),
             rotation=sector5[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector5[0]][0],
+            pixel_y = self.center_pixels[sector5[0]][1]
         )
 
         # else:
@@ -575,7 +650,9 @@ class Universe:
         # img=os.path.join(IMAGES, "sector5.png"),
         #     universe_grid=eval(f"self.{sector5[0]}"),
         #     rotation=sector5[1],
-        #     planet_list=self.planet_list
+        #     planet_list=self.planet_list,
+        #     pixel_x = self.center_pixels[sector5[0]][0],
+        #     pixel_y = self.center_pixels[sector5[0]][1]
         # )
 
         # CAREFUL THESE ARE THE BACK SIDE!!
@@ -591,7 +668,9 @@ class Universe:
             img=os.path.join(IMAGES, "sector6b.png"),
             universe_grid=eval(f"self.{sector6[0]}"),
             rotation=sector6[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector6[0]][0],
+            pixel_y = self.center_pixels[sector6[0]][1]
         )
 
         # CAREFUL THESE ARE THE BACK SIDE!!
@@ -607,10 +686,17 @@ class Universe:
             img=os.path.join(IMAGES, "sector7b.png"),
             universe_grid=eval(f"self.{sector7[0]}"),
             rotation=sector7[1],
-            planet_list=self.planet_list
+            planet_list=self.planet_list,
+            pixel_x = self.center_pixels[sector7[0]][0],
+            pixel_y = self.center_pixels[sector7[0]][1]
         )
 
         self.sort_planets()
+        # self.generate()
+
+        # Draw the generated universe on the screen.
+        background = pygame.image.load("default_2p_map.png").convert_alpha()
+        screen.blit(background, (0, 0))
 
     def sort_planets(self, lost_planet=False):
         if lost_planet:
@@ -626,16 +712,18 @@ class Universe:
         self.planets = {planet.location: planet for planet in self.planet_list}
 
     def generate(self):
+        """Assemble the universe into an image."""
+
         self.universe = "default_2p_map"
 
-        default_2p_map = {
-            1: (1632, 1769),  # Center
-            2: (1837, 0),  # North
-            3: (3265, 1060),  # North East
-            4: (3060, 2829),  # South East
-            5: (1427, 3539),  # South
-            6: (0, 2478),  # South West
-            7: (205, 709)  # North West
+        pos = {
+            'c': (301, 326),  # Center
+            'n': (339, 0),  # North
+            'ne': (602, 196),  # North East
+            'se': (564, 522),  # South East
+            's': (263, 652),  # South
+            'sw': (0, 456),  # South West
+            'nw': (38, 130)  # North West
         }
 
         # TODO find better way to do this, maybe don't have the images open in
@@ -645,30 +733,83 @@ class Universe:
 
         # Stitching together the tiles to form the map for 2 players.
         # (width, height)
-        map_ = Image.new("RGBA", (5312, 5430), "white")
+        map_ = Image.new("RGBA", (978, 1000), "white")
 
-        # Center (1632, 1769)
-        map_.paste(self.sector3.img, (1632, 1769), self.sector3.img)
+        with (
+            Image.open(self.sector1.img) as s1,
+            Image.open(self.sector2.img) as s2,
+            Image.open(self.sector3.img) as s3,
+            Image.open(self.sector4.img) as s4,
+            Image.open(self.sector5.img) as s5,
+            Image.open(self.sector6.img) as s6,
+            Image.open(self.sector7.img) as s7
+        ):
 
-        # North (1837, 0)
-        map_.paste(self.sector1.img, (1837, 0), self.sector1.img)
+            # Canvas size is 978, 1000 (width, length)
+            # Sector size is 376, 348 (width, length)
 
-        # North East (3265, 1060)
-        map_.paste(self.sector5.img, (3265, 1060), self.sector5.img)
+            # Center (301, 326)
+            map_.paste(s3, (301, 326), s3)
 
-        # South East (3060, 2829)
-        map_.paste(self.sector6.img, (3060, 2829), self.sector6.img)
+            # North (339, 0)
+            map_.paste(s1, (339, 0), s1)
 
-        # South (1427, 3539)
-        map_.paste(self.sector7.img, (1427, 3539), self.sector7.img)
+            # North East (602, 196)
+            map_.paste(s5, (602, 196), s5)
 
-        # South West (0, 2478)
-        map_.paste(self.sector4.img, (0, 2478), self.sector4.img)
+            # South East (564, 522)
+            map_.paste(s6, (564, 522), s6)
 
-        # North West (205, 709)
-        map_.paste(self.sector2.img, (205, 709), self.sector2.img)
+            # South (263, 652)
+            map_.paste(s7, (263, 652), s7)
 
-        map_.save("2p Default.png", "png")
+            # South West (0, 456)
+            map_.paste(s4, (0, 456), s4)
+
+            # North West (38, 130)
+            map_.paste(s2, (38, 130), s2)
+
+            map_.save("default_2p_map.png", "png")
+
+    def place_structure(self, screen, planet, home_type, place):
+        """Place structure image on the screen.
+
+        Args:
+            screen: pygame display.
+            planet: Planet object to display the structure on.
+            home_type (str): home type of the player's faction to determine
+                the colour of the structure.
+            place (str): type of structure the player wants to place.
+        """
+
+        # First remove the old structure if applicable.
+        if place != "Mine":
+            background = pygame.image.load(
+                os.path.join(ROOT, "default_2p_map.png")
+            ).convert_alpha()
+
+            planet_x = planet.pixel_x
+            planet_y = planet.pixel_y
+
+            img_x = C.PLACE[planet.structure][0]
+            img_y = C.PLACE[planet.structure][1]
+
+            # Blit the background over the area the old building was taking up.
+            screen.blit(
+                background,
+                (planet_x - img_x // 2, planet_y - img_y // 2),
+                (planet_x - img_x // 2, planet_y - img_y // 2, img_x, img_y)
+            )
+
+        # Place the new structure
+        img_dir = os.path.join(IMAGES, place)
+        img_path = os.path.join(img_dir, f"{home_type} {place}.png")
+
+        structure = pygame.image.load(img_path).convert_alpha()
+        x = planet.pixel_x - C.PLACE[place][0] // 2
+        y = planet.pixel_y - C.PLACE[place][1] // 2
+
+        screen.blit(structure, (x, y))
 
     def distance(self, startx, starty, targetx, targety):
         """Using the universe grid to calculate distance between two planets.

@@ -36,3 +36,13 @@ STRUCTURE_POWER_VALUES = {
     "Academy": 3,
     "Planetary Institute": 3
 }
+PLACE = {
+    "Mine": (57, 55),
+    "Trading Station": (67, 65),
+    "Research Lab": (57, 55),
+    "Planetary Institute":  (71, 69),
+    "Academy": (63, 61),
+    "Gaiaformer": (60, 36),
+    "Satellite": (37, 36)
+    # TODO gaia planet
+}
