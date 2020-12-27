@@ -6,12 +6,28 @@ import constants as C
 import exceptions as e
 
 
+class Card:
+    def __init__(self, num, passing, support, action, booster, vp):
+        self.num = num
+        self.passing = passing
+        self.support = support
+        self.action = action
+        self.booster = booster
+        self.vp = vp
+
+    def __str__(self):
+        return (
+            f"num: {self.num} | passing: {self.passing} | support: {self.support} |"
+            f" action: {self.action} | booster: {self.booster} | vp: {self.vp}"
+        )
+
 class Automa:
 
     def __init__(self, faction, difficulty):
         self.faction = select_faction(faction.lower())()
         self.difficulty = difficulty
         self.set_difficulty()
+        self.deck_setup()
 
         self.booster = False  # This property is set during setup
         self.universe = False  # This property is set during setup
@@ -32,10 +48,207 @@ class Automa:
         self.passed = False  # whether or not the automa has passed.
 
     def set_difficulty(self):
-        if self.difficulty.lower() == "automalein":
+        if self.difficulty == "Automalein":
             self.vp = 0
         else:
             self.vp = 10
+
+    def deck_setup(self):
+        one = Card(
+            num=1,
+            passing=[False, 1],
+            support=["top", 4, "right", "right1"],
+            action="upgrade",
+            booster=1,
+            vp=1
+        )
+        two = Card(
+            num=2,
+            passing=[False, 2],
+            support=["bottom", 2, "right", "right2"],
+            action="upgrade",
+            booster=2,
+            vp=1
+        )
+        three = Card(
+            num=3,
+            passing=[False, 3],
+            support=["top", 2, "right", "right3"],
+            action="highest research",
+            booster=3,
+            vp=1
+        )
+        four = Card(
+            num=4,
+            passing=[True, 1],
+            support=[[False], 2, "left", "left4"],
+            action="mine",
+            booster=4,
+            vp=1
+        )
+        five = Card(
+            num=5,
+            passing=[False, 2],
+            support=["bottom", 2, "left", "left5"],
+            action="pq",
+            booster=5,
+            vp=1
+        )
+        six = Card(
+            num=6,
+            passing=[True, 3],
+            support=["top", 2, "right", "left1"],
+            action="mine",
+            booster=1,
+            vp=3
+        )
+        seven = Card(
+            num=7,
+            passing=[True, 3],
+            support=["top", 2, "right", "right4"],
+            action="random research",
+            booster=2,
+            vp=0
+        )
+        eight = Card(
+            num=8,
+            passing=[False, 2],
+            support=["bottom", 4, "left", "left1"],
+            action="mine",
+            booster=3,
+            vp=3
+        )
+        nine = Card(
+            num=9,
+            passing=[True, 3],
+            support=["bottom", 2, "left", "left2"],
+            action="faction",
+            booster=4,
+            vp=0
+        )
+        ten = Card(
+            num=10,
+            passing=[False, 1],
+            support=["top", 2, "left", "left3"],
+            action="upgrade",
+            booster=5,
+            vp=3
+        )
+        eleven = Card(
+            num=11,
+            passing=[True, 2],
+            support=["bottom", 4, "right", "right1"],
+            action="upgrade",
+            booster=1,
+            vp=2
+        )
+        twelve = Card(
+            num=12,
+            passing=[False, 3],
+            support=["top", 2, "left", "left1"],
+            action="pq",
+            booster=2,
+            vp=3
+        )
+        thirteen = Card(
+            num=13,
+            passing=[True, 3],
+            support=[False, 2, "left", "left2"],
+            action="faction",
+            booster=3,
+            vp=0
+        )
+        fourteen = Card(
+            num=14,
+            passing=[True, 2],
+            support=["bottom", 2, "left", "left3"],
+            action="pq",
+            booster=4,
+            vp=3
+        )
+        fifteen = Card(
+            num=15,
+            passing=[True, 1],
+            support=["top", 2, "left", "right2"],
+            action="highest research",
+            booster=5,
+            vp=1
+        )
+        sixteen = Card(
+            num=16,
+            passing=[False, 1],
+            support=["top", 2, "right", "right3"],
+            action="pq",
+            booster=1,
+            vp=3
+        )
+        seventeen = Card(
+            num=17,
+            passing=[True, 1],
+            support=["bottom", 2, "right", "right5"],
+            action="random research",
+            booster=2,
+            vp=2
+        )
+
+        remaining_deck = []
+        current_deck = []
+
+        current_deck.append(one)
+
+        if self.difficulty != "Automalein":
+            current_deck.append(two)
+
+        remaining_deck.append(three)
+
+        # current_deck.append(four)
+        current_deck.append(five)
+
+        remaining_deck.append(six)
+
+        # current_deck.append(seven)
+
+        remaining_deck.append(eight)
+
+        if self.difficulty in ["Automachtig", "Ultoma", "Alptrauma"]:
+            current_deck.append(nine)
+        else:
+            remaining_deck.append(nine)
+
+        remaining_deck.append(ten)
+        remaining_deck.append(eleven)
+        remaining_deck.append(twelve)
+
+        # current_deck.append(thirteen)
+
+        remaining_deck.append(fourteen)
+
+        if self.difficulty in ["Ultoma", "Alptrauma"]:
+            current_deck.append(fifteen)
+        else:
+            remaining_deck.append(fifteen)
+
+        remaining_deck.append(sixteen)
+        remaining_deck.append(seventeen)
+
+        random.shuffle(current_deck)
+        random.shuffle(remaining_deck)
+
+        self.current_deck = current_deck
+        self.remaining_deck = remaining_deck
+        self.discard_deck = []
+
+        print("Current deck:")
+        for card in self.current_deck:
+            print(card)
+
+        print("Remaining deck:")
+        for card in self.remaining_deck:
+            print(card)
+
+
+        self.support_card = False
+        self.action_card = False
 
     def start_mine(self, count, gp, players):
         """Function for placing the initial mines.
@@ -194,60 +407,70 @@ class Automa:
         # Automa doesn't have a gaia phase.
         pass
 
-    def action_phase(self, gp, rnd, choice=False):
+    def action_phase(self, gp, rnd):
         """Functions for delegating to action functions.
 
         Args:
             gp: GaiaProject main game object.
             rnd: Active Round object.
-
-        TODO:
-            Automate drawing automa cards.
-            Print summary of available strucures?
         """
 
-        faction_name = f"\n{self.faction.name}:"
-        intro = "What action does the Automa choose?"
-        mine = "1. Build a mine."
-        upgrade = "2. Upgrade an existing structure."
-        research = "3. Do research."
-        pq = "4. Power or Q.I.C. (Purple/Green) action."
-        faction_action = "5. Do a faction action."
-        pass_ = "6. Pass."
+        passed = False
 
         # Value is a list with the function and the arguments it needs.
-        options = {
-            "1": [self.mine, gp],
-            "2": [self.upgrade, gp],
-            "3": [self.research, gp.research_board],
-            "4": [self.pq, gp.research_board],
-            "5": [self.faction.faction_action, gp, self],
-            "6": [self.pass_, gp, rnd],
+        actions = {
+            "mine": [self.mine, gp],
+            "upgrade": [self.upgrade, gp],
+            "highest research": [self.highest_research, gp.research_board],
+            "random research": [self.random_research, gp.research_board],
+            "pq": [self.pq, gp.research_board],
+            "faction": [self.faction.faction_action, gp, self],
+            "pass": [self.pass_, gp, rnd],
         }
 
-        while True:
-            automa_points = f"Automa has {self.vp} victory points."
-            prompt = (
-                f"{faction_name}\n"
-                f"{automa_points}\n"
-                f"{intro}\n"
-                f"{mine}\n"
-                f"{upgrade}\n"
-                f"{research}\n"
-                f"{pq}\n"
-                f"{faction_action}\n"
-                f"{pass_}\n"
-                "--> "
+        # If this is the first action of the round, draw a support card.
+        if not self.support_card:
+            self.support_card = self.current_deck.pop(0)
+
+        # If an action has already been taken the action card now becomes the
+        # support card.
+        else:
+            self.discard_deck.append(self.support_card)
+            self.support_card = self.action_card
+
+        # If the current deck is empty the automa passes.
+        if not self.current_deck:
+            passed = True
+
+            # TESTING temporary while testing:
+            self.action_card = "no card here!"
+
+        # If the next action card drawn is one of the bottom three cards in
+        # the current deck the automa COULD pass.
+        elif len(self.current_deck) <= 3:
+            self.action_card = self.current_deck.pop(0)
+            if self.action_card.passing[0]:
+                passed = True
+        else:
+            self.action_card = self.current_deck.pop(0)
+
+        # TESTING temporary while testing:
+        print(f"ACTION CARD:\n{self.action_card}")
+        print(f"SUPPORT CARD:\n{self.support_card}\n")
+
+        print(f"Automa has {self.vp} Victory Points.")
+
+        if passed:
+            action = actions["pass"]
+            print("The Automa Passes.")
+        else:
+            action = actions[self.action_card.action]
+            print(
+                f"The Automa takes the {self.action_card.action.title()} "
+                "action."
             )
-            if not choice or choice == "0":
-                choice = input(prompt)
 
-            if not choice in options.keys():
-                print("Please type the action's corresponding number.")
-                choice = "0"
-                continue
-
-            action = options[choice]
+        while True:
             try:
                 if len(action) > 1:
                     # If the action function needs additional arguments, unpack
@@ -258,16 +481,9 @@ class Automa:
                     action[0]()
             except e.NotEnoughMinesError as ex:
                 print(ex)
-                choice = "2"
-                continue
-            except e.BackToActionSelection as back:
-                # User made a mistake and chose the wrong action for the automa
-                choice = back.choice
+                action = actions["upgrade"]
                 continue
             else:
-                action_name = action[0].__name__
-                if not action_name in ["pass_", "faction_action"]:
-                    self.points(action_name)
                 return
 
     def points(self, action):
@@ -887,6 +1103,12 @@ class Automa:
         # Automa can't do a Federation action.
         pass
 
+    def highest_research(self, research_board):
+        pass
+
+    def random_research(self, research_board):
+        pass
+
     def research(self, research_board):
         levels = [
             self.terraforming,
@@ -1264,4 +1486,11 @@ def select_faction(faction):
 
 if __name__ == "__main__":
     test = Automa("Taklons", "Automa")
-    print(type(test.faction).__name__)
+
+    print("Current deck:")
+    for card in test.current_deck:
+        print(card)
+
+    print("Remaining deck:")
+    for card in test.remaining_deck:
+        print(card)

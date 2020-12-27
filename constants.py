@@ -46,3 +46,10 @@ PLACE = {
     "Satellite": (37, 36),
     "Lost Planet": (59, 61)
 }
+DIFFICULTY = [
+    "Automalein",
+    "Automa",
+    "Automachtig",
+    "Ultoma",
+    "Alptrauma"
+]

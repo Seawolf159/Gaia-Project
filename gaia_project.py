@@ -253,25 +253,18 @@ class GaiaProject:
 
         # If playing against the Automa, ask for the desired difficulty.
         if self.automa:
-            difficulty_options = [
-                "Automalein",
-                "Automa",
-                "Automachtig",
-                "Ultoma",
-                "Alptrauma"
-            ]
             print(
                 "What difficulty do you want to set the Automa to? Please type"
                 " the corresponding number."
             )
-            for i, diff in enumerate(difficulty_options, start=1):
+            for i, diff in enumerate(C.DIFFICULTY, start=1):
                 print(f"{i}. {diff}.")
 
             while True:
                 choice = input("--> ")
 
                 if choice in [str(num + 1) for num in range(i)]:
-                    chosen_difficulty = difficulty_options[int(choice) - 1]
+                    chosen_difficulty = C.DIFFICULTY[int(choice) - 1]
                     break
                 else:
                     print("! Please only type one of the available numbers.")
@@ -280,7 +273,7 @@ class GaiaProject:
             # Set desired difficulty.
             self.players.append(Automa("Taklons", chosen_difficulty))
 
-        # Place players on level 0 of all research boards and check if they
+        # Place players on level 0 of all researc7h boards and check if they
         # start on level 1 of any of them. Add the Level object to the Player
         # object for easy acces and insert the faction name of the player in
         # the Level.players list.
