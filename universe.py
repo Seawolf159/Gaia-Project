@@ -22,7 +22,7 @@ class Space:
         self.pixel_y = pixel_y  # Space y coordinate in pixels for the screen.
         self.type = "Space"
 
-        # TODO factin compatibility. Check how to handle the ivits space
+        # TODO faction compatibility. Check how to handle the ivits space
         #   station.
         # Verify if that works in Universe.valid_spaces to exclude spaces with
         # a space station.
