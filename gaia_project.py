@@ -321,6 +321,7 @@ class GaiaProject:
             player.start_mine("second", self, self.players)
 
         # Choose booster (start with last player and going counter-clockwise):
+        print("\nBooster selection.")
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
 
@@ -365,12 +366,13 @@ def start_game(screen):
         player_count = 2
         automa = True
         new_game = GaiaProject(player_count, screen, automa=automa)
+        # Choose factions after the whole setup has been done.
         print("The board has been set up. Please choose your factions.")
         new_game.player_setup()
         print("Factions have been chosen. The game will now start. Good luck.")
         new_game.play()
 
-        # To stop the program to let the player recap a bit about the results.
+        # Pause the program to let the player recap a bit about the results.
         input("Type enter if you are done playing the game.\n")
         break
 

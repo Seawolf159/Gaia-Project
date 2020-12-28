@@ -307,28 +307,11 @@ class Automa:
         valid_options = temp_options[:]
 
         if len(valid_options) > 1:
-            print(
-                "There are multiple planets that are equally close to the "
-                "center.\nPlease take a random decision card and type the number "
-                "of the corresponding direction the arrow of the Directional "
-                "Selection is pointing to."
-            )
+            # Pick the directional selection direction of a random card.
+            all_cards = self.current_deck + self.remaining_deck
+            random_card = random.choice(all_cards)
 
-            for i, direct in enumerate(["<--", "-->"], start=1):
-                print(f"{i}. {direct}")
-
-            while True:
-                direction = input("--> ")
-                if not direction in [str(n + 1) for n in range(i)]:
-                    print(
-                        "! Please type the number of the corresponding "
-                        "direction the arrow is pointing to."
-                    )
-                    continue
-                else:
-                    break
-
-            if direction == '1':
+            if random_card.support[2] == "left":
                 reverse = True
             else:
                 reverse = False
@@ -362,42 +345,13 @@ class Automa:
         )
 
     def choose_booster(self, scoring_board):
-        faction_name = f"\n{self.faction.name}:\n"
-        question = (
-            "Which booster does the Automa pick? Please turn a random Automa "
-            "card and look at the bottom right."
-        )
-        print(f"{faction_name}{question}")
+        # Pick the directional selection direction of a random card.
+        all_cards = self.current_deck + self.remaining_deck
+        random_card = random.choice(all_cards)
 
-        for x, booster in enumerate(scoring_board.boosters, start=1):
-            print(f"{x}. {booster}")
-        while True:
-
-            choice = input(f"--> ")
-
-            if choice in (
-                [str(num + 1) for num in range(len(scoring_board.boosters))]
-            ):
-                self.booster = scoring_board.boosters.pop(int(choice) - 1)
-                print(f"Automa chose {self.booster}.")
-                break
-            else:
-                print("! Please only type one of the available numbers.")
-
-        # Instruct player to now shuffle the automa deck.
-        print(
-            "\nYou must now shuffle the Automa deck with the cards your chosen"
-            " difficulty requires.\nShuffle the cards that aren't used and set"
-            " them aside for now.\nDon't forget to rotate the 3 bottom cards "
-            "perpendicular to the rest of the deck to see when the Automa "
-            "could pass."
-        )
-
-        # Allow the player to setup the deck without the game starting yet.
-        input(
-            "Press enter when you are ready to select your own booster and "
-            "begin the game.\n--> "
-        )
+        booster_num = random_card.booster - 1
+        self.booster = scoring_board.boosters.pop(booster_num)
+        print(f"\nAutoma chose {self.booster}.")
 
     def income_phase(self):
         # Automa doesn't have an income phase.
@@ -441,9 +395,6 @@ class Automa:
         # If the current deck is empty the automa passes.
         if not self.current_deck:
             passed = True
-
-            # TESTING temporary while testing:
-            self.action_card = "no card here!"
 
         # If the next action card drawn is one of the bottom three cards in
         # the current deck the automa COULD pass.
@@ -562,80 +513,56 @@ class Automa:
         if len(valid_options) > 1:
             # 3b. Check if there are end scoring tiles that could be used for
             # breaking ties.
+
             relevant_tiles = ["sectors", "planet_types", "gaia_planets"]
-            end_scoring_flag = False
-            for end_scoring in gp.scoring_board.end_scoring:
-                if end_scoring.goal in relevant_tiles:
-                    end_scoring_flag = True
-                    break
+            end_card = self.support_card.support[0]
 
-            if end_scoring_flag:
-                print(
-                    "Does the Automa check the final scoring tiles for a "
-                    "tiebreaker? Please type the corresponding number."
-                )
+            if end_card == "top":
+                tile_choice = 0
+            elif end_card == "bottom":
+                tile_choice = 1
 
-                print(
-                    "1. Top tile\n"
-                    "2. Bottom tile\n"
-                    "3. Final scoring tiles tile aren't used."
-                )
-                while True:
-                    tile_choice = input("--> ")
+            # Start filtering.
+            temp_filter = []
 
-                    if not tile_choice in ['1', '2', '3']:
-                        print(
-                            "! Please only type one of the available numbers."
-                        )
-                        continue
-                    else:
-                        break
+            tile = gp.scoring_board.end_scoring[tile_choice]
+            if tile.goal in relevant_tiles:
 
-                if tile_choice != '3':
-                    # Start filtering.
-                    temp_filter = []
-                    for i, tile in enumerate(
-                        gp.scoring_board.end_scoring, start=1
-                    ):
-                        if not i == int(tile_choice):
+                if tile.goal == "sectors":
+                    # Unique sectors the Automa is in.
+                    sectors = {
+                        planet.sector for planet in self.empire
+                    }
+
+                    for planet in valid_options:
+                        if not planet.sector in sectors:
+                            temp_filter.append(planet)
+
+                elif tile.goal == "planet_types":
+                    # Unique planet types the Automa owns
+                    planet_types = {
+                        planet.type for planet in self.empire
+                    }
+
+                    for planet in valid_options:
+                        # Trans-dim counts as Gaia.
+                        if planet.type == "Trans-dim" \
+                                and "Gaia" in planet_types:
                             continue
 
-                        if tile.goal in relevant_tiles:
-                            if tile.goal == "sectors":
-                                # Unique sectors the Automa is in.
-                                sectors = {
-                                    planet.sector for planet in self.empire
-                                }
+                        if not planet.type in planet_types:
+                            temp_filter.append(planet)
 
-                                for planet in valid_options:
-                                    if not planet.sector in sectors:
-                                        temp_filter.append(planet)
+                elif tile.goal == "gaia_planets":
+                    for planet in valid_options:
+                        if planet.type in ["Gaia", "Trans-dim"]:
+                            temp_filter.append(planet)
 
-                            elif tile.goal == "planet_types":
-                                # Unique planet types the Automa owns
-                                planet_types = {
-                                    planet.type for planet in self.empire
-                                }
-
-                                for planet in valid_options:
-                                    # Trans-dim counts as Gaia.
-                                    if planet.type == "Trans-dim" \
-                                            and "Gaia" in planet_types:
-                                        continue
-
-                                    if not planet.type in planet_types:
-                                        temp_filter.append(planet)
-
-                            elif tile.goal == "gaia_planets":
-                                for planet in valid_options:
-                                    if planet.type in ["Gaia", "Trans-dim"]:
-                                        temp_filter.append(planet)
-
-                    if temp_filter:
-                        # If the valid_options got reduced by checking for
-                        # end_scoring, make the valid_options the list of
-                        # filtered planets.
-                        valid_options = temp_filter[:]
+                if temp_filter:
+                    # If the valid_options got reduced by checking for
+                    # end_scoring, make the valid_options the list of
+                    # filtered planets.
+                    valid_options = temp_filter[:]
 
         if len(valid_options) > 1:
             # 3c. Planet type requiring the fewest terraforming steps for the
