@@ -201,12 +201,12 @@ class Automa:
 
         remaining_deck.append(three)
 
-        # current_deck.append(four)
+        current_deck.append(four)
         current_deck.append(five)
 
         remaining_deck.append(six)
 
-        # current_deck.append(seven)
+        current_deck.append(seven)
 
         remaining_deck.append(eight)
 
@@ -219,7 +219,7 @@ class Automa:
         remaining_deck.append(eleven)
         remaining_deck.append(twelve)
 
-        # current_deck.append(thirteen)
+        current_deck.append(thirteen)
 
         remaining_deck.append(fourteen)
 
@@ -406,7 +406,7 @@ class Automa:
             self.action_card = self.current_deck.pop(0)
 
         # TESTING temporary while testing:
-        print(f"ACTION CARD:\n{self.action_card}")
+        print(f"\nACTION CARD:\n{self.action_card}")
         print(f"SUPPORT CARD:\n{self.support_card}\n")
 
         print(f"Automa has {self.vp} Victory Points.")
@@ -474,7 +474,7 @@ class Automa:
                 the range the faction action provides.
         """
 
-        # 1. Condition: The Automa has at least one mine in.
+        # 1. Condition: The Automa has at least one mine in its supply..
         if not self.faction.mine_available:
             raise e.NotEnoughMinesError(
                 "! Automa doesn't have any mines left. It will upgrade "
@@ -487,15 +487,7 @@ class Automa:
         if faction_action:
             max_range = faction_action
         else:
-            print("What is the range of the Automa?")
-            while True:
-                try:
-                    max_range = int(input("--> "))
-                except ValueError:
-                    print("! Please only type a number.")
-                    continue
-                else:
-                    break
+            max_range = self.support_card.support[1]
 
         valid_options = self.mine_valid_options(gp, max_range)
 
@@ -584,39 +576,13 @@ class Automa:
             # 3d. Planet closest to any of YOUR planets.
             # From the valid_options, find out what the shortest distance
             # to the opponent is.
-            closest_distance = self.closest_distance_to_opponent(
-                gp, valid_options
-            )
-
-            # Find all planets that are closest_distance from the opponent.
-            valid_options = self.closest_planets_to_opponent(
-                gp, closest_distance, valid_options
-            )
+            valid_options = self.closest_planets_to_opponent(gp, valid_options)
 
         if len(valid_options) > 1:
-        # 3e. Directional selection.
-            print(
-                "\nThere are multiple planets that are equally closest "
-                "to you.\nPlease type the number of the corresponding "
-                "direction the arrow of the Directional Selection is "
-                "pointing to."
-            )
+            # 3e. Directional selection.
+            direction = self.support_card.support[2]
 
-            for i, direct in enumerate(["<--", "-->"], start=1):
-                print(f"{i}. {direct}")
-
-            while True:
-                direction = input("--> ")
-                if not direction in [str(n + 1) for n in range(i)]:
-                    print(
-                        "! Please type the number of the corresponding "
-                        "direction the arrow is pointing to."
-                    )
-                    continue
-                else:
-                    break
-
-            if direction == '1':
+            if direction == 'left':
                 reverse = True
             else:
                 reverse = False
@@ -646,6 +612,8 @@ class Automa:
         planet.structure = "Mine"
         self.faction.mine_available -= 1
         self.empire.append(planet)
+
+        # Let opponent charge power if applicable.
         gp.universe.planet_has_neighbours(planet, self, gp.players)
 
     def mine_valid_options(self, gp, max_range):
@@ -873,51 +841,20 @@ class Automa:
         if len(candidates) == 1:
             planet = candidates[0]
 
-            # Check if the planet is neighbouring the opponent.
-            closest_distance = self.closest_distance_to_opponent(
-                gp, candidates
-            )
-
         # Look at the tiebreakers for which structure to upgrade.
         else:
-            # a. Closest to any of player's planets.
-            closest_distance = self.closest_distance_to_opponent(
-                gp, candidates
-            )
-
             # Check which planets are equally closest.
-            closest_planets = self.closest_planets_to_opponent(
-                gp, closest_distance, candidates
-            )
+            closest_planets = self.closest_planets_to_opponent(gp, candidates)
 
             if len(closest_planets) == 1:
                 planet = closest_planets[0]
 
-            # If there are multiple closest planets, let the player handle
-            # the b. Directional selection tiebreaker.
+            # If there are multiple closest planets use
+            # b. Directional selection tiebreaker.
             else:
-                print(
-                    "\nThere are multiple planets that are equally closest "
-                    "to you.\nPlease type the number of the corresponding "
-                    "direction the arrow of the Directional Selection is "
-                    "pointing to."
-                )
+                direction = self.support_card.support[2]
 
-                for i, direct in enumerate(["<--", "-->"], start=1):
-                    print(f"{i}. {direct}")
-
-                while True:
-                    direction = input("--> ")
-                    if not direction in [str(n + 1) for n in range(i)]:
-                        print(
-                            "! Please type the number of the corresponding "
-                            "direction the arrow is pointing to."
-                        )
-                        continue
-                    else:
-                        break
-
-                if direction == '1':
+                if direction == 'left':
                     reverse = True
                 else:
                     reverse = False
@@ -946,20 +883,18 @@ class Automa:
 
         planet.structure = structure_upgrade
 
-        # Let opponent charge power.
-        if closest_distance < 3:
-            gp.universe.planet_has_neighbours(planet, self, gp.players)
+        # Let opponent charge power if applicable.
+        gp.universe.planet_has_neighbours(planet, self, gp.players)
 
-    def closest_distance_to_opponent(self, gp, valid_options):
-        """Function for determining the closest distance to the opponent.
+    def closest_planets_to_opponent(self, gp, valid_options):
+        """Function for determining the closest planets to the opponent.
 
         Args:
             gp: GaiaProject main game object.
-            valid_options: List of valid_options.
+            valid_options: List of planets to check.
 
         Returns:
-            The distance of the closest planet to the opponent.
-                (1 is the lowest it can be.)
+            All the planets that are closest to the opponent.
         """
 
         closest_distance = 43  # Abitrarily high so found distance is lower.
@@ -967,12 +902,14 @@ class Automa:
             if opponent is self:
                 continue
 
-            # Check all candidatates what the shortest distance is to the
-            # opponent.
-            for automa_planet in valid_options:
+            # Check all valid_options. Reset the closest_planets list if a
+            # planet is found that is closer than the current closest and
+            # append to the list if the distance is the same as the current
+            # closest planet.
+            for planet in valid_options:
                 for opponent_planet in opponent.empire:
-                    startx = automa_planet.location[0]
-                    starty = automa_planet.location[1]
+                    startx = planet.location[0]
+                    starty = planet.location[1]
 
                     targetx = opponent_planet.location[0]
                     targety = opponent_planet.location[1]
@@ -982,47 +919,9 @@ class Automa:
                     )
                     if distance < closest_distance:
                         closest_distance = distance
-                        # Can't get lower than 1 so immediately return
-                        # TODO faction compatibility. With lantids, distance
-                        #   can be 0.
-                        if closest_distance == 1:
-                            return closest_distance
-            return closest_distance
-
-    def closest_planets_to_opponent(self, gp, closest_distance, valid_options):
-        """Function for determining the closest planet to the opponent.
-
-        Args:
-            gp: GaiaProject main game object.
-            closest_distance (Int): The distance that's closest to the
-                opponent.
-            valid_options: List of valid_options.
-
-        Returns:
-            A list of planets that are equally close the the opponent.
-        """
-
-        closest_planets = []
-        for opponent in gp.players:
-            if opponent is self:
-                continue
-
-            # Check all valid_options if they are one of the closest to the
-            # opponent.
-            for automa_planet in valid_options:
-                for opponent_planet in opponent.empire:
-                    startx = automa_planet.location[0]
-                    starty = automa_planet.location[1]
-
-                    targetx = opponent_planet.location[0]
-                    targety = opponent_planet.location[1]
-
-                    distance = gp.universe.distance(
-                        startx, starty, targetx, targety
-                    )
-                    if distance == closest_distance:
-                        closest_planets.append(automa_planet)
-                        break
+                        closest_planets = [planet]
+                    elif distance == closest_distance:
+                        closest_planets.append(planet)
 
             return closest_planets
 
@@ -1031,7 +930,119 @@ class Automa:
         pass
 
     def highest_research(self, research_board):
+        # Errors are corrected at runtime so i can ignore this.
+        # pylint: disable=no-member
+
+        all_levels = [
+            self.terraforming,
+            self.navigation,
+            self.a_i,
+            self.gaia_project,
+            self.economy,
+            self.science,
+        ]
+
+        highest_track = []
+        highest_level_num = 0
+        for i, level in enumerate(all_levels):
+
+            research_track = research_board.tech_tracks[i]
+            current_level_num = int(level.name[-1])
+
+            # First filter out the tracks that the automa can't go up on
+            # because those will be skipped.
+
+            # If there is still an advanced technology tile and if the
+            # opponent or the Automa is not on level 5, the Automa can always
+            # this track.
+            if research_track.advanced \
+                    or not research_track.level5.players:
+
+                # If the track is currently the highest up, reset the list.
+                if int(current_level_num) > highest_level_num:
+                    highest_level_num = int(current_level_num)
+                    highest_track = [research_track]
+
+                # If it is equally high as another track, append it to the
+                # list.
+                elif int(current_level_num) == highest_level_num:
+                    highest_track.append(research_track)
+
+        # There are multiple tracks researchable that are all equally high up.
+        # Use Numbered Selection as a tiebreaker.
+        if len(highest_track) > 1:
+            direction = self.support_card.support[3][:-1]
+            amount = self.support_card.support[3][-1]
+
+            if direction == 'left':
+                reverse = True
+            else:
+                reverse = False
+
+
+        # Check if going up is possible
         pass
+
+
+
+
+
+        choice = int(choice)
+        current_level = levels[choice - 1]
+        track = research_board.tech_tracks[choice - 1]
+
+        # num = Number of the level before completing the research.
+        num = int(current_level.name[-1])
+
+        if num == 4:
+            # Automa removes the advanced technology if there still is one.
+            if track.advanced:
+                print(
+                    f"Automa has taken the {track.advanced} "
+                    "Advanced Technology tile."
+                )
+                track.advanced = False
+                return
+            else:
+                # Check if there is a player on level 5 when there is no
+                # tile present.
+                next_level = track.level5
+                if next_level.players:
+                    print(
+                        "! There is already a player on level 5. The "
+                        f"Automa can't research {track.name}. Please "
+                        "choose the next technology track."
+                    )
+                    continue
+        elif num == 5:
+            print(
+                "! Automa is already at the maximum level of 5. Please "
+                "choose the next technology track."
+            )
+            continue
+        break
+
+        automa_level_pos = [
+            "terraforming",
+            "navigation",
+            "a_i",
+            "gaia_project",
+            "economy",
+            "science",
+        ]
+
+        # Remove automa from the current level's list of players.
+        current_level.remove(self.faction.name)
+
+        # Add the Automa to the next level on the level's list of players.
+        exec(f"track.level{num + 1}.add(self.faction.name)")
+
+        # Add the level to the Automa object's corresponding research
+        # property.
+        exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
+
+        print(research_board)
+        print(f"Automa has researched {track.name}.")
 
     def random_research(self, research_board):
         pass
@@ -1213,7 +1224,7 @@ class Automa:
             else:
                 i += 1
                 if i == 11:
-                    i =1
+                    i = 1
         else:
             research_board.pq_actions[i] = False
 
@@ -1390,16 +1401,9 @@ class Taklons(Faction):
         print("+ Automa has gained 2 Victory Points.")
 
     def mine_tiebreaker(self, gp, valid_options, automa):
-        # From the valid_options, find out what the shortest distance
-        # to the opponent is.
-        closest_distance = automa.closest_distance_to_opponent(
-            gp, valid_options
-        )
-
-        # Find all planets that are closest_distance from the opponent.
-        valid_options = automa.closest_planets_to_opponent(
-            gp, closest_distance, valid_options
-        )
+        # From the valid_options, find all planets that are closest to the
+        # opponent.
+        valid_options = automa.closest_planets_to_opponent(gp, valid_options)
         return valid_options
 
 
