@@ -953,7 +953,7 @@ class Automa:
             # because those will be skipped.
 
             # If there is still an advanced technology tile and if the
-            # opponent or the Automa is not on level 5, the Automa can always
+            # opponent or the Automa is not on level 5, the Automa can go up
             # this track.
             if research_track.advanced \
                     or not research_track.level5.players:
@@ -974,53 +974,13 @@ class Automa:
             direction = self.support_card.support[3][:-1]
             amount = self.support_card.support[3][-1]
 
-            if direction == 'left':
+            if direction == "left":
                 reverse = True
+                # highest_track.reverse()
             else:
                 reverse = False
-
-
-        # Check if going up is possible
-        pass
-
-
-
-
-
-        choice = int(choice)
-        current_level = levels[choice - 1]
-        track = research_board.tech_tracks[choice - 1]
-
-        # num = Number of the level before completing the research.
-        num = int(current_level.name[-1])
-
-        if num == 4:
-            # Automa removes the advanced technology if there still is one.
-            if track.advanced:
-                print(
-                    f"Automa has taken the {track.advanced} "
-                    "Advanced Technology tile."
-                )
-                track.advanced = False
-                return
-            else:
-                # Check if there is a player on level 5 when there is no
-                # tile present.
-                next_level = track.level5
-                if next_level.players:
-                    print(
-                        "! There is already a player on level 5. The "
-                        f"Automa can't research {track.name}. Please "
-                        "choose the next technology track."
-                    )
-                    continue
-        elif num == 5:
-            print(
-                "! Automa is already at the maximum level of 5. Please "
-                "choose the next technology track."
-            )
-            continue
-        break
+            
+            # itertools.chain,from_iterable itertools.repeat
 
         automa_level_pos = [
             "terraforming",
