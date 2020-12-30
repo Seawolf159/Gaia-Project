@@ -1,3 +1,4 @@
+import itertools
 import random
 
 import pygame
@@ -933,6 +934,10 @@ class Automa:
         # Errors are corrected at runtime so i can ignore this.
         # pylint: disable=no-member
 
+        # TODO CRITICAL still need to test if the cycling works properly when
+        # the number selection number is higher than the length of the
+        # available research tracks list.
+
         all_levels = [
             self.terraforming,
             self.navigation,
@@ -972,119 +977,76 @@ class Automa:
         # Use Numbered Selection as a tiebreaker.
         if len(highest_track) > 1:
             direction = self.support_card.support[3][:-1]
-            amount = self.support_card.support[3][-1]
+            amount = int(self.support_card.support[3][-1])
 
             if direction == "left":
-                reverse = True
-                # highest_track.reverse()
-            else:
-                reverse = False
-            
-            # itertools.chain,from_iterable itertools.repeat
+                highest_track.reverse()
 
-        automa_level_pos = [
-            "terraforming",
-            "navigation",
-            "a_i",
-            "gaia_project",
-            "economy",
-            "science",
-        ]
+            # Use itertools.cycle to keep cycling all the highest tracks until
+            # the Numbered Selection number is reached.
+            cycling_highest_track = itertools.cycle(highest_track)
+            for i, track in enumerate(cycling_highest_track, start=1):
+                if i == amount:
+                    highest_track = [track]
+                    break
+
+        chosen_track = highest_track[0]
+
+        # Alter the chosen_track name to be in the same format as the automa
+        # research level variable format.
+        chosen_track_name = chosen_track.name.lower().replace(' ', '_')
 
         # Remove automa from the current level's list of players.
+        current_level = eval(f"self.{chosen_track_name}")
         current_level.remove(self.faction.name)
 
         # Add the Automa to the next level on the level's list of players.
-        exec(f"track.level{num + 1}.add(self.faction.name)")
+        exec(
+            f"chosen_track.level{highest_level_num + 1}.add(self.faction.name)"
+        )
 
         # Add the level to the Automa object's corresponding research
         # property.
-        exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
+        exec(
+            f"self.{chosen_track_name} "
+            f"= chosen_track.level{highest_level_num + 1}")
 
         print(research_board)
         print(f"Automa has researched {track.name}.")
 
     def random_research(self, research_board):
-        pass
+        direction = self.support_card.support[3][:-1]
+        amount = int(self.support_card.support[3][-1])
 
-    def research(self, research_board):
-        levels = [
-            self.terraforming,
-            self.navigation,
-            self.a_i,
-            self.gaia_project,
-            self.economy,
-            self.science,
-        ]
+        research_tracks = research_board.tech_tracks
 
-        print("\nOn what research track does the Automa go up?")
-        print(research_board)
-        options = (
-            "Please type the corresponding number or type 7 if you chose the "
-            "wrong action.\n"
-        )
-        while True:
-            choice = input(f"{options}--> ")
+        if direction == "left":
+            research_tracks.reverse()
 
-            if choice in ["1", "2", "3", "4", "5", "6"]:
-                choice = int(choice)
-                current_level = levels[choice - 1]
-                track = research_board.tech_tracks[choice - 1]
+        for i, track in enumerate(research_tracks, start=1):
+            if i == amount:
+                chosen_track = track
+                break
 
-                # num = Number of the level before completing the research.
-                num = int(current_level.name[-1])
-            elif choice == "7":
-                raise e.BackToActionSelection
-            else:
-                print("! Please only type 1-6")
-                continue
-
-            if num == 4:
-                # Automa removes the advanced technology if there still is one.
-                if track.advanced:
-                    print(
-                        f"Automa has taken the {track.advanced} "
-                        "Advanced Technology tile."
-                    )
-                    track.advanced = False
-                    return
-                else:
-                    # Check if there is a player on level 5 when there is no
-                    # tile present.
-                    next_level = track.level5
-                    if next_level.players:
-                        print(
-                            "! There is already a player on level 5. The "
-                            f"Automa can't research {track.name}. Please "
-                            "choose the next technology track."
-                        )
-                        continue
-            elif num == 5:
-                print(
-                    "! Automa is already at the maximum level of 5. Please "
-                    "choose the next technology track."
-                )
-                continue
-            break
-
-        automa_level_pos = [
-            "terraforming",
-            "navigation",
-            "a_i",
-            "gaia_project",
-            "economy",
-            "science",
-        ]
+        # Alter the chosen_track name to be in the same format as the automa
+        # research level variable format.
+        chosen_track_name = chosen_track.name.lower().replace(' ', '_')
 
         # Remove automa from the current level's list of players.
+        current_level = eval(f"self.{chosen_track_name}")
         current_level.remove(self.faction.name)
 
         # Add the Automa to the next level on the level's list of players.
-        exec(f"track.level{num + 1}.add(self.faction.name)")
+        exec(
+            f"chosen_track.level{int(current_level.name[-1]) + 1}"
+            ".add(self.faction.name)"
+        )
 
         # Add the level to the Automa object's corresponding research
         # property.
-        exec(f"self.{automa_level_pos[choice - 1]} = track.level{num + 1}")
+        exec(
+            f"self.{chosen_track_name} "
+            f"= chosen_track.level{int(current_level.name[-1]) + 1}")
 
         print(research_board)
         print(f"Automa has researched {track.name}.")
