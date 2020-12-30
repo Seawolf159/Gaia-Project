@@ -1039,7 +1039,7 @@ class Automa:
         print(research_board)
         print(f"Automa has researched {track.name}.")
 
-    def pq(self, research_board, faction_action=False):
+    def pq(self, research_board):
         # Check if there are any Power/Q.I.C. actions still open
         if not any(research_board.pq_actions.values()):
             print(
@@ -1050,7 +1050,24 @@ class Automa:
 
         direction = self.support_card.support[3][:-1]
         amount = int(self.support_card.support[3][-1])
+        
+        # Filter out the pq actions that have already been taken.
+        all_pq_actions = research_board.pq_actions
+        available_pq = [num for num in all_pq_actions if all_pq_actions[num]]
+                        
+        if direction == "left":
+            available_pq.reverse()
 
+        # Use itertools.cycle to keep cycling all the available pq_actions
+        # until the Numbered Selection number is reached.
+        cycling_pq_actions = itertools.cycle(available_pq)
+        for i, pq_action in enumerate(cycling_pq_actions, start=1):
+            if i == amount:
+                chosen_pq_action = pq_action
+                break
+        
+        research_board.pq_actions[chosen_pq_action] = False
+                        
         context = [
             "Gain 3 Knowledge for 7 Power",
             "Gain 2 Terraforming steps for 5 Power",
@@ -1064,29 +1081,8 @@ class Automa:
             "Gain 3 VP and 1 VP for every different planet type for 2 " \
             "Q.I.C."
         ]
-        number = int(number)
-        if direction == "1":
-            i = 10
-        else:
-            i = 1
-        # Keep looking for available actions until the amount of actions
-        # checked is equal to the Numbered Selection number.
-        while number:
-            if research_board.pq_actions[i]:
-                number -= 1
-                if number == 0:
-                    continue
-            if direction == "1":
-                i -= 1
-                if i == 0:
-                    i = 10
-            else:
-                i += 1
-                if i == 11:
-                    i = 1
-        else:
-            research_board.pq_actions[i] = False
-        print(f"The Automa has chosen the {context[i - 1]} Action.")
+                        
+        print(f"The Automa has chosen the {context[chosen_pq_action - 1]} Action.")
 
     # Old pq action.
     # def pq(self, research_board, faction_action=False):
@@ -1356,7 +1352,7 @@ class Taklons(Faction):
         except e.NotEnoughMinesError as ex:
             print(ex)
             automa.upgrade(gp)
-        automa.pq(gp.research_board, faction_action=True)
+        automa.pq(gp.research_board)
         automa.vp += 2
         print("+ Automa has gained 2 Victory Points.")
 
