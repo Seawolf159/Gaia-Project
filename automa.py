@@ -436,33 +436,21 @@ class Automa:
                 action = actions["upgrade"]
                 continue
             else:
-                return
+                if not passed:
+                    # Get Victory Points if the Automa hasn't passed.
+                    vp = self.support_card.vp
+                    self.vp += vp
 
-    def points(self, action):
-        # Make action names more user friendly.
-        if action == "pq":
-            action = "Power/Q.I.C."
-        else:
-            action = action.capitalize()
+                    point_points = "Points"
+                    if vp == 1:
+                        point_points = "Point"
 
-        print(
-            f"\nHow many points does the Automa score for doing the "
-            f"{action} action? Please type the number of points."
-        )
-
-        while True:
-            points = input("--> ")
-
-            try:
-                points = int(points)
-            except ValueError:
-                print("! Please only type a number.")
-            else:
-                self.vp += points
-                point_points = "Points"
-                if points == 1:
-                    point_points = "Point"
-                print(f"+ Automa has gained {points} Victory {point_points}.")
+                    if vp != 0:
+                        print(
+                            f"+ Automa has gained {vp}Victory {point_points}."
+                        )
+                    else:
+                        print("! The Automa didn't gain any Victory Points.")
                 return
 
     def mine(self, gp, faction_action=False):
@@ -1056,62 +1044,12 @@ class Automa:
         if not any(research_board.pq_actions.values()):
             print(
                 "\n! There are no available Power/Q.I.C. Actions left. "
-                "The Automa does nothing this turn. the Automa DOES score "
-                "points though!"
+                "The Automa does nothing this turn."
             )
             return
 
-        print(
-            "\nWhich Power/Q.I.C. Action does the Automa take?"
-        )
-
-        if faction_action:
-            prompt = (
-                "Please type the number of the Numbered Selection (1-5).\n"
-                "--> "
-            )
-        else:
-            prompt = (
-                "Please type the number of the Numbered Selection (1-5).\n"
-                "Type 0 if the Automa does a different Action.\n--> "
-            )
-        while True:
-            number = input(prompt)
-
-            if number == "0":
-                if faction_action:
-                    continue
-                else:
-                    raise e.BackToActionSelection
-            elif not number in [str(num) for num in range(1, 6)]:
-                continue
-
-            number_selection = False
-            while True:
-                print(
-                    "Please type the number of the corresponding direction "
-                    "the arrow of the Numbered Selection is pointing to."
-                )
-                for i, direct in enumerate(["<--", "-->"], start=1):
-                    print(f"{i}. {direct}")
-                print(f"{i + 1}. Go back to number selection.")
-
-                direction = input("--> ")
-
-                if direction == f"{i + 1}":
-                    number_selection = True
-                    break
-                elif not direction in [str(n + 1) for n in range(i)]:
-                    print(
-                        "! Please type the number of the corresponding "
-                        "direction the arrow is pointing to."
-                    )
-                    continue
-                break
-            if number_selection:
-                continue
-            else:
-                break
+        direction = self.support_card.support[3][:-1]
+        amount = int(self.support_card.support[3][-1])
 
         context = [
             "Gain 3 Knowledge for 7 Power",
@@ -1126,7 +1064,6 @@ class Automa:
             "Gain 3 VP and 1 VP for every different planet type for 2 " \
             "Q.I.C."
         ]
-
         number = int(number)
         if direction == "1":
             i = 10
@@ -1149,8 +1086,109 @@ class Automa:
                     i = 1
         else:
             research_board.pq_actions[i] = False
-
         print(f"The Automa has chosen the {context[i - 1]} Action.")
+
+    # Old pq action.
+    # def pq(self, research_board, faction_action=False):
+    #     # Check if there are any Power/Q.I.C. actions still open
+    #     if not any(research_board.pq_actions.values()):
+    #         print(
+    #             "\n! There are no available Power/Q.I.C. Actions left. "
+    #             "The Automa does nothing this turn. the Automa DOES score "
+    #             "points though!"
+    #         )
+    #         return
+
+    #     print(
+    #         "\nWhich Power/Q.I.C. Action does the Automa take?"
+    #     )
+
+    #     if faction_action:
+    #         prompt = (
+    #             "Please type the number of the Numbered Selection (1-5).\n"
+    #             "--> "
+    #         )
+    #     else:
+    #         prompt = (
+    #             "Please type the number of the Numbered Selection (1-5).\n"
+    #             "Type 0 if the Automa does a different Action.\n--> "
+    #         )
+    #     while True:
+    #         number = input(prompt)
+
+    #         if number == "0":
+    #             if faction_action:
+    #                 continue
+    #             else:
+    #                 raise e.BackToActionSelection
+    #         elif not number in [str(num) for num in range(1, 6)]:
+    #             continue
+
+    #         number_selection = False
+    #         while True:
+    #             print(
+    #                 "Please type the number of the corresponding direction "
+    #                 "the arrow of the Numbered Selection is pointing to."
+    #             )
+    #             for i, direct in enumerate(["<--", "-->"], start=1):
+    #                 print(f"{i}. {direct}")
+    #             print(f"{i + 1}. Go back to number selection.")
+
+    #             direction = input("--> ")
+
+    #             if direction == f"{i + 1}":
+    #                 number_selection = True
+    #                 break
+    #             elif not direction in [str(n + 1) for n in range(i)]:
+    #                 print(
+    #                     "! Please type the number of the corresponding "
+    #                     "direction the arrow is pointing to."
+    #                 )
+    #                 continue
+    #             break
+    #         if number_selection:
+    #             continue
+    #         else:
+    #             break
+
+    #     context = [
+    #         "Gain 3 Knowledge for 7 Power",
+    #         "Gain 2 Terraforming steps for 5 Power",
+    #         "Gain 2 Ore for 4 Power",
+    #         "Gain 7 Credits for 4 Power",
+    #         "Gain 2 Knowledge for 4 Power",
+    #         "Gain 1 Terraforming step for 3 Power",
+    #         "Gain 2 Power Tokens for 3 Power",
+    #         "Gain a technology tile for 4 Q.I.C",
+    #         "Score one of your Federation Tokens again for 3 Q.I.C",
+    #         "Gain 3 VP and 1 VP for every different planet type for 2 " \
+    #         "Q.I.C."
+    #     ]
+
+    #     number = int(number)
+    #     if direction == "1":
+    #         i = 10
+    #     else:
+    #         i = 1
+    #     # Keep looking for available actions until the amount of actions
+    #     # checked is equal to the Numbered Selection number.
+    #     while number:
+    #         if research_board.pq_actions[i]:
+    #             number -= 1
+    #             if number == 0:
+    #                 continue
+    #         if direction == "1":
+    #             i -= 1
+    #             if i == 0:
+    #                 i = 10
+    #         else:
+    #             i += 1
+    #             if i == 11:
+    #                 i = 1
+    #     else:
+    #         research_board.pq_actions[i] = False
+
+    #     print(f"The Automa has chosen the {context[i - 1]} Action.")
 
     def special(self):
         # Automa can't do a Special action.
