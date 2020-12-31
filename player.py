@@ -5,7 +5,7 @@ import constants as C
 import exceptions as e
 from faction import select_faction
 from scoring import Booster
-from technology import AdvancedTechnology, StandardTechnology
+from technology import AdvancedTechnology
 
 
 class Player:

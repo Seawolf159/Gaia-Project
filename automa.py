@@ -1,9 +1,6 @@
 import itertools
 import random
 
-import pygame
-
-import constants as C
 import exceptions as e
 
 
@@ -18,8 +15,9 @@ class Card:
 
     def __str__(self):
         return (
-            f"num: {self.num} | passing: {self.passing} | support: {self.support} |"
-            f" action: {self.action} | booster: {self.booster} | vp: {self.vp}"
+            f"num: {self.num} | passing: {self.passing} | "
+            f"support: {self.support} | action: {self.action} | "
+            f"booster: {self.booster} | vp: {self.vp}"
         )
 
 class Automa:
@@ -239,15 +237,6 @@ class Automa:
         self.remaining_deck = remaining_deck
         self.discard_deck = []
 
-        print("Current deck:")
-        for card in self.current_deck:
-            print(card)
-
-        print("Remaining deck:")
-        for card in self.remaining_deck:
-            print(card)
-
-
         self.support_card = False
         self.action_card = False
 
@@ -356,7 +345,14 @@ class Automa:
 
     def income_phase(self):
         # Automa doesn't have an income phase.
-        pass
+
+        # TESTING temporary while testing:
+        print("Current deck:")
+        for card in self.current_deck:
+            print(card)
+        print("Remaining deck:")
+        for card in self.remaining_deck:
+            print(card)
 
     def gaia_phase(self):
         # Automa doesn't have a gaia phase.
@@ -417,10 +413,13 @@ class Automa:
             print("The Automa Passes.")
         else:
             action = actions[self.action_card.action]
+
+            action_name = self.action_card.action.title()
+            if action_name == "Pq":
+                action_name = "Power/Q.I.C. action."
+
             print(
-                f"The Automa takes the {self.action_card.action.title()} "
-                "action."
-            )
+                f"The Automa takes the {action_name} action.")
 
         while True:
             try:
@@ -436,8 +435,9 @@ class Automa:
                 action = actions["upgrade"]
                 continue
             else:
-                if not passed:
-                    # Get Victory Points if the Automa hasn't passed.
+                if action[0].__name__ not in ["pass_", "faction_action"]:
+                    # Get Victory Points if the Automa hasn't passed and not
+                    # taken a faction action.
                     vp = self.support_card.vp
                     self.vp += vp
 
@@ -447,7 +447,7 @@ class Automa:
 
                     if vp != 0:
                         print(
-                            f"+ Automa has gained {vp}Victory {point_points}."
+                            f"+ Automa has gained {vp} Victory {point_points}."
                         )
                     else:
                         print("! The Automa didn't gain any Victory Points.")
@@ -502,12 +502,15 @@ class Automa:
                 tile_choice = 0
             elif end_card == "bottom":
                 tile_choice = 1
+            else:
+                # The support card doesn't use the end scoring tile.
+                tile_choice = False
 
             # Start filtering.
             temp_filter = []
 
             tile = gp.scoring_board.end_scoring[tile_choice]
-            if tile.goal in relevant_tiles:
+            if tile_choice and tile.goal in relevant_tiles:
 
                 if tile.goal == "sectors":
                     # Unique sectors the Automa is in.
@@ -1050,11 +1053,11 @@ class Automa:
 
         direction = self.support_card.support[3][:-1]
         amount = int(self.support_card.support[3][-1])
-        
+
         # Filter out the pq actions that have already been taken.
         all_pq_actions = research_board.pq_actions
         available_pq = [num for num in all_pq_actions if all_pq_actions[num]]
-                        
+
         if direction == "left":
             available_pq.reverse()
 
@@ -1065,9 +1068,9 @@ class Automa:
             if i == amount:
                 chosen_pq_action = pq_action
                 break
-        
+
         research_board.pq_actions[chosen_pq_action] = False
-                        
+
         context = [
             "Gain 3 Knowledge for 7 Power",
             "Gain 2 Terraforming steps for 5 Power",
@@ -1078,120 +1081,20 @@ class Automa:
             "Gain 2 Power Tokens for 3 Power",
             "Gain a technology tile for 4 Q.I.C",
             "Score one of your Federation Tokens again for 3 Q.I.C",
-            "Gain 3 VP and 1 VP for every different planet type for 2 " \
-            "Q.I.C."
+            "Gain 3 VP and 1 VP for every different planet type for 2 Q.I.C."
         ]
-                        
-        print(f"The Automa has chosen the {context[chosen_pq_action - 1]} Action.")
 
-    # Old pq action.
-    # def pq(self, research_board, faction_action=False):
-    #     # Check if there are any Power/Q.I.C. actions still open
-    #     if not any(research_board.pq_actions.values()):
-    #         print(
-    #             "\n! There are no available Power/Q.I.C. Actions left. "
-    #             "The Automa does nothing this turn. the Automa DOES score "
-    #             "points though!"
-    #         )
-    #         return
-
-    #     print(
-    #         "\nWhich Power/Q.I.C. Action does the Automa take?"
-    #     )
-
-    #     if faction_action:
-    #         prompt = (
-    #             "Please type the number of the Numbered Selection (1-5).\n"
-    #             "--> "
-    #         )
-    #     else:
-    #         prompt = (
-    #             "Please type the number of the Numbered Selection (1-5).\n"
-    #             "Type 0 if the Automa does a different Action.\n--> "
-    #         )
-    #     while True:
-    #         number = input(prompt)
-
-    #         if number == "0":
-    #             if faction_action:
-    #                 continue
-    #             else:
-    #                 raise e.BackToActionSelection
-    #         elif not number in [str(num) for num in range(1, 6)]:
-    #             continue
-
-    #         number_selection = False
-    #         while True:
-    #             print(
-    #                 "Please type the number of the corresponding direction "
-    #                 "the arrow of the Numbered Selection is pointing to."
-    #             )
-    #             for i, direct in enumerate(["<--", "-->"], start=1):
-    #                 print(f"{i}. {direct}")
-    #             print(f"{i + 1}. Go back to number selection.")
-
-    #             direction = input("--> ")
-
-    #             if direction == f"{i + 1}":
-    #                 number_selection = True
-    #                 break
-    #             elif not direction in [str(n + 1) for n in range(i)]:
-    #                 print(
-    #                     "! Please type the number of the corresponding "
-    #                     "direction the arrow is pointing to."
-    #                 )
-    #                 continue
-    #             break
-    #         if number_selection:
-    #             continue
-    #         else:
-    #             break
-
-    #     context = [
-    #         "Gain 3 Knowledge for 7 Power",
-    #         "Gain 2 Terraforming steps for 5 Power",
-    #         "Gain 2 Ore for 4 Power",
-    #         "Gain 7 Credits for 4 Power",
-    #         "Gain 2 Knowledge for 4 Power",
-    #         "Gain 1 Terraforming step for 3 Power",
-    #         "Gain 2 Power Tokens for 3 Power",
-    #         "Gain a technology tile for 4 Q.I.C",
-    #         "Score one of your Federation Tokens again for 3 Q.I.C",
-    #         "Gain 3 VP and 1 VP for every different planet type for 2 " \
-    #         "Q.I.C."
-    #     ]
-
-    #     number = int(number)
-    #     if direction == "1":
-    #         i = 10
-    #     else:
-    #         i = 1
-    #     # Keep looking for available actions until the amount of actions
-    #     # checked is equal to the Numbered Selection number.
-    #     while number:
-    #         if research_board.pq_actions[i]:
-    #             number -= 1
-    #             if number == 0:
-    #                 continue
-    #         if direction == "1":
-    #             i -= 1
-    #             if i == 0:
-    #                 i = 10
-    #         else:
-    #             i += 1
-    #             if i == 11:
-    #                 i = 1
-    #     else:
-    #         research_board.pq_actions[i] = False
-
-    #     print(f"The Automa has chosen the {context[i - 1]} Action.")
+        print(
+            f"The Automa has chosen the {context[chosen_pq_action - 1]} "
+            "Action."
+        )
 
     def special(self):
         # Automa can't do a Special action.
         pass
 
     def pass_(self, gp, rnd):
-        print("\nThe Automa Passes.")
+        gp.passed += 1
 
         # Check what the current round number is.
         round_number = gp.scoring_board.rounds.index(rnd) + 1
@@ -1204,58 +1107,105 @@ class Automa:
 
         # Don't pick a new booster when it's the last round.
         if round_number != 6:
-            print(
-                "Which Booster does the Automa choose? Please choose the "
-                "Booster's corresponding number."
-            )
-            for pos, boost in zip(
-                ["1 (Left)", "2 (Middle)", "3 (Right)"],
-                gp.scoring_board.boosters
-            ):
-                print(f"{pos}. {boost}")
-            print(
-                f"4. You chose the wrong action. Go back to action selection."
-            )
+            booster_choice = self.support_card.passing[1] - 1
+            # Add old booster to the right of the unused boosters.
+            gp.scoring_board.boosters.append(self.booster)
 
-            while True:
-                booster_choice = input("--> ")
-                if booster_choice in [str(n + 1) for n in range(3)]:
-                    # Add old booster to the right of the unused boosters.
-                    gp.scoring_board.boosters.append(self.booster)
+            # Set own booster to the chosen booster.
+            self.booster = gp.scoring_board.boosters.pop(booster_choice)
+            print(f"The Automa has chosen {self.booster}.")
 
-                    # Set own booster to the chosen booster.
-                    self.booster = gp.scoring_board.boosters.pop(
-                        int(booster_choice) - 1
-                    )
-                    print(f"Automa chose {self.booster}.")
-                    break
-                elif booster_choice == "4":
-                    raise e.BackToActionSelection
-                else:
-                    print("! Please only type one of the available numbers.")
-                    continue
+            # Reset the Automa deck and add a new card from the remaining deck.
+            if self.action_card:
+                self.current_deck.append(self.action_card)
+            if self.support_card:
+                self.current_deck.append(self.support_card)
 
-        gp.passed += 1
-        self.passed = True
-        self.vp += scored_vp
-        print(f"The Automa scored {scored_vp} VP for passing.")
+            self.action_card = False
+            self.support_card = False
 
-        if round_number != 6:
-            print(
-                "\nTake the discard pile, any cards remaining in the deck, the "
-                "current action and support cards,\nand the top card of the "
-                "set-aside pile and shuffle them together facedown without "
-                "looking at them to create a new Automa deck.\nAnd don't forget to"
-                " rotate the 3 bottom cards perpendicular to the rest of the deck "
-                "to see when the Automa could pass."
-            )
-            input("Press enter when you are ready to continue.\n--> ")
+            self.current_deck.extend(self.discard_deck)
+            self.discard_deck.clear()
+            self.current_deck.append(self.remaining_deck.pop(0))
+            random.shuffle(self.current_deck)
 
             # If automa passed first, it starts first next round.
             if gp.passed == 1:
                 gp.players.remove(self)
                 gp.players.insert(0, self)
                 print("Automa starts first next round.")
+
+        self.passed = True
+        self.vp += scored_vp
+        print(f"+ The Automa has gained {scored_vp} Victory Points.")
+
+    # Old pass_ action.
+    # def pass_(self, gp, rnd):
+    #     print("\nThe Automa Passes.")
+
+    #     # Check what the current round number is.
+    #     round_number = gp.scoring_board.rounds.index(rnd) + 1
+
+    #     # Give the automa points for the current round.
+    #     if round_number < 4:
+    #         scored_vp = rnd.first_half
+    #     else:
+    #         scored_vp = rnd.second_half
+
+    #     # Don't pick a new booster when it's the last round.
+    #     if round_number != 6:
+    #         print(
+    #             "Which Booster does the Automa choose? Please choose the "
+    #             "Booster's corresponding number."
+    #         )
+    #         for pos, boost in zip(
+    #             ["1 (Left)", "2 (Middle)", "3 (Right)"],
+    #             gp.scoring_board.boosters
+    #         ):
+    #             print(f"{pos}. {boost}")
+    #         print(
+    #             f"4. You chose the wrong action. Go back to action selection."
+    #         )
+
+    #         while True:
+    #             booster_choice = input("--> ")
+    #             if booster_choice in [str(n + 1) for n in range(3)]:
+    #                 # Add old booster to the right of the unused boosters.
+    #                 gp.scoring_board.boosters.append(self.booster)
+
+    #                 # Set own booster to the chosen booster.
+    #                 self.booster = gp.scoring_board.boosters.pop(
+    #                     int(booster_choice) - 1
+    #                 )
+    #                 print(f"Automa chose {self.booster}.")
+    #                 break
+    #             elif booster_choice == "4":
+    #                 raise e.BackToActionSelection
+    #             else:
+    #                 print("! Please only type one of the available numbers.")
+    #                 continue
+
+    #     gp.passed += 1
+    #     self.passed = True
+    #     self.vp += scored_vp
+    #     print(f"The Automa scored {scored_vp} VP for passing.")
+
+    #     if round_number != 6:
+    #         print(
+    #             "\nTake the discard pile, any cards remaining in the deck, the "
+    #             "current action and support cards,\nand the top card of the "
+    #             "set-aside pile and shuffle them together facedown without "
+    #             "looking at them to create a new Automa deck.\nAnd don't forget to"
+    #             " rotate the 3 bottom cards perpendicular to the rest of the deck "
+    #             "to see when the Automa could pass."
+    #         )
+    #         input("Press enter when you are ready to continue.\n--> ")
+
+    #         # If automa passed first, it starts first next round.
+    #         if gp.passed == 1:
+    #             gp.players.remove(self)
+    #             gp.players.insert(0, self)
+    #             print("Automa starts first next round.")
 
     def clean_up(self):
         # Automa has no clean up to do.

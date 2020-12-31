@@ -4,6 +4,7 @@ import sys
 from threading import Thread
 
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 import pygame
 from PIL import Image
 
@@ -316,14 +317,20 @@ class GaiaProject:
         # Place first structures (start with first player and going clockwise):
         for player in self.players:
             player.start_mine("first", self, self.players)
+            if type(player).__name__ == "Automa":
+                input("Press Enter to continue. --> ")
 
         for player in reversed(self.players):
             player.start_mine("second", self, self.players)
+            if type(player).__name__ == "Automa":
+                input("Press Enter to continue. --> ")
 
         # Choose booster (start with last player and going counter-clockwise):
         print("\nBooster selection.")
         for player in reversed(self.players):
             player.choose_booster(self.scoring_board)
+            if type(player).__name__ == "Automa":
+                input("Press Enter to continue. --> ")
 
     def play(self):
         """This function will setup and allow you to start playing a game."""
@@ -332,9 +339,9 @@ class GaiaProject:
         for rnd in self.scoring_board.rounds:
             print(f"\nCurrent round {str(rnd).upper()}.")
             self.passed = 0
+
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
-                # TODO move this to cleanup?
                 player.income_phase()
                 player.gaia_phase()
 
@@ -343,6 +350,8 @@ class GaiaProject:
                 for player in self.players:
                     if not player.passed:
                         player.action_phase(self, rnd)
+                        if type(player).__name__ == "Automa":
+                            input("Press Enter to continue. --> ")
 
             # 4. Clean up phase
             # Reset Power/Q.I.C. actions.
