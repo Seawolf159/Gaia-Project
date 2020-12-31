@@ -44,7 +44,8 @@ PLACE = {
     "Academy": (63, 61),
     "Gaiaformer": (60, 36),
     "Satellite": (37, 36),
-    "Lost Planet": (59, 61)
+    "Lost Planet": (59, 61),
+    "Gaia Planet": (60, 60)
 }
 DIFFICULTY = [
     "Automalein",

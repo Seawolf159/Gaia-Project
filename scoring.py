@@ -44,7 +44,7 @@ class Booster:
                 [
                     planet for planet in player.empire
                         if planet.type == "Gaia"
-                        and planet.structure != "gaiaformer"
+                        and planet.structure != "Gaiaformer"
                 ]
             )
             player.resolve_gain(f"vp{gaia_planets}", reason)
@@ -271,7 +271,7 @@ class Scoring:
                         [
                             planet for planet in player.empire
                                 if planet.type == "Gaia"
-                                and planet.strucure != "gaiaformer"
+                                and planet.strucure != "Gaiaformer"
                         ]
                     )
                     scores.append([player, end_tile_score])

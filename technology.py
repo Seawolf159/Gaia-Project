@@ -274,7 +274,7 @@ class GaiaVp(AdvancedTechnology):
             [
                 planet for planet in player.empire
                     if planet.type == "Gaia"
-                    and planet.strucure != "gaiaformer"
+                    and planet.strucure != "Gaiaformer"
             ]
         )
         player.resolve_gain(

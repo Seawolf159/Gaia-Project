@@ -343,7 +343,7 @@ class GaiaProject:
             # 1. Income phase followed by # 2. Gaia phase.
             for player in self.players:
                 player.income_phase()
-                player.gaia_phase()
+                player.gaia_phase(self)
 
             # 3. Action phase
             while self.passed != len(self.players):

@@ -37,12 +37,13 @@ class Automa:
         self.satellites = 0
 
         # Research levels
-        self.terraforming = False  # This property is set during setup
-        self.navigation = False  # This property is set during setup
-        self.a_i = False  # This property is set during setup
-        self.gaia_project = False  # This property is set during setup
-        self.economy = False  # This property is set during setup
-        self.science = False  # This property is set during setup
+        # These properties are set during setup.
+        self.terraforming = False
+        self.navigation = False
+        self.a_i = False
+        self.gaia_project = False
+        self.economy = False
+        self.science = False
 
         self.passed = False  # whether or not the automa has passed.
 
@@ -354,7 +355,7 @@ class Automa:
         for card in self.remaining_deck:
             print(card)
 
-    def gaia_phase(self):
+    def gaia_phase(self, gp):
         # Automa doesn't have a gaia phase.
         pass
 
@@ -741,7 +742,7 @@ class Automa:
 
         return coords_to_check
 
-    def gaia(self, universe):
+    def gaia(self, gp):
         # Automa can't do a Gaia Project action.
         pass
 
@@ -1022,6 +1023,9 @@ class Automa:
         # Alter the chosen_track name to be in the same format as the automa
         # research level variable format.
         chosen_track_name = chosen_track.name.lower().replace(' ', '_')
+
+        if chosen_track_name == "artificial_intelligence":
+            chosen_track_name = "a_i"
 
         # Remove automa from the current level's list of players.
         current_level = eval(f"self.{chosen_track_name}")

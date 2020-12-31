@@ -50,6 +50,7 @@ class Planet:
         self.structure = False  # Type of building built.
         self.federation = False  # Part of federation? True or False.
         self.neighbours = []  # List of opponents that are within range 2.
+        self.gaiaformed = False  # Used for Trans-dim planets.
 
     def __str__(self):
         owner = ""
@@ -808,7 +809,7 @@ class Universe:
         """
 
         # First remove the old structure if applicable.
-        if place != "Mine":
+        if place not in ["Mine", "Gaiaformer"]:
             background = pygame.image.load(
                 os.path.join(ROOT, "default_2p_map.png")
             ).convert_alpha()
@@ -826,6 +827,11 @@ class Universe:
                 (planet_x - img_x // 2, planet_y - img_y // 2, img_x, img_y)
             )
 
+        # If the planet was gaiaformed, the background will contain the
+        # Trans-dim planet, so place a Gaia Planet again first.
+        if planet.gaiaformed:
+            self.place_gaia_planet(screen, planet)
+
         # Place the new structure
         img_dir = os.path.join(IMAGES, place)
         img_path = os.path.join(img_dir, f"{home_type} {place}.png")
@@ -835,6 +841,17 @@ class Universe:
         y = planet.pixel_y - C.PLACE[place][1] // 2
 
         screen.blit(structure, (x, y))
+
+    def place_gaia_planet(self, screen, planet):
+        # Place the Gaia Planet over the Trans-dim planet.
+        img_dir = os.path.join(IMAGES, "Miscellaneous")
+        img_path = os.path.join(img_dir, "Gaia Planet.png")
+
+        gaia_planet = pygame.image.load(img_path).convert_alpha()
+        x = planet.pixel_x - C.PLACE["Gaia Planet"][0] // 2
+        y = planet.pixel_y - C.PLACE["Gaia Planet"][1] // 2
+
+        screen.blit(gaia_planet, (x, y))
 
     def distance(self, startx, starty, targetx, targety):
         """Using the universe grid to calculate distance between two planets.
@@ -930,7 +947,7 @@ class Universe:
             if planet.type in types:
                 if not planet.owner \
                         or planet.owner == player.faction.name \
-                        and planet.structure == "gaiaformer" \
+                        and planet.structure == "Gaiaformer" \
                         or action == "upgrade":
                     planets.append(planet)
 
@@ -1030,7 +1047,7 @@ class Universe:
             if not self.planets[location].owner \
                     or self.planets[location].owner \
                         == active_player.faction.name \
-                    or self.planets[location].structure == "gaiaformer":
+                    or self.planets[location].structure == "Gaiaformer":
                 continue
 
             # Opponent that is a neighbour is found.

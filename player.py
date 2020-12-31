@@ -61,7 +61,7 @@ class Player:
 
         # TESTING parameters.
         # Initiate testing parameters
-        self.faction._testing()
+        # self.faction._testing()
 
     def start_mine(self, count, gp, players):
         """Function for placing the initial mines.
@@ -532,7 +532,7 @@ class Player:
         else:
             print(f"!+ Only {charged} power could be charged.")
 
-    def gaia_phase(self):
+    def gaia_phase(self, gp):
         # TODO Faction incompatibility. Might not work with faction Itars,
         # Bal Tak's
         if self.faction.gaia_bowl > 0:
@@ -541,7 +541,19 @@ class Player:
             while self.gaia_forming:
                 # Set the type property of the trans-dimensional planet to Gaia
                 # as the gaia project is now completed.
-                self.gaia_forming.pop().type = "Gaia"
+                planet = self.gaia_forming.pop()
+                planet.type = "Gaia"
+
+                # Place a Gaia Planet in place of the Trans-dim planet.
+                gp.universe.place_gaia_planet(gp.screen, planet)
+
+                # Replace the Gaiaformer on the Gaia Planet.
+                gp.universe.place_structure(
+                    gp.screen,
+                    planet,
+                    self.faction.home_type,
+                    "Gaiaformer"
+                )
 
             print(
                 "\nGaia phase:\nYour Trans-dimensional planets are now Gaia "
@@ -578,7 +590,7 @@ class Player:
         # Value is a list with the function and the arguments it needs.
         options = {
             "1": [self.mine, gp, rnd],
-            "2": [self.gaia, gp.universe],
+            "2": [self.gaia, gp],
             "3": [self.upgrade, gp, rnd],
             "4": [self.federation, gp, rnd],
             "5": [self.research, gp.research_board, rnd, gp],
@@ -790,7 +802,7 @@ class Player:
                 planet = p_chosen
 
             # If the planet was gaiaformed, the player only pays for the mine.
-            if planet.structure == "gaiaformer":
+            if planet.structure == "Gaiaformer":
                 break
 
             # If this function was called from the pq action function, check
@@ -964,17 +976,19 @@ class Player:
         )
 
         planet.owner = self.faction.name
+
+        # Get back the Gaiaformer if one was on the planet.
+        if planet.structure == "Gaiaformer":
+            self.resolve_gain(
+                "gaiaformer1", "Because you built a mine on a planet "
+                "with a Gaiaformer"
+            )
+
         planet.structure = "Mine"
         self.faction.mine_built += 1
         self.empire.append(planet)
 
         if planet.type == "Gaia":
-            if planet.structure == "gaiaformer":
-                self.resolve_gain(
-                    f"gaiaformer1", "Because you built a mine on a planet "
-                    "with a Gaiaformer"
-                )
-
             # Check if the current round awards points for building a mine
             # on a Gaia planet.
             if rnd.goal == "gaiamine":
@@ -1174,11 +1188,11 @@ class Player:
         # Player wants to pay QIC.
         return qic_needed
 
-    def gaia(self, universe, p_chosen=False, action="gaia", extra_range=0):
+    def gaia(self, gp, p_chosen=False, action="gaia", extra_range=0):
         """Function for starting a Gaia Project.
 
         Args:
-            universe: The universe object used in the main GaiaProject class.
+            gp: GaiaProject main game object.
             planet: Planet object. Only used in scoring.ExtraRange class.
             p_chosen: Planet object. Only used in scoring.ExtraRange class.
             action (str): What kind of action called this function.
@@ -1211,13 +1225,13 @@ class Player:
             pay_range_qic = False
 
             if not p_chosen:
-                planet = self.choose_planet(universe, action)
+                planet = self.choose_planet(gp.universe, action)
             else:
                 planet = p_chosen
 
             # Check if the player is within range of the target planet.
             enough_range, distance = self.within_range(
-                universe, planet, available_range
+                gp.universe, planet, available_range
             )
 
             if not enough_range:
@@ -1253,8 +1267,13 @@ class Player:
         if pay_range_qic:
             self.resolve_cost(f"qic{pay_range_qic}")
 
+        gp.universe.place_structure(
+            gp.screen, planet, self.faction.home_type, "Gaiaformer"
+        )
+
         planet.owner = self.faction.name
-        planet.structure = "gaiaformer"
+        planet.structure = "Gaiaformer"
+        planet.gaiaformed = True
         self.gaia_forming.append(planet)
         self.resolve_cost("gaiaformer1")
 

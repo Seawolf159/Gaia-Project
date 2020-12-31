@@ -6,7 +6,8 @@ structures/
 test.py
 Gaia Project play zone.xcf
 dist/
+build/
 gaia_project.spec
 images/Original/
-gaia_project.zip
-gaia_project/
+Release/
+gaia_project_release.spec
