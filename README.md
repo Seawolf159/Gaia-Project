@@ -1,6 +1,8 @@
 # Gaia-Project
 Attempt to recreate the boardgame Gaia Project for PC. Automa only for now.
 
+To play, download [zip file](https://github.com/Seawolf159/Gaia-Project/releases/download/v0.1.0-alpha/gaia_project.zip) unpack and run `gaia_project.exe`
+
 ## Some game images
 
 ### Start the game
