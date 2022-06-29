@@ -12,9 +12,6 @@ Attempt to recreate the boardgame Gaia Project for PC. Automa only for now.
 ### Game board with starting mines
 ![Game board with starting mines](https://github.com/Seawolf159/Gaia-Project/blob/master/Images/Github%20Images/Game%20board%20with%20starting%20mines.png)
 
-### Doing research
-![Do research](https://github.com/Seawolf159/Gaia-Project/blob/master/Images/Github%20Images/Do%20research.png)
-
 ## Some 3d models made with Blender
 ![Planetary institute](https://github.com/Seawolf159/Gaia-Project/blob/master/Images/Raw%20renders/Planetary%20Institute.png)
 
